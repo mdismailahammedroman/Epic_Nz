@@ -6,8 +6,10 @@ import { JwtPayload } from "jsonwebtoken";
 import { generateToken, verifyToken } from "./jwt";
 import AppError from "../errorHelper/AppError";
 import { envVar } from "../config/envVar";
+import User from "../modules/user/user.model";
+import { IsActive, IUser, Role } from "../modules/user/user.interface";
 
-export const createUserTokens = (user: Partial<Iuser>) => {
+export const createUserTokens = (user: Partial<IUser>) => {
   if (!user || !user._id) {
     throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "User ID is missing");
   }
@@ -62,8 +64,8 @@ export const createNewAccessTokenWithRefreshToken = async (
   }
 
   if (
-    isUserExist.isActive === isActive.BLOCKED ||
-    isUserExist.isActive === isActive.INACTIVE
+    isUserExist.isActive === IsActive.BLOCKED ||
+    isUserExist.isActive === IsActive.INACTIVE
   ) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
