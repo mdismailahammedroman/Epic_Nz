@@ -2,6 +2,7 @@ import httpStatus from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import { envVar } from "../config/envVar";
+import { verifyToken } from "../utils/jwt";
 
 export const checkAuth =
   (...restRole: string[]) =>
@@ -10,7 +11,7 @@ export const checkAuth =
       const accessToken = req.headers.authorization;
       const verifyUser = verifyToken(
         accessToken as string,
-        envVar.JWT_SECRET
+        envVar.JWT_SECRET as string
       ) as JwtPayload;
 
       /*
