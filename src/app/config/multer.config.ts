@@ -1,14 +1,13 @@
-import { Request } from "express";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+
 import multer from "multer";
 import { cloudinaryUpload } from "./cloudinary.config";
 
 // Define Cloudinary storage configuration
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinaryUpload,
+  cloudinary: cloudinaryUpload, // Using Cloudinary instance from cloudinary.config.ts
   params: {
-    // Custom public_id generation logic
-    public_id: (req: Request, file: Express.Multer.File) => {
+    public_id: (req: any, file: Express.Multer.File) => {
       // Sanitize file name and make it URL-friendly
       const fileName = file.originalname
         .toLowerCase()

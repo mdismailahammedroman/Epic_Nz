@@ -1,6 +1,7 @@
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import stream from "stream";
 import { envVar } from "./envVar";
+import AppError from "../errorHelper/AppError";
 
 cloudinary.config({
   cloud_name: envVar?.CLOUDINARY.CLOUDINARY_NAME,
