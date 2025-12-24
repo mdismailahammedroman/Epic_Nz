@@ -1,83 +1,69 @@
-import express, { Application, Request, Response, NextFunction } from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
-import { Server } from "node:http";
+/* eslint-disable no-console */
+import { Server } from "http";
 
-// Load environment variables
+import dotenv from "dotenv";
+import app from "./app";
+import { envVar } from "./app/config/envVar";
+import mongoose from "mongoose";
+
 dotenv.config();
 
-// Create Express app
-const app: Application = express();
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(cors({ credentials: true }));
-
-// Root route
-app.get("/", (_req: Request, res: Response) => {
-  res.send("API Working...");
-});
-
-// API Routes (Placeholder for future routes)
-app.use("/api/v1", (req, res) => {
-  res.send("API v1");
-});
-
-// Global Error Handler (Catches errors from routes and middleware)
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err);
-  res.status(500).json({ message: "Something went wrong!" });
-});
-
-// Create and start server
 let server: Server;
-const PORT = process.env.PORT || 3000;
+const PORT = envVar.PORT || 3000;
+const MONGO_URL =
+  process.env.MONGO_URI || "mongodb://localhost:27017/my_database_name";
 
-async function startServer() {
+const startServer = async () => {
   try {
+    await mongoose.connect(MONGO_URL);
     server = app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      console.log(`Server is running on port ${PORT}`);
     });
-  } catch (err) {
-    console.error("❌ Error starting the server:", err);
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    process.exit(1);
   }
-}
+};
 
 (async () => {
   await startServer();
 })();
 
-// Graceful shutdown
-function shutdown(exitCode: number) {
+process.on("SIGTERM", (error) => {
+  console.log("SIGTERM received...........Server shutting down", error);
   if (server) {
     server.close(() => {
-      console.log("✅ Server closed.");
-      process.exit(exitCode);
+      process.exit(1);
     });
-  } else {
-    process.exit(exitCode);
   }
-}
+  process.exit(1);
+});
 
-process.on("uncaughtException", (err) => {
-  console.error("💥 Uncaught Exception! Server shutting down.", err);
-  shutdown(1);
+process.on("SIGINT", (error) => {
+  console.log("SIGINT received...........Server shutting down", error);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
 });
 
 process.on("unhandledRejection", (error) => {
-  console.error("⚠️ Unhandled Rejection! Server shutting down.", error);
-  shutdown(1);
+  console.error("Unhandled Rejection...........Server shutting down", error);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
 });
-
-process.on("SIGTERM", (signal) => {
-  console.log("🧩 SIGTERM received. Shutting down gracefully.", signal);
-  shutdown(0);
-});
-
-process.on("SIGINT", (signal) => {
-  console.log("🧩 SIGINT received (Ctrl+C). Shutting down.", signal);
-  shutdown(0);
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception...........Server shutting down", err);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
 });

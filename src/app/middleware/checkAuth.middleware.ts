@@ -3,6 +3,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import { envVar } from "../config/envVar";
 import { verifyToken } from "../utils/jwt";
+import AppError from "../errorHelper/AppError";
 
 export const checkAuth =
   (...restRole: string[]) =>
