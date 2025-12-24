@@ -1,23 +1,65 @@
-import mongoose, { Schema } from "mongoose";
-import { IUser, Role, IsActive } from "./user.interface";
+import { model, Schema } from "mongoose";
+import {
+  AuthProviderType,
+  IAuthProvider,
+  IUser,
+  Role,
+  userStatus,
+} from "./user.interface";
 
-// Create the User Schema
-const userSchema: Schema = new Schema<IUser>({
-  email: { type: String, required: true, unique: true },
-  role: {
+const authProviderSchema = new Schema<IAuthProvider>({
+  provider: {
     type: String,
-    enum: [Role.USER, Role.ADMIN, Role.SUPER_ADMIN],
-    default: Role.USER,
+    enum: Object.values(AuthProviderType),
+    required: true,
   },
-  isActive: {
-    type: String,
-    enum: [IsActive.ACTIVE, IsActive.BLOCKED, IsActive.INACTIVE],
-    default: IsActive.ACTIVE,
-  },
-  isDeleted: { type: Boolean, default: false },
+  providerID: { type: String, required: true },
 });
 
-// Create the User Model
-const User = mongoose.model<IUser>("User", userSchema);
+// Define User Schema
+const userSchema = new Schema<IUser>(
+  {
+    name: { type: String },
+    email: { type: String, required: true, unique: true },
+    password: { type: String },
+    role: {
+      type: String,
+      enum: Object.values(Role),
+      required: true,
+      default: Role.GUEST,
+    },
+    phone: { type: String },
+    picture: { type: String },
+    address: { type: String },
+    nationalId: { type: String },
+    profileImage: { type: String },
+    dateOfBirth: { type: Date },
+    isVerified: { type: Boolean, default: false },
+    userStatus: {
+      type: String,
+      enum: Object.values(userStatus),
+      default: userStatus.PENDING, // Defaulting to PENDING
+    },
+    isDeleted: { type: Boolean, default: false },
+    wallet: {
+      type: Schema.Types.ObjectId,
+      ref: "Wallet",
+      required: false,
+    },
+    auths: [authProviderSchema],
+    approved: { type: Boolean, default: false },
+    commissionRate: { type: Number, default: 0 },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
-export default User;
+// Virtual for `id`
+userSchema.virtual("id").get(function () {
+  return this._id.toString();
+});
+
+// Create model
+export const User = model<IUser>("User", userSchema);

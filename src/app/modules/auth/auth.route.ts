@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { authController } from "./auth.controller";
 
-const route = Router();
+const router = Router();
 
-route.get("/logins", authController.login);
-route.post("/login", authController.login);
+router.post("/login", authController.login);
+///refresh'
+//('/change-password
+//('/forget-password/:email
+//('/reset-password/:email/:otp
 
-export const AuthRouter = route;
+export const AuthRouter = router;
