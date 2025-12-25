@@ -58,16 +58,46 @@ const getProfile = CatchAsync(async (req: Request, res: Response) => {
 
 const getAllUser = CatchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user as JwtPayload;
-  const query = req.query as Record<string, string>;
 
-  query.userId = userId;
-
-  const result = await userServices.getAllUserService(query);
+  // Assuming userId is being used for access control; otherwise, remove it.
+  const result = await userServices.getAllUserService(userId);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Users fetched successfully!",
+    message: "User profiles fetched successfully!",
+    data: result,
+  });
+});
+const userUpdate = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.user as JwtPayload;
+    const result = await userServices.userUpdateService(
+      userId,
+      req.body,
+      req.user as JwtPayload
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "User updated successfully!",
+      data: result,
+    });
+  }
+);
+
+// USER UPDATE
+const userDelete = CatchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const decodedToken = req.user as JwtPayload;
+
+  const result = await userServices.userDeleteService(userId, decodedToken);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User deleted successful!",
     data: result,
   });
 });
@@ -77,4 +107,6 @@ export const userController = {
   getMe,
   getProfile,
   getAllUser,
+  userUpdate,
+  userDelete,
 };

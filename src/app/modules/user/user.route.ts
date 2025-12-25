@@ -34,5 +34,11 @@ router.get(
   checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.USER),
   userController.getAllUser
 );
+router.patch("/:userId", checkAuth(Role.USER), userController.userUpdate);
+router.delete(
+  "/:userId",
+  checkAuth(...Object.keys(Role)),
+  userController.userDelete
+);
 
 export const userRouter = router;

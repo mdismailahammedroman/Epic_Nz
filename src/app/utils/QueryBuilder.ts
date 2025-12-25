@@ -11,15 +11,22 @@ export class QueryBuilder<T> {
   }
 
   // CASE SENSITIVE FILTERING
-  filter(): this {
-    const filter = { ...this.query };
+  filter() {
+    // Example: only apply filtering if there's a query string to filter on
+    if (this.query.name) {
+      this.queryModel = this.queryModel.find({
+        name: { $regex: this.query.name, $options: "i" }, // Case-insensitive search
+      });
+    }
 
-    // Remove excluded fields (can be useful for sensitive fields like password, etc.)
-    const excludeFields = ["password", "isDeleted"]; // Example of excluded fields, you can customize this
-    excludeFields.forEach((field) => delete filter[field]);
+    // Ensure there are other filters or conditions applied as needed, e.g., active users only
+    if (this.query.status) {
+      this.queryModel = this.queryModel.find({
+        status: this.query.status, // Example status filter
+      });
+    }
 
-    this.queryModel = this.queryModel.find(filter);
-    return this;
+    return this; // Chainable
   }
 
   // FILTER BY DATE RANGE (e.g., upcoming events within a certain number of days)
