@@ -1,7 +1,4 @@
-import {
-  TErrorSources,
-  TGenericsErrorResponse,
-} from "../interface/error.types";
+import { TErrorSources, TGenericsErrorResponse } from "../types/error.types";
 
 export const zodErrorHandler = (err: any): TGenericsErrorResponse => {
   const errorSources: TErrorSources[] = [];

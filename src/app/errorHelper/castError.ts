@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { TGenericsErrorResponse } from "../interface/error.types";
+import { TGenericsErrorResponse } from "../types/error.types";
 
 export const handleCastError = (
   err: mongoose.Error.CastError

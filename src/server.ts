@@ -10,8 +10,7 @@ dotenv.config();
 
 let server: Server;
 const PORT = envVar.PORT || 3000;
-const MONGO_URL =
-  process.env.MONGO_URI || "mongodb://localhost:27017/my_database_name";
+const MONGO_URL = envVar.MONGO_URI;
 
 const startServer = async () => {
   try {
