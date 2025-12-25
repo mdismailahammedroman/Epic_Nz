@@ -22,13 +22,16 @@ export interface IAuthProvider {
   provider: AuthProviderType; // Google or credential
   providerID: string;
 }
+export interface ICoord {
+  lat: number; // Latitude
+  long: number; // Longitude
+}
 
 // Enum for Roles
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
   USER = "USER",
-  GUEST = "GUEST",
 }
 
 // Enum for subscription status
@@ -69,7 +72,7 @@ export interface IUser {
   userId?: Types.ObjectId | string;
   name: string;
   email: string;
-  password?: string;
+  password?: string; // Optional if using Google/Apple authentication
   picture?: string;
   phone?: string;
   address?: string;
@@ -78,12 +81,10 @@ export interface IUser {
   userStatus?: userStatus;
   isVerified?: boolean;
   approved?: boolean;
-  wallet?: Types.ObjectId;
-  auths: IAuthProvider[]; // Array of auth providers
-  nationalId?: string;
-  profileImage?: string;
-  dateOfBirth?: Date;
-  commissionRate?: number;
+  wallet?: Types.ObjectId; // Reference to wallet
+  auths: IAuthProvider[]; // Array of auth providers (Google, email, etc.)
+  profileImage?: string; // Cloudinary URL for profile image
+  commissionRate?: number; // Commission rate, if applicable
   createdAt?: Date;
   updatedAt?: Date;
 }

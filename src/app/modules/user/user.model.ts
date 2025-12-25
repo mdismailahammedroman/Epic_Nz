@@ -27,7 +27,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: Object.values(Role),
       required: true,
-      default: Role.GUEST,
+      default: Role.USER,
     },
     phone: { type: String },
     picture: { type: String }, // Optional image URL

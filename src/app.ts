@@ -1,5 +1,6 @@
 import express, { Application } from "express";
 import cors from "cors";
+import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import globalErrorHandler from "./app/errorHelper/globalErrorHandler"; // Error handler
@@ -8,6 +9,7 @@ import notFound from "./app/helper/notFound";
 import { envVar } from "./app/config/envVar";
 import rateLimit from "express-rate-limit";
 import safeSanitizeMiddleware from "./app/middleware/mongo-sanitize";
+import passport from "./app/config/passport.config";
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +23,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({ credentials: true }));
 app.use(safeSanitizeMiddleware);
+
+app.use(
+  session({
+    secret: envVar.EXPRESS_SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Ensure the values are parsed as numbers
 const rateLimitTime = Number(envVar.REQUEST_RATE_LIMIT_TIME) * 1000 * 10; // Convert to milliseconds

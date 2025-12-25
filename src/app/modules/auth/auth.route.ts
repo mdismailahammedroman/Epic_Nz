@@ -3,7 +3,7 @@ import { authController } from "./auth.controller";
 
 const router = Router();
 
-router.post("/login", authController.login);
+router.post("/login", authController.credentialLogin);
 ///refresh'
 //('/change-password
 //('/forget-password/:email

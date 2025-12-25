@@ -4,36 +4,67 @@ import { NextFunction, Request, Response } from "express";
 import { envVar } from "../config/envVar";
 import { verifyToken } from "../utils/jwt";
 import AppError from "../errorHelper/AppError";
+import { User } from "../modules/user/user.model";
+import { userStatus } from "../modules/user/user.interface";
 
 export const checkAuth =
   (...restRole: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const accessToken = req.headers.authorization;
-      const verifyUser = verifyToken(
-        accessToken as string,
-        envVar.JWT_SECRET as string
-      ) as JwtPayload;
+      const authHeader = req.headers.authorization; // Get the Authorization header
 
-      /*
-      ----------------------------------------------------------------
-      // More checking will be execute here based on application need
-      ----------------------------------------------------------------
-      */
+      // Check if the token exists and starts with 'Bearer '
+      if (!authHeader || !authHeader.startsWith("")) {
+        throw new AppError(httpStatus.UNAUTHORIZED, "Token not provided!");
+      }
+
+      // Extract the token from the Authorization header
+
+      // VERIFY ACCESS TOKEN
+      const verifyUser = verifyToken(
+        authHeader,
+        envVar.JWT_SECRET
+      ) as JwtPayload;
 
       // CHECK Verified
       if (!verifyUser) {
-        throw new AppError(httpStatus.BAD_REQUEST, "Not Authorized");
+        throw new AppError(httpStatus.UNAUTHORIZED, "Invalid token!");
       }
 
-      if (!restRole.includes(verifyUser.role)) {
+      // Check if the user exists in the database
+      const isUser = await User.findById(verifyUser?.userId);
+
+      if (!isUser) {
+        throw new AppError(httpStatus.UNAUTHORIZED, "No user found!");
+      }
+
+      // Check if the user's status is either INACTIVE or BANNED
+      if (
+        isUser.userStatus === userStatus.INACTIVE ||
+        isUser.userStatus === userStatus.BANNED
+      ) {
         throw new AppError(
           httpStatus.FORBIDDEN,
-          "You are not permitted to access this route"
+          "User is Blocked or Inactive!"
         );
       }
 
-      req.user = verifyUser; // Set an global type for this line see on: interface > intex.d.ts
+      // Check if the user is deleted
+      if (isUser.isDeleted) {
+        throw new AppError(httpStatus.FORBIDDEN, "The user was deleted!");
+      }
+
+      // Check if the user has the required role to access the route
+      if (restRole.length && !restRole.includes(verifyUser.role)) {
+        throw new AppError(
+          httpStatus.FORBIDDEN,
+          "You are not permitted to access this route!"
+        );
+      }
+
+      // Add the verified user to the request object
+      req.user = verifyUser;
+
       next();
     } catch (error) {
       next(error);

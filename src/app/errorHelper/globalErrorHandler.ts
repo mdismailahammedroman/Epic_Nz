@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import AppError from "./AppError"; // Assuming you have a custom AppError class
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 const globalErrorHandler = (
   err: any,
@@ -12,6 +13,22 @@ const globalErrorHandler = (
     return res.status(err.statusCode).json({
       status: "error",
       message: err.message,
+    });
+  }
+
+  // Handle JSON Web Token Errors (JWT)
+  if (err instanceof JsonWebTokenError) {
+    return res.status(401).json({
+      status: "error",
+      message: "Invalid token. Please login again.",
+    });
+  }
+
+  // Handle Token Expired Errors
+  if (err instanceof TokenExpiredError) {
+    return res.status(401).json({
+      status: "error",
+      message: "Token has expired. Please login again.",
     });
   }
 
