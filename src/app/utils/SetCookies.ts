@@ -11,10 +11,10 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
 
   res.cookie("accessToken", tokenInfo.accessToken || "", {
     httpOnly: true,
-    secure: isProduction, // false in dev
-    sameSite: isProduction ? "none" : "lax", // lax in dev
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 15 * 60 * 1000, // 15 minutes
-    path: "/", // available to all routes
+    path: "/",
   });
 
   res.cookie("refreshToken", tokenInfo.refreshToken || "", {

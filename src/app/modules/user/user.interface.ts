@@ -78,7 +78,7 @@ export interface IUser {
   address?: string;
   isDeleted?: boolean;
   role: Role;
-  userStatus?: userStatus;
+  IsActive?: userStatus; // Keeping IsActive here as the user status field
   isVerified?: boolean;
   approved?: boolean;
   wallet?: Types.ObjectId; // Reference to wallet

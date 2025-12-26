@@ -1,13 +1,11 @@
-// src/app/modules/auth/jwt.ts (continued)
 import { StatusCodes } from "http-status-codes";
-
 import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { generateToken, verifyToken } from "./jwt";
 import AppError from "../errorHelper/AppError";
 import { envVar } from "../config/envVar";
-import User from "../modules/user/user.model";
-import { IsActive, IUser, Role } from "../modules/user/user.interface";
+import { IUser, Role, userStatus } from "../modules/user/user.interface"; // Corrected import for userStatus
+import { User } from "../modules/user/user.model";
 
 export const createUserTokens = (user: Partial<IUser>) => {
   if (!user || !user._id) {
@@ -24,10 +22,12 @@ export const createUserTokens = (user: Partial<IUser>) => {
     userId: string;
     email: string;
     role: Role;
+    status: userStatus;
   } = {
     userId,
     email: user.email as string,
     role: user.role as Role,
+    status: user.IsActive as userStatus,
   };
 
   const accessToken = generateToken(
@@ -63,13 +63,14 @@ export const createNewAccessTokenWithRefreshToken = async (
     throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
   }
 
+  // Corrected userStatus check (replace IsActive with userStatus)
   if (
-    isUserExist.isActive === IsActive.BLOCKED ||
-    isUserExist.isActive === IsActive.INACTIVE
+    isUserExist.IsActive === userStatus.INACTIVE ||
+    isUserExist.IsActive === userStatus.BANNED
   ) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      `User is ${isUserExist.isActive}`
+      `User is ${isUserExist.IsActive}`
     );
   }
 

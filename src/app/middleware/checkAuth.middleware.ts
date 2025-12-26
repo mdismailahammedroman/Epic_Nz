@@ -1,4 +1,4 @@
-import httpStatus from "http-status-codes";
+import httpStatus, { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import { envVar } from "../config/envVar";
@@ -11,8 +11,8 @@ export const checkAuth =
   (...restRole: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authHeader = req.headers.authorization; // Get the Authorization header
-
+      // const authHeader = req.headers.authorization; // Get the Authorization header
+      const authHeader = req.cookies.accessToken || req.headers.authorization;
       // Check if the token exists and starts with 'Bearer '
       if (!authHeader || !authHeader.startsWith("")) {
         throw new AppError(httpStatus.UNAUTHORIZED, "Token not provided!");
@@ -40,12 +40,12 @@ export const checkAuth =
 
       // Check if the user's status is either INACTIVE or BANNED
       if (
-        isUser.userStatus === userStatus.INACTIVE ||
-        isUser.userStatus === userStatus.BANNED
+        isUser.IsActive === userStatus.INACTIVE ||
+        isUser.IsActive === userStatus.BANNED
       ) {
         throw new AppError(
-          httpStatus.FORBIDDEN,
-          "User is Blocked or Inactive!"
+          StatusCodes.BAD_REQUEST,
+          `User is ${isUser.IsActive}`
         );
       }
 
