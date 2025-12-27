@@ -1,22 +1,20 @@
-import mongoSanitize from "mongo-sanitize";
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
+import mongoSanitize from "express-mongo-sanitize";
 
-// Middleware to sanitize user input (body, query, params) to prevent NoSQL injection
 const safeSanitizeMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  // Sanitize request body
-  req.body = mongoSanitize(req.body);
+  // Only sanitize the body and params, not the query
+  if (req.body) {
+    req.body = mongoSanitize.sanitize(req.body); // Sanitize the body
+  }
 
-  // Sanitize query parameters
-  req.query = mongoSanitize(req.query);
+  if (req.params) {
+    req.params = mongoSanitize.sanitize(req.params); // Sanitize the params
+  }
 
-  // Sanitize URL parameters
-  req.params = mongoSanitize(req.params);
-
-  // Continue to the next middleware or route handler
   next();
 };
 

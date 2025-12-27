@@ -1,4 +1,4 @@
-import { TGenericsErrorResponse } from "../interface/error.types";
+import { TGenericsErrorResponse } from "../types/error.types";
 
 export const handleDuplicateError = (err: any): TGenericsErrorResponse => {
   // Match the field and value in the error message

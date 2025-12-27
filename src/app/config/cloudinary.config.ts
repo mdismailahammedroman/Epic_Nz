@@ -3,12 +3,14 @@ import stream from "stream";
 import { envVar } from "./envVar";
 import AppError from "../errorHelper/AppError";
 
+// Cloudinary config
 cloudinary.config({
   cloud_name: envVar?.CLOUDINARY.CLOUDINARY_NAME,
   api_key: envVar.CLOUDINARY.CLOUDINARY_API_KEY,
   api_secret: envVar.CLOUDINARY.CLOUDINARY_SECRET,
 });
 
+// Upload buffer to Cloudinary
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
   fileName: string
@@ -25,7 +27,7 @@ export const uploadBufferToCloudinary = async (
           {
             resource_type: "auto",
             public_id: public_id,
-            folder: "pdf",
+            folder: "pdf", // You can change the folder name based on your use case
           },
           (error, result) => {
             if (error) {
@@ -49,11 +51,10 @@ export const deleteImageFromCLoudinary = async (url: string) => {
 
     if (match && match[1]) {
       const public_id = match[1];
-      await cloudinary.uploader.destroy(public_id);
+      await cloudinary.uploader.destroy(public_id); // Delete from Cloudinary
     }
   } catch (error: any) {
     throw new AppError(401, "Cloudinary image deletion failed", error.message);
   }
 };
-
 export const cloudinaryUpload = cloudinary;

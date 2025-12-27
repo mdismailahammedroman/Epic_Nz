@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  TErrorSources,
-  TGenericsErrorResponse,
-} from "../interface/error.types";
+import { TErrorSources, TGenericsErrorResponse } from "../types/error.types";
 
 export const validationError = (
   err: mongoose.Error.ValidationError

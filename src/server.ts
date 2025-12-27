@@ -1,26 +1,47 @@
-/* eslint-disable no-console */
-import { Server } from "http";
-
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import app from "./app";
 import { envVar } from "./app/config/envVar";
-import mongoose from "mongoose";
 
 dotenv.config();
 
-let server: Server;
 const PORT = envVar.PORT || 3000;
-const MONGO_URL =
-  process.env.MONGO_URI || "mongodb://localhost:27017/my_database_name";
+const MONGO_URL = envVar.MONGO_URI;
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Create Socket.IO server
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    credentials: true,
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("geolocation", (data) => {
+    console.log("Received geolocation:", data);
+    socket.broadcast.emit("geolocation", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
 
 const startServer = async () => {
   try {
     await mongoose.connect(MONGO_URL);
-    server = app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    console.error("MongoDB connection failed:", error);
     process.exit(1);
   }
 };
@@ -29,8 +50,9 @@ const startServer = async () => {
   await startServer();
 })();
 
-process.on("SIGTERM", (error) => {
-  console.log("SIGTERM received...........Server shutting down", error);
+/* Graceful shutdown */
+process.on("SIGTERM", (signal: string, error?: unknown) => {
+  console.log(`${signal} received. Shutting down...`, error);
   if (server) {
     server.close(() => {
       process.exit(1);

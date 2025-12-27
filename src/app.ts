@@ -1,54 +1,58 @@
 import express, { Application } from "express";
 import cors from "cors";
+import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import globalErrorHandler from "./app/errorHelper/globalErrorHandler"; // Error handler
+import globalErrorHandler from "./app/errorHelper/globalErrorHandler";
 import { router } from "./app/routes";
 import notFound from "./app/helper/notFound";
 import { envVar } from "./app/config/envVar";
 import rateLimit from "express-rate-limit";
 import safeSanitizeMiddleware from "./app/middleware/mongo-sanitize";
+import passport from "./app/config/passport.config";
 
-// Load environment variables
 dotenv.config();
 
-// Create the Express app
 const app: Application = express();
 
-// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({ credentials: true }));
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+
 app.use(safeSanitizeMiddleware);
 
-// Ensure the values are parsed as numbers
-const rateLimitTime = Number(envVar.REQUEST_RATE_LIMIT_TIME) * 1000 * 10; // Convert to milliseconds
-const rateLimitMax = Number(envVar.REQUEST_RATE_LIMIT); // Ensure this is a number
+app.use(
+  session({
+    secret: envVar.EXPRESS_SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
-// Rate Limiter configuration
+app.use(passport.initialize());
+app.use(passport.session());
+
 const limiter = rateLimit({
-  windowMs: rateLimitTime, // Set the time window in milliseconds
-  max: rateLimitMax, // Max requests allowed within the window
-  message: {
-    success: false,
-    statusCode: 400,
-    message: "Too many requests, please try again later.",
-  },
+  windowMs: Number(envVar.REQUEST_RATE_LIMIT_TIME) * 1000,
+  max: Number(envVar.REQUEST_RATE_LIMIT),
 });
 
-// Apply rate limiting to all routes
 app.use(limiter);
 
-// Sample root route for testing
 app.get("/", (_req, res) => {
   res.send("API Working...");
 });
 
-// API Routes (you can define your API routes here)
-app.use("/api/v1", router); // Replace with actual routes
+app.use("/api/v1", router);
 
-// Global Error Handler (Catches errors from routes and middleware)
 app.use(globalErrorHandler);
 app.use(notFound);
-export default app; // Export the app instance
+
+export default app;

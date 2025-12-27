@@ -53,6 +53,9 @@ interface EnvVar {
   SMTP: SMTP_TYPE;
   GOOGLE_AUTH: GOOGLE_TYPE;
   FACEBOOK_AUTH: FACEBOOK_TYPE;
+  SESSION_SECRET: string;
+  OPENWEATHER_API_KEY: string;
+  LOCATIONIQ_API_KEY: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -86,6 +89,9 @@ const loadEnvVariables = (): EnvVar => {
     "FACEBOOK_APP_ID",
     "FACEBOOK_APP_SECRET",
     "FACEBOOK_APP_CALLBACK_URL",
+    "SESSION_SECRET",
+    "OPENWEATHER_API_KEY",
+    "LOCATIONIQ_API_KEY",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -136,6 +142,9 @@ const loadEnvVariables = (): EnvVar => {
       FACEBOOK_APP_SECRET: process.env.FACEBOOK_APP_SECRET!,
       FACEBOOK_APP_CALLBACK_URL: process.env.FACEBOOK_APP_CALLBACK_URL!,
     },
+    SESSION_SECRET: process.env.SESSION_SECRET!,
+    OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY!,
+    LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY!,
   };
 };
 
