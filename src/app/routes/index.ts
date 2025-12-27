@@ -14,10 +14,10 @@ const moduleRoutes = [
     path: "/auth",
     route: AuthRouter,
   },
-  // {
-  //   path: "/location",
-  //   route: locationRouter,
-  // },
+  {
+    path: "/location",
+    route: locationRouter,
+  },
 ];
 
 moduleRoutes.forEach((r) => {

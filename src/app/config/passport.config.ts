@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs"; // for password hashing
-import { User } from "../modules/user/user.model";
+import User from "../modules/user/user.model";
 
 // Configure the local strategy
 passport.use(

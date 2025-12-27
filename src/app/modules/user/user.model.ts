@@ -1,60 +1,144 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 import {
-  AuthProviderType,
-  IAuthProvider,
   IUser,
   Role,
-  userStatus,
+  UserStatus,
+  Plan,
+  SubscriptionStatus,
+  AuthProviderType,
 } from "./user.interface";
-
-const authProviderSchema = new Schema<IAuthProvider>({
-  provider: {
-    type: String,
-    enum: Object.values(AuthProviderType),
-    required: true,
-  },
-  providerID: { type: String, required: true },
-});
 
 const userSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    full_name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+    },
+    profile_picture: {
+      type: String,
+    },
+
+    auth_providers: [
+      {
+        provider: {
+          type: String,
+          enum: Object.values(AuthProviderType),
+          required: true,
+        },
+        providerID: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
+    location: {
+      lat: { type: Number },
+      long: { type: Number },
+    },
+
+    notifications_enabled: {
+      type: Boolean,
+      default: true,
+    },
+
+    preferences: {
+      language: { type: String, default: "en" },
+      theme: { type: String, default: "light" },
+      categories: { type: [String], default: [] },
+    },
+
     role: {
       type: String,
       enum: Object.values(Role),
-      required: true,
       default: Role.USER,
     },
-    phone: { type: String },
-    picture: { type: String },
-    address: { type: String },
-    profileImage: { type: String },
-    isVerified: { type: Boolean, default: false },
-    IsActive: {
+
+    status: {
       type: String,
-      enum: Object.values(userStatus), //
-      default: userStatus.PENDING,
+      enum: Object.values(UserStatus),
+      default: UserStatus.ACTIVE,
     },
-    isDeleted: { type: Boolean, default: false },
-    wallet: {
-      type: Schema.Types.ObjectId,
-      ref: "Wallet",
-      required: false,
+
+    is_verified: {
+      type: Boolean,
+      default: false,
     },
-    auths: [authProviderSchema],
-    approved: { type: Boolean, default: false },
-    commissionRate: { type: Number, default: 0 },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    subscription: {
+      plan_type: {
+        type: String,
+        enum: Object.values(Plan),
+        default: Plan.TRIAL,
+      },
+
+      start_date: {
+        type: Date,
+        default: Date.now,
+      },
+
+      end_date: {
+        type: Date,
+        default: null,
+      },
+
+      status: {
+        type: String,
+        enum: Object.values(SubscriptionStatus),
+        default: SubscriptionStatus.ACTIVE,
+      },
+
+      ai_features_access: {
+        type: Boolean,
+        default: false,
+      },
+
+      ads_free: {
+        type: Boolean,
+        default: false,
+      },
+
+      payment_method: {
+        type: String,
+      },
+
+      renewal_date: {
+        type: Date,
+      },
+
+      total_spent: {
+        type: Number,
+        default: 0,
+      },
+
+      auto_renew: {
+        type: Boolean,
+        default: true,
+      },
+    },
   },
   {
-    timestamps: true,
-    versionKey: false,
+    timestamps: {
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
   }
 );
 
-userSchema.virtual("id").get(function () {
-  return this._id.toString();
-});
-
-export const User = mongoose.model<IUser>("User", userSchema);
+const User = model<IUser>("User", userSchema);
+export default User;

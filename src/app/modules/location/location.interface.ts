@@ -1,20 +1,13 @@
 import { Document, Types } from "mongoose";
 
 export interface ILocation {
+  user_id: Types.ObjectId;
   name: string;
-  coordinates: {
-    lat: number;
-    lon: number;
-  };
-  type: "Epic Spot" | "Hike" | "Campground" | "Freedom Camping";
+  category: "epic_photo_spots" | "hike" | "campground" | "freedom_camping"; // Category of the location
+  coordinates: { type: { type: String }; coordinates: [number, number] }; // GeoJSON coordinates [longitude, latitude]
   description: string;
-  image: string; // URL to an image or image data
-}
-
-export interface ILocationModel extends ILocation, Document {}
-
-export interface ILocationQuery {
-  type?: "Epic Spot" | "Hike" | "Campground" | "Freedom Camping";
-  page?: number;
-  limit?: number;
+  image_url: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  created_at: Date;
+  updated_at: Date;
 }

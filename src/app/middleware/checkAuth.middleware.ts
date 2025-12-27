@@ -4,8 +4,8 @@ import { NextFunction, Request, Response } from "express";
 import { envVar } from "../config/envVar";
 import { verifyToken } from "../utils/jwt";
 import AppError from "../errorHelper/AppError";
-import { User } from "../modules/user/user.model";
-import { userStatus } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
+import { UserStatus } from "../modules/user/user.interface";
 
 export const checkAuth =
   (...restRole: string[]) =>
@@ -40,12 +40,12 @@ export const checkAuth =
 
       // Check if the user's status is either INACTIVE or BANNED
       if (
-        isUser.IsActive === userStatus.INACTIVE ||
-        isUser.IsActive === userStatus.BANNED
+        isUser.status === UserStatus.INACTIVE ||
+        isUser.status === UserStatus.BANNED
       ) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
-          `User is ${isUser.IsActive}`
+          `User is ${isUser.status} and cannot access the system.`
         );
       }
 

@@ -1,10 +1,23 @@
-// src/routes/location.routes.ts
 import { Router } from "express";
-import { locationController } from "./location.controller";
+import { locationController } from "./location.controller"; // Correct import
+import { checkAuth } from "../../middleware/checkAuth.middleware";
+import { Role } from "../user/user.interface";
 
-const router = Router();
+const locationRouter = Router();
 
-// Route to get locations by category
-router.get("/category", locationController.getLocationsByCategoryController);
+// Routes for locations and location details
+locationRouter.get("/", locationController.getAllLocations); // Get all locations
+locationRouter.get("/nearby", locationController.getNearbyLocations); // Get nearby locations
 
-export const locationRouter = router;
+// Routes for saving and submitting locations
+locationRouter.post("/save", checkAuth(), locationController.saveLocation); // Save a location to the user's profile
+locationRouter.post(
+  "/submit",
+  checkAuth(...Object.values(Role.USER)),
+  locationController.submitNewLocation
+); // Submit a new location
+
+// Route for fetching weather data by location
+locationRouter.get("/weather/:lat/:lon", locationController.getWeatherData); // Get weather data for location (lat, lon)
+
+export { locationRouter };

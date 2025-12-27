@@ -8,11 +8,7 @@ const router = Router();
 
 // Login & Logout
 router.post("/login", authController.credentialLogin);
-router.post(
-  "/logout",
-  checkAuth(...Object.values(Role)),
-  authController.logout
-);
+router.post("/logout", authController.logout);
 
 // Refresh Access Token
 router.post("/refresh", createNewAccessTokenWithRefreshToken);

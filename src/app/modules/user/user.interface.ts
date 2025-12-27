@@ -1,90 +1,86 @@
-import mongoose, { Schema, Document, Types, model } from "mongoose";
-
-// Preferences interface
-interface Preferences {
-  notifications: boolean;
-  categories: (
-    | "epic photo spots"
-    | "Hike"
-    | "Campground"
-    | "Freedom Camping"
-  )[];
-}
-
-// Enum for Auth Provider Type
-export enum AuthProviderType {
-  GOOGLE = "google",
-  CREDENTIAL = "credential",
-}
-
-// AuthProvider interface
-export interface IAuthProvider {
-  provider: AuthProviderType; // Google or credential
-  providerID: string;
-}
-export interface ICoord {
-  lat: number; // Latitude
-  long: number; // Longitude
-}
-
-// Enum for Roles
+// ===== Enums =====
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
   USER = "USER",
 }
 
-// Enum for subscription status
-export enum subscriptionStatus {
-  ACTIVE = "active", // The subscription is active and the user has access
-  EXPIRED = "expired", // The subscription has expired
-  CANCELLED = "cancelled", // The subscription was cancelled
-  SUSPENDED = "suspended", // The subscription is temporarily suspended
-}
-
-// Enum for subscription plans
-export enum Plan {
-  TRIAL = "trial", // Trial plan (usually free for a limited time)
-  MONTHLY = "monthly", // Monthly subscription plan
-  ANNUAL = "annual", // Annual subscription plan
-}
-
-// Interface for Subscription
-export interface Subscription {
-  plan: Plan; // Plan type (trial, monthly, annual)
-  startDate: Date; // Subscription start date
-  endDate: Date | null; // Subscription end date (null if ongoing)
-  status: subscriptionStatus; // Current status of the subscription
-}
-
-// Enum for user status
-export enum userStatus {
+export enum UserStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
   BANNED = "BANNED",
   SUSPENDED = "SUSPENDED",
-  PENDING = "PENDING", // Adding PENDING status
+  PENDING = "PENDING",
 }
 
-// User interface
+export enum Plan {
+  TRIAL = "TRIAL",
+  MONTHLY = "MONTHLY",
+  ANNUAL = "ANNUAL",
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = "ACTIVE",
+  EXPIRED = "EXPIRED",
+  CANCELLED = "CANCELLED",
+  SUSPENDED = "SUSPENDED",
+}
+
+// ===== Auth =====
+export enum AuthProviderType {
+  GOOGLE = "google",
+  CREDENTIAL = "credential",
+}
+
+export interface IAuthProvider {
+  provider: AuthProviderType;
+  providerID: string;
+}
+
+// ===== Location =====
+export interface ICoord {
+  lat: number;
+  long: number;
+}
+
+// ===== Interfaces =====
+export interface IUserPreferences {
+  language: string;
+  theme: string;
+  categories: string[];
+}
+
+export interface IUserSubscription {
+  plan_type: Plan;
+  start_date: Date;
+  end_date: Date | null;
+  status: SubscriptionStatus;
+  ai_features_access: boolean;
+  ads_free: boolean;
+  payment_method?: string;
+  renewal_date?: Date;
+  total_spent: number;
+  auto_renew: boolean;
+}
+
 export interface IUser {
-  _id?: Types.ObjectId | string;
-  userId?: Types.ObjectId | string;
-  name: string;
   email: string;
-  password?: string; // Optional if using Google/Apple authentication
-  picture?: string;
-  phone?: string;
-  address?: string;
-  isDeleted?: boolean;
+  full_name: string;
+  password?: string;
+  profile_picture?: string;
+
+  auth_providers: IAuthProvider[]; // 👈 added
+  location?: ICoord; // 👈 added (optional)
+
+  notifications_enabled: boolean;
+  preferences?: IUserPreferences;
+
   role: Role;
-  IsActive?: userStatus; // Keeping IsActive here as the user status field
-  isVerified?: boolean;
-  approved?: boolean;
-  wallet?: Types.ObjectId; // Reference to wallet
-  auths: IAuthProvider[]; // Array of auth providers (Google, email, etc.)
-  profileImage?: string; // Cloudinary URL for profile image
-  commissionRate?: number; // Commission rate, if applicable
-  createdAt?: Date;
-  updatedAt?: Date;
+  status: UserStatus;
+  is_verified: boolean;
+  isDeleted: boolean;
+  subscription: IUserSubscription;
+
+  created_at: Date;
+  updated_at: Date;
 }

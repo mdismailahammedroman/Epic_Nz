@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { User } from "../user/user.model";
+import User from "../user/user.model";
 
 const forgetPassword = async (email: string) => {
   // Generate OTP, save in DB, send email

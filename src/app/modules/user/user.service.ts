@@ -1,20 +1,15 @@
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
 import AppError from "../../errorHelper/AppError";
-import {
-  AuthProviderType,
-  IAuthProvider,
-  IUser,
-  Role,
-  userStatus,
-} from "./user.interface";
-import { User } from "./user.model";
+import { AuthProviderType, IAuthProvider, IUser, Role } from "./user.interface";
+
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
+import User from "./user.model";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, profileImage, ...rest } = payload;
+  const { email, password, profile_picture, ...rest } = payload;
 
   const isUser = await User.findOne({ email });
   if (isUser) {
@@ -30,8 +25,8 @@ const createUser = async (payload: Partial<IUser>) => {
   const newUser = new User({
     email,
     password: hashedPassword,
-    profileImage,
-    auths: [authUser],
+    profile_picture,
+    auth_providers: [authUser],
     ...rest,
   });
 
@@ -151,7 +146,7 @@ const userUpdateService = async (
 
   // Prevent certain fields update by non-Admin users
   // if (
-  //   payload?.userStatus !== undefined ||
+  //   payload?.UserStatus !== undefined ||
   //   payload?.isDeleted !== undefined ||
   //   payload?.isVerified !== undefined
   // ) {

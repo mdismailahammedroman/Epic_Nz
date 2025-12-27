@@ -19,7 +19,7 @@ const router = Router();
 // POST request to register a new user
 router.post(
   "/register", // Endpoint for user registration
-  multerUpload.single("picture"), // Middleware to handle file upload
+  multerUpload.single("profile_picture"), // Middleware to handle file upload
   userController.userRegister // Controller function to handle user registration
 );
 
