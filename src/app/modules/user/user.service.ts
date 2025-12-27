@@ -7,6 +7,7 @@ import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import User from "./user.model";
+import { getPlaceName } from "../../utils/getLocation";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, profile_picture, ...rest } = payload;
@@ -50,17 +51,30 @@ const getMeService = async (userId: string) => {
 
     {
       $project: {
-        password: 0,
-        interests: 0,
+        email: 1,
+        full_name: 1,
+        location: 1, // Include location
+        interest: 1,
       },
     },
   ]);
 
-  if (!user) {
+  if (!user || user.length === 0) {
     throw new AppError(404, "User not found");
   }
 
-  return user;
+  const userData = user[0]; // Extract the first user (since it's an array)
+
+  // If the user has a location, fetch the place name
+  if (userData.location && userData.location.lat && userData.location.long) {
+    const placeName = await getPlaceName(
+      userData.location.lat,
+      userData.location.long
+    );
+    userData.location.placeName = placeName;
+  }
+
+  return userData;
 };
 
 const getProfileService = async (userId: string) => {
@@ -68,12 +82,18 @@ const getProfileService = async (userId: string) => {
     throw new AppError(400, "User ID is required");
   }
 
+  // Fetch user from the database, excluding password and auths for security
   const user = await User.findById(userId).select("-password -auths");
 
   if (!user) {
     throw new AppError(404, "User not found");
   }
-  return {};
+
+  return {
+    email: user.email,
+    full_name: user.full_name,
+    location: user.location?.placeName || "No place name available",
+  };
 };
 
 const getAllUserService = async (query: Record<string, string>) => {
