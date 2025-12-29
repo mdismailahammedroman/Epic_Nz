@@ -63,12 +63,76 @@ const getAllActivities = async (query: Record<string, string>) => {
 };
 
 const getHikes = async (query: Record<string, string>) => {
-  const hikeQuery = await Location.find({ category: CategoryEnum.campgrounds });
-  return { data: hikeQuery };
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'Hikes' })
+    category: CategoryEnum.Hikes, // Force category to 'Hikes'
+  })
+    .filter() // Apply filtering based on query params
+    .sort()
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+const getEpicPhotoSpots = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'Hikes' })
+    category: CategoryEnum.epicPhotoSpots, // Force category to 'Hikes'
+  })
+    .filter() // Apply filtering based on query params
+    .sort() // Apply sorting if provided
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+const getCampgrounds = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'campgrounds' })
+    category: CategoryEnum.campgrounds, // Force category to 'campgrounds'
+  })
+    .filter() // Apply filtering based on query params
+    .sort() // Apply sorting if provided
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+const getFreedomCampingLocations = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'Hikes' })
+    category: CategoryEnum.freedomCampingLocations, // Force category to 'Hikes'
+  })
+    .filter() // Apply filtering based on query params
+    .sort() // Apply sorting if provided
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+
+const locationDetailsById = async (locationId: string) => {
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(404, "Location not found");
+  }
+  return location;
 };
 
 export const locationServices = {
   submitLocation,
   getAllActivities,
   getHikes,
+  getCampgrounds,
+  getFreedomCampingLocations,
+  getEpicPhotoSpots,
+  locationDetailsById,
 };

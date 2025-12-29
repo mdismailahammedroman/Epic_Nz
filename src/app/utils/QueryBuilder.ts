@@ -152,16 +152,23 @@ export class QueryBuilder<T> {
   }
 
   // GET META DATA (for pagination)
+  // utils/QueryBuilder.ts
+
   async getMeta() {
     const page = Number(this.query.page) || 1;
     const limit = Number(this.query.limit) || 10;
-    const totalDocuments = await this.queryModel.model.countDocuments();
-    const totalPage = Math.ceil(totalDocuments / limit);
+
+    // 1. Get the filter object currently applied to your queryModel
+    const filter = this.queryModel.getFilter();
+
+    // 2. Count ONLY the documents matching those filters
+    const total = await this.queryModel.model.countDocuments(filter);
+    const totalPage = Math.ceil(total / limit);
 
     return {
       page,
       limit,
-      total: totalDocuments,
+      total,
       totalPage,
     };
   }

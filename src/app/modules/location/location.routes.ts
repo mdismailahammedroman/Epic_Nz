@@ -19,4 +19,24 @@ locationRouter.get(
   locationController.getAllActivities
 );
 locationRouter.get("/hikes", checkAuth(Role.USER), locationController.getHikes);
+locationRouter.get(
+  "/campgrounds",
+  checkAuth(Role.USER),
+  locationController.getCampgrounds
+);
+locationRouter.get(
+  "/freedom-camping-locations",
+  checkAuth(Role.USER),
+  locationController.getFreedomCampingLocations
+);
+locationRouter.get(
+  "/epic-photo-spots",
+  checkAuth(Role.USER),
+  locationController.getEpicPhotoSpots
+);
+locationRouter.get(
+  "/:locationId",
+  checkAuth(Role.USER),
+  locationController.locationDetailsById
+);
 export { locationRouter };

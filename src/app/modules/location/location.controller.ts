@@ -50,13 +50,63 @@ const getHikes = CatchAsync(async (req: Request, res: Response) => {
   const query = req.query as Record<string, string>;
   const hikesData = await locationServices.getHikes(query);
 
-  console.log("Hikes Data:", hikesData.data); // Log to verify the data
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Hikes locations retrieved successfully",
+    meta: hikesData.meta,
+    data: hikesData.data,
+  });
+});
+const getFreedomCampingLocations = CatchAsync(
+  async (req: Request, res: Response) => {
+    const query = req.query as Record<string, string>;
+    const FreedomCampingLocations =
+      await locationServices.getFreedomCampingLocations(query);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Hikes locations retrieved successfully",
+      data: FreedomCampingLocations.data,
+      meta: FreedomCampingLocations.meta,
+    });
+  }
+);
+const getCampgrounds = CatchAsync(async (req: Request, res: Response) => {
+  const query = req.query as Record<string, string>;
+  const Campgrounds = await locationServices.getCampgrounds(query);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "Hikes locations retrieved successfully",
-    data: hikesData.data,
+    data: Campgrounds.data,
+    meta: Campgrounds.meta,
+  });
+});
+const getEpicPhotoSpots = CatchAsync(async (req: Request, res: Response) => {
+  const query = req.query as Record<string, string>;
+  const EpicPhotoSpotsData = await locationServices.getEpicPhotoSpots(query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Hikes locations retrieved successfully",
+    data: EpicPhotoSpotsData.data,
+    meta: EpicPhotoSpotsData.meta,
+  });
+});
+const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const locationDetails = await locationServices.locationDetailsById(
+    locationId
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location details retrieved successfully",
+    data: locationDetails,
   });
 });
 
@@ -64,4 +114,8 @@ export const locationController = {
   submitLocation,
   getAllActivities,
   getHikes,
+  getEpicPhotoSpots,
+  getFreedomCampingLocations,
+  getCampgrounds,
+  locationDetailsById,
 };
