@@ -11,59 +11,53 @@ import { sendResponse } from "../../utils/SendResponse";
 import { setAuthCookie } from "../../utils/SetCookies";
 import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
-import axios from "axios";
-
-const getPlaceName = async (lat: number, long: number) => {
-  try {
-    const response = await axios.get(
-      `https://us1.locationiq.com/v1/reverse.php?key=${envVar.LOCATIONIQ_API_KEY}&lat=${lat}&lon=${long}&format=json`
-    );
-    if (response.data) {
-      // Extract the address from the response
-      const placeName = response.data.display_name; // Example: "New York, NY, USA"
-      return placeName;
-    } else {
-      throw new Error("Unable to get the place name");
-    }
-  } catch (error: any) {
-    console.error("Error in geocoding:", error);
-    throw new Error("Error in geocoding: " + error.message);
-  }
-};
+import { getPlaceName } from "../../utils/getLocation";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) return next(err);
-
       if (!user) {
         return next(new AppError(StatusCodes.FORBIDDEN, info.message));
       }
 
-      // Capture location data (latitude, longitude) from the request body
+      // Initialize placeName variable
+      let placeName = "";
+
+      // Get latitude and longitude from the request body
       const { latitude, longitude } = req.body;
 
       if (latitude && longitude) {
         try {
-          // Get the place name using reverse geocoding
-          const placeName = await getPlaceName(latitude, longitude);
-          user.location = { lat: latitude, long: longitude, placeName };
-          await user.save();
-          console.log(
-            `User's location: Latitude: ${latitude}, Longitude: ${longitude}, Place Name: ${placeName}`
-          );
+          // Call the getPlaceName function to fetch the place name using latitude and longitude
+          placeName = await getPlaceName(latitude, longitude);
+
+          // Check if placeName is valid before assigning it to the user
+          if (placeName) {
+            user.location = { lat: latitude, long: longitude, placeName };
+            await user.save();
+            console.log("User's location:", user.location); // Log the saved location
+          } else {
+            console.error(
+              "Place name not found for coordinates:",
+              latitude,
+              longitude
+            );
+          }
         } catch (error) {
           console.error("Error getting place name:", error);
         }
+      } else {
+        console.log("No latitude or longitude provided.");
       }
 
-      // Generate tokens for the user
+      // Generate access and refresh tokens for the user
       const userTokens = createUserTokens(user);
 
-      // Set auth cookies with the user tokens
+      // Set authentication cookies with the user tokens
       setAuthCookie(res, userTokens);
 
-      // Send response with the user tokens and place name in the data object
+      // Send response with the user tokens and location data (placeName)
       sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
@@ -71,7 +65,7 @@ const credentialLogin = CatchAsync(
         data: {
           accessToken: userTokens.accessToken,
           refreshToken: userTokens.refreshToken,
-          location: user.location, // Include location and place name
+          location: placeName, // Ensure the placeName is included in the response
         },
       });
     })(req, res, next);

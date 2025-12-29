@@ -1,30 +1,67 @@
-import { Schema, model } from "mongoose";
-import { ILocation } from "./location.interface"; // Assuming the interface is in location.interface.ts
+import mongoose, { model } from "mongoose";
+import { CategoryEnum, ILocation } from "./location.interface";
 
-const locationSchema = new Schema<ILocation>({
-  user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  name: { type: String, required: true },
-  category: {
-    type: String,
-    enum: ["epic_photo_spots", "hike", "campground", "freedom_camping"],
-    required: true,
-  },
-  coordinates: {
-    type: { type: String, default: "Point" }, // 'Point' type for 2dsphere index
-    coordinates: { type: [Number], required: true }, // [longitude, latitude]
-  },
-  description: { type: String, required: true },
-  image_url: { type: String, required: true },
-  status: {
-    type: String,
-    enum: ["PENDING", "APPROVED", "REJECTED"],
-    default: "PENDING",
-  },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
-});
+const { Schema } = mongoose;
 
-// Create geospatial index for the coordinates field
+const locationSchema = new Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Referencing the User model
+    },
+    placeName: {
+      type: String,
+    },
+    imageUrl: {
+      type: String,
+      required: true, // Assuming an image is uploaded
+    },
+    category: {
+      type: String,
+      enum: Object.values(CategoryEnum),
+      required: true,
+    },
+    // Create geospatial index for the coordinates field
+    coordinates: {
+      type: { type: String, default: "Point" }, // 'Point' type for 2dsphere index
+      coordinates: { type: [Number] }, // [longitude, latitude]
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "PENDING",
+    },
+    address: {
+      type: String,
+    },
+    description: {
+      type: String,
+    },
+
+    AI_Predictions: {
+      type: Object, // Store AI-generated data like "Epic Rating" or forecasts
+    },
+    weatherInfo: {
+      type: Object, // Store weather information
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    approvedByAdmin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin", // Referencing the Admin model (optional)
+    },
+  },
+  {
+    timestamps: true, // Automatically add createdAt and updatedAt fields
+  }
+);
+
 locationSchema.index({ coordinates: "2dsphere" });
 
 const Location = model<ILocation>("Location", locationSchema);

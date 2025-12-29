@@ -11,22 +11,20 @@ export class QueryBuilder<T> {
   }
 
   // CASE SENSITIVE FILTERING
-  filter() {
-    // Example: only apply filtering if there's a query string to filter on
+  filter(): this {
+    if (this.query.category) {
+      this.queryModel = this.queryModel.find({
+        category: this.query.category, // Filter by category
+      });
+    }
+
     if (this.query.name) {
       this.queryModel = this.queryModel.find({
-        name: { $regex: this.query.name, $options: "i" }, // Case-insensitive search
+        name: { $regex: this.query.name, $options: "i" }, // Case-insensitive name search
       });
     }
 
-    // Ensure there are other filters or conditions applied as needed, e.g., active users only
-    if (this.query.status) {
-      this.queryModel = this.queryModel.find({
-        status: this.query.status, // Example status filter
-      });
-    }
-
-    return this; // Chainable
+    return this;
   }
 
   // FILTER BY DATE RANGE (e.g., upcoming events within a certain number of days)
@@ -154,16 +152,23 @@ export class QueryBuilder<T> {
   }
 
   // GET META DATA (for pagination)
+  // utils/QueryBuilder.ts
+
   async getMeta() {
     const page = Number(this.query.page) || 1;
     const limit = Number(this.query.limit) || 10;
-    const totalDocuments = await this.queryModel.model.countDocuments();
-    const totalPage = Math.ceil(totalDocuments / limit);
+
+    // 1. Get the filter object currently applied to your queryModel
+    const filter = this.queryModel.getFilter();
+
+    // 2. Count ONLY the documents matching those filters
+    const total = await this.queryModel.model.countDocuments(filter);
+    const totalPage = Math.ceil(total / limit);
 
     return {
       page,
       limit,
-      total: totalDocuments,
+      total,
       totalPage,
     };
   }

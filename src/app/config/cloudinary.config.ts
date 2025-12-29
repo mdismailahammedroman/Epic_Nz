@@ -14,7 +14,7 @@ cloudinary.config({
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
   fileName: string
-): Promise<UploadApiResponse | undefined> => {
+): Promise<UploadApiResponse> => {
   try {
     return new Promise((resolve, reject) => {
       const public_id = `${fileName}-${Date.now()}`;
@@ -26,21 +26,21 @@ export const uploadBufferToCloudinary = async (
         .upload_stream(
           {
             resource_type: "auto",
-            public_id: public_id,
-            folder: "pdf", // You can change the folder name based on your use case
+            public_id,
+            folder: "locations", // A folder specifically for location images
           },
           (error, result) => {
-            if (error) {
-              return reject(error);
-            }
-            resolve(result);
+            if (error)
+              return reject(
+                new AppError(500, "Cloudinary upload failed", error.message)
+              );
+            resolve(result as UploadApiResponse);
           }
         )
         .end(buffer);
     });
   } catch (error: any) {
-    console.log(error);
-    throw new AppError(401, `Error uploading file ${error.message}`);
+    throw new AppError(500, `Error uploading file: ${error.message}`);
   }
 };
 

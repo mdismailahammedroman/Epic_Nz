@@ -46,13 +46,17 @@ const getMe = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const getProfile = CatchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user as JwtPayload;
+  const { userId } = req.user as JwtPayload; // Extract userId from the JWT payload
+
+  // Get the profile and location data from the service
   const result = await userServices.getProfileService(userId);
+
+  // Send the response with user data and location (including placeName)
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "User profile fetched successful!",
-    data: result,
+    message: "User profile fetched successfully!",
+    data: result, // This will include email, full name, and location with placeName
   });
 });
 

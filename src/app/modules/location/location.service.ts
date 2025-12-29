@@ -1,74 +1,138 @@
-import axios from "axios";
-
-import { envVar } from "../../config/envVar";
-import { JwtPayload } from "jsonwebtoken";
+import { Query } from "mongoose";
 import Location from "./location.model";
 
-// Fetch all locations, optionally filtered by category
-const getLocations = async (category?: string) => {
-  const filter = category ? { type: category } : {}; // Ensure we're filtering by the 'type' field in your Location schema
-  console.log("Location Filter:", filter); // Log the filter being applied
-  const locations = await Location.find(filter); // Fetch locations based on the filter
-  console.log("Fetched Locations:", locations); // Log the fetched locations
-  return locations;
-};
+import { getPlaceName } from "../../utils/getLocation";
 
-// Get a location's details by its ID
+import AppError from "../../errorHelper/AppError";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { CategoryEnum } from "./location.interface";
 
-const saveLocation = async (userId: string, locationId: string) => {
-  // Convert string IDs to ObjectId using mongoose.Types.ObjectId
-  // const userObjectId = mongoose.Types.ObjectId(userId); // Convert userId to ObjectId
-  // const locationObjectId = mongoose.Types.ObjectId(locationId); // Convert locationId to ObjectId
-  // // Find the user by userId (now correctly treated as ObjectId)
-  // const user = await User.findById(userObjectId);
-  // if (!user) throw new Error("User not found");
-  // // Ensure savedLocations is initialized if undefined
-  // user.savedLocations = user.savedLocations || [];
-  // // Check if the location is already saved
-  // if (!user.savedLocations.includes(locationObjectId)) {
-  //   user.savedLocations.push(locationObjectId); // Add locationId (as ObjectId) to savedLocations
-  //   await user.save(); // Save updated user data
-  //   return { message: "Location saved successfully" };
-  // }
-  // return { message: "Location is already saved" };
-};
-
-// Submit a new location for admin approval
-const submitNewLocation = async (
-  userId: JwtPayload, // The userId from the JWT payload
-  name: string,
-  coordinates: { lat: number; lon: number },
-  description: string,
-  photos: string[]
+const submitLocation = async (
+  userId: string,
+  latitude: number,
+  longitude: number,
+  imageUrl: string,
+  categoryName: string // New parameter
 ) => {
-  // Create a new location document
-  const newLocation = new Location({
-    userId: userId._id, // Save the userId as ObjectId
-    name,
-    coordinates,
-    description,
-    photos,
-    status: "Pending", // Submitted for admin approval
-  });
-  console.log("New Location:", newLocation);
-};
+  const lat = Number(latitude);
+  const lon = Number(longitude);
 
-// Fetch weather data using OpenWeather API
-const fetchWeather = async (lat: string, lon: string) => {
-  const apiKey = envVar.OPENWEATHER_API_KEY; // Use your OpenWeather API key
-  const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
-
-  try {
-    const response = await axios.get(weatherUrl); // Make API call to fetch weather data
-    return response.data; // Return weather data
-  } catch (error) {
-    throw new Error("Error fetching weather data");
+  if (isNaN(lat) || isNaN(lon)) {
+    throw new AppError(400, "Invalid coordinates provided");
   }
-};
-export const locationServices = {
-  getLocations,
 
-  saveLocation,
-  submitNewLocation,
-  fetchWeather,
+  let placeName = "";
+  try {
+    placeName = await getPlaceName(lat, lon);
+  } catch (error) {
+    placeName = "Unknown Location";
+  }
+
+  const newLocation = new Location({
+    userId: userId, // Use 'userId' to match your schema
+    imageUrl: imageUrl,
+
+    placeName: placeName,
+    coordinates: {
+      type: "Point",
+      coordinates: [lon, lat],
+    },
+    // Use the category passed from form-data or a default
+    category: categoryName || CategoryEnum.epicPhotoSpots,
+    status: "PENDING",
+  });
+
+  await newLocation.save();
+  return newLocation;
+};
+
+const getAllActivities = async (query: Record<string, string>) => {
+  const locationQuery = new QueryBuilder(Location.find(), query)
+    .filter()
+    .category()
+    .sort()
+    .paginate(); // Apply skip and limit here
+
+  const result = await locationQuery.build();
+  const meta = await locationQuery.getMeta();
+
+  return {
+    meta,
+    result,
+  };
+};
+
+const getHikes = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'Hikes' })
+    category: CategoryEnum.Hikes, // Force category to 'Hikes'
+  })
+    .filter() // Apply filtering based on query params
+    .sort()
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+const getEpicPhotoSpots = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'Hikes' })
+    category: CategoryEnum.epicPhotoSpots, // Force category to 'Hikes'
+  })
+    .filter() // Apply filtering based on query params
+    .sort() // Apply sorting if provided
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+const getCampgrounds = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'campgrounds' })
+    category: CategoryEnum.campgrounds, // Force category to 'campgrounds'
+  })
+    .filter() // Apply filtering based on query params
+    .sort() // Apply sorting if provided
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+const getFreedomCampingLocations = async (query: Record<string, string>) => {
+  const hikeQuery = new QueryBuilder(Location.find(), {
+    ...query, // Merge query params (e.g., { category: 'Hikes' })
+    category: CategoryEnum.freedomCampingLocations, // Force category to 'Hikes'
+  })
+    .filter() // Apply filtering based on query params
+    .sort() // Apply sorting if provided
+    .paginate(); // Apply pagination
+
+  const data = await hikeQuery.build(); // Build and execute the query
+  const meta = await hikeQuery.getMeta(); // Get pagination metadata
+
+  return { data, meta };
+};
+
+const locationDetailsById = async (locationId: string) => {
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(404, "Location not found");
+  }
+  return location;
+};
+
+export const locationServices = {
+  submitLocation,
+  getAllActivities,
+  getHikes,
+  getCampgrounds,
+  getFreedomCampingLocations,
+  getEpicPhotoSpots,
+  locationDetailsById,
 };

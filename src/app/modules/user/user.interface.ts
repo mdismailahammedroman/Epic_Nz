@@ -41,6 +41,7 @@ export interface IAuthProvider {
 export interface ICoord {
   lat: number;
   long: number;
+  placeName?: string;
 }
 
 // ===== Interfaces =====
