@@ -1,74 +1,71 @@
-import axios from "axios";
-
-import { envVar } from "../../config/envVar";
-import { JwtPayload } from "jsonwebtoken";
 import Location from "./location.model";
 
-// Fetch all locations, optionally filtered by category
-const getLocations = async (category?: string) => {
-  const filter = category ? { type: category } : {}; // Ensure we're filtering by the 'type' field in your Location schema
-  console.log("Location Filter:", filter); // Log the filter being applied
-  const locations = await Location.find(filter); // Fetch locations based on the filter
-  console.log("Fetched Locations:", locations); // Log the fetched locations
-  return locations;
-};
+import { getPlaceName } from "../../utils/getLocation";
 
-// Get a location's details by its ID
+import AppError from "../../errorHelper/AppError";
+import { category } from "./location.interface";
 
-const saveLocation = async (userId: string, locationId: string) => {
-  // Convert string IDs to ObjectId using mongoose.Types.ObjectId
-  // const userObjectId = mongoose.Types.ObjectId(userId); // Convert userId to ObjectId
-  // const locationObjectId = mongoose.Types.ObjectId(locationId); // Convert locationId to ObjectId
-  // // Find the user by userId (now correctly treated as ObjectId)
-  // const user = await User.findById(userObjectId);
-  // if (!user) throw new Error("User not found");
-  // // Ensure savedLocations is initialized if undefined
-  // user.savedLocations = user.savedLocations || [];
-  // // Check if the location is already saved
-  // if (!user.savedLocations.includes(locationObjectId)) {
-  //   user.savedLocations.push(locationObjectId); // Add locationId (as ObjectId) to savedLocations
-  //   await user.save(); // Save updated user data
-  //   return { message: "Location saved successfully" };
-  // }
-  // return { message: "Location is already saved" };
-};
+// Assuming the cloudinaryUpload is working and configured properly
 
-// Submit a new location for admin approval
-const submitNewLocation = async (
-  userId: JwtPayload, // The userId from the JWT payload
-  name: string,
-  coordinates: { lat: number; lon: number },
-  description: string,
-  photos: string[]
+// location.service.ts
+import { category as CategoryEnum } from "./location.interface"; // Rename to avoid conflict
+import { QueryBuilder } from "../../utils/QueryBuilder";
+
+const submitLocation = async (
+  userId: string,
+  latitude: number,
+  longitude: number,
+  imageUrl: string,
+  categoryName: string // New parameter
 ) => {
-  // Create a new location document
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+
+  if (isNaN(lat) || isNaN(lon)) {
+    throw new AppError(400, "Invalid coordinates provided");
+  }
+
+  let placeName = "";
+  try {
+    placeName = await getPlaceName(lat, lon);
+  } catch (error) {
+    placeName = "Unknown Location";
+  }
+
   const newLocation = new Location({
-    userId: userId._id, // Save the userId as ObjectId
-    name,
-    coordinates,
-    description,
-    photos,
-    status: "Pending", // Submitted for admin approval
+    userId: userId, // Use 'userId' to match your schema
+    imageUrl: imageUrl,
+
+    placeName: placeName,
+    coordinates: {
+      type: "Point",
+      coordinates: [lon, lat],
+    },
+    // Use the category passed from form-data or a default
+    category: categoryName || CategoryEnum.epicPhotoSpots,
+    status: "PENDING",
   });
-  console.log("New Location:", newLocation);
+
+  await newLocation.save();
+  return newLocation;
 };
 
-// Fetch weather data using OpenWeather API
-const fetchWeather = async (lat: string, lon: string) => {
-  const apiKey = envVar.OPENWEATHER_API_KEY; // Use your OpenWeather API key
-  const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+const getAllLocations = async (query: Record<string, string>) => {
+  const locationQuery = new QueryBuilder(Location.find(), query)
+    .filter()
+    .category()
+    .sort()
+    .paginate(); // Apply skip and limit here
 
-  try {
-    const response = await axios.get(weatherUrl); // Make API call to fetch weather data
-    return response.data; // Return weather data
-  } catch (error) {
-    throw new Error("Error fetching weather data");
-  }
+  const result = await locationQuery.build();
+  const meta = await locationQuery.getMeta();
+
+  return {
+    meta,
+    result,
+  };
 };
 export const locationServices = {
-  getLocations,
-
-  saveLocation,
-  submitNewLocation,
-  fetchWeather,
+  submitLocation,
+  getAllLocations,
 };
