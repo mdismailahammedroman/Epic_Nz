@@ -18,4 +18,9 @@ locationRouter.get(
   checkAuth(Role.USER),
   locationController.getAllLocations
 );
+locationRouter.get(
+  "/hikes",
+  checkAuth(Role.USER),
+  locationController.getHikesLocations
+);
 export { locationRouter };

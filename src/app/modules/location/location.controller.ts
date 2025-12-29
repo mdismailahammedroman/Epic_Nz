@@ -44,7 +44,20 @@ const getAllLocations = CatchAsync(async (req: Request, res: Response) => {
     data: locationsData,
   });
 });
+
+const getHikesLocations = CatchAsync(async (req: Request, res: Response) => {
+  const QueryBuilder = req.query as Record<string, string>;
+  const hikesLocations = await locationServices.getHikesLocations(QueryBuilder);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Hikes locations retrieved successfully",
+    data: hikesLocations,
+  });
+});
+
 export const locationController = {
-  submitLocation, 
+  submitLocation,
   getAllLocations,
+  getHikesLocations,
 };

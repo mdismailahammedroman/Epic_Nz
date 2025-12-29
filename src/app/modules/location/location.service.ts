@@ -1,3 +1,4 @@
+import { Query } from "mongoose";
 import Location from "./location.model";
 
 import { getPlaceName } from "../../utils/getLocation";
@@ -65,7 +66,18 @@ const getAllLocations = async (query: Record<string, string>) => {
     result,
   };
 };
+
+const getHikesLocations = async (Query: Record<string, string>) => {
+  const locationQuery = new QueryBuilder(
+    Location.find({ category: CategoryEnum.Hikes }),
+    Query
+  );
+  const hikesLocations = await locationQuery.build();
+
+  return hikesLocations;
+};
 export const locationServices = {
   submitLocation,
   getAllLocations,
+  getHikesLocations,
 };
