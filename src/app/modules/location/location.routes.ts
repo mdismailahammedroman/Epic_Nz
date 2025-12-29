@@ -16,11 +16,7 @@ locationRouter.post(
 locationRouter.get(
   "/all",
   checkAuth(Role.USER),
-  locationController.getAllLocations
+  locationController.getAllActivities
 );
-locationRouter.get(
-  "/hikes",
-  checkAuth(Role.USER),
-  locationController.getHikesLocations
-);
+locationRouter.get("/hikes", checkAuth(Role.USER), locationController.getHikes);
 export { locationRouter };

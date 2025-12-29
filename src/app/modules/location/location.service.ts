@@ -4,13 +4,8 @@ import Location from "./location.model";
 import { getPlaceName } from "../../utils/getLocation";
 
 import AppError from "../../errorHelper/AppError";
-import { category } from "./location.interface";
-
-// Assuming the cloudinaryUpload is working and configured properly
-
-// location.service.ts
-import { category as CategoryEnum } from "./location.interface"; // Rename to avoid conflict
 import { QueryBuilder } from "../../utils/QueryBuilder";
+import { CategoryEnum } from "./location.interface";
 
 const submitLocation = async (
   userId: string,
@@ -51,7 +46,7 @@ const submitLocation = async (
   return newLocation;
 };
 
-const getAllLocations = async (query: Record<string, string>) => {
+const getAllActivities = async (query: Record<string, string>) => {
   const locationQuery = new QueryBuilder(Location.find(), query)
     .filter()
     .category()
@@ -67,17 +62,13 @@ const getAllLocations = async (query: Record<string, string>) => {
   };
 };
 
-const getHikesLocations = async (Query: Record<string, string>) => {
-  const locationQuery = new QueryBuilder(
-    Location.find({ category: CategoryEnum.Hikes }),
-    Query
-  );
-  const hikesLocations = await locationQuery.build();
-
-  return hikesLocations;
+const getHikes = async (query: Record<string, string>) => {
+  const hikeQuery = await Location.find({ category: CategoryEnum.campgrounds });
+  return { data: hikeQuery };
 };
+
 export const locationServices = {
   submitLocation,
-  getAllLocations,
-  getHikesLocations,
+  getAllActivities,
+  getHikes,
 };

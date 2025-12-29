@@ -1,5 +1,5 @@
 import mongoose, { model } from "mongoose";
-import { ILocation } from "./location.interface";
+import { CategoryEnum, ILocation } from "./location.interface";
 
 const { Schema } = mongoose;
 
@@ -18,6 +18,7 @@ const locationSchema = new Schema(
     },
     category: {
       type: String,
+      enum: Object.values(CategoryEnum),
       required: true,
     },
     // Create geospatial index for the coordinates field

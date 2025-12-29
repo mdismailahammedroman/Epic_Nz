@@ -11,22 +11,20 @@ export class QueryBuilder<T> {
   }
 
   // CASE SENSITIVE FILTERING
-  filter() {
-    // Example: only apply filtering if there's a query string to filter on
+  filter(): this {
+    if (this.query.category) {
+      this.queryModel = this.queryModel.find({
+        category: this.query.category, // Filter by category
+      });
+    }
+
     if (this.query.name) {
       this.queryModel = this.queryModel.find({
-        name: { $regex: this.query.name, $options: "i" }, // Case-insensitive search
+        name: { $regex: this.query.name, $options: "i" }, // Case-insensitive name search
       });
     }
 
-    // Ensure there are other filters or conditions applied as needed, e.g., active users only
-    if (this.query.status) {
-      this.queryModel = this.queryModel.find({
-        status: this.query.status, // Example status filter
-      });
-    }
-
-    return this; // Chainable
+    return this;
   }
 
   // FILTER BY DATE RANGE (e.g., upcoming events within a certain number of days)

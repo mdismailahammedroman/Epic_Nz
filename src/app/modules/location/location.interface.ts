@@ -11,7 +11,7 @@ export enum LocationStatus {
   REJECTED = "REJECTED",
 }
 
-export enum category {
+export enum CategoryEnum {
   Hikes = "Hikes",
   epicPhotoSpots = "EPIC_PHOTO_SPOTS",
   campgrounds = "Campgrounds",
@@ -21,7 +21,7 @@ export enum category {
 export interface ILocation {
   user_id: Types.ObjectId; // User ID associated with this location
   placeName?: string; // Name of the place
-  category: category; // Location category
+  category: CategoryEnum; // Location category
 
   coordinates: ICoordinates; // Latitude and Longitude
   address?: string; // Full address of the location

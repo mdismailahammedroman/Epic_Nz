@@ -1,3 +1,4 @@
+import { CategoryEnum } from "./location.interface";
 import { StatusCodes } from "http-status-codes";
 import { Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";
@@ -33,10 +34,10 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllLocations = CatchAsync(async (req: Request, res: Response) => {
+const getAllActivities = CatchAsync(async (req: Request, res: Response) => {
   const QueryBuilder = req.query as Record<string, string>;
 
-  const locationsData = await locationServices.getAllLocations(QueryBuilder);
+  const locationsData = await locationServices.getAllActivities(QueryBuilder);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -45,19 +46,22 @@ const getAllLocations = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getHikesLocations = CatchAsync(async (req: Request, res: Response) => {
-  const QueryBuilder = req.query as Record<string, string>;
-  const hikesLocations = await locationServices.getHikesLocations(QueryBuilder);
+const getHikes = CatchAsync(async (req: Request, res: Response) => {
+  const query = req.query as Record<string, string>;
+  const hikesData = await locationServices.getHikes(query);
+
+  console.log("Hikes Data:", hikesData.data); // Log to verify the data
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "Hikes locations retrieved successfully",
-    data: hikesLocations,
+    data: hikesData.data,
   });
 });
 
 export const locationController = {
   submitLocation,
-  getAllLocations,
-  getHikesLocations,
+  getAllActivities,
+  getHikes,
 };
