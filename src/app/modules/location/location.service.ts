@@ -143,7 +143,15 @@ const saveLocationForUser = async (userId: string, locationId: string) => {
   await user.save();
   return;
 };
-
+// POST /locations/{id}/share – Share a location with others via deep link.
+const shareLocation = async (locationId: string) => {
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(404, "Location not found");
+  }
+  const deepLink = `epicnz://location/${locationId}`;
+  return deepLink;
+};
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -153,4 +161,5 @@ export const locationServices = {
   getEpicPhotoSpots,
   locationDetailsById,
   saveLocationForUser,
+  shareLocation,
 };

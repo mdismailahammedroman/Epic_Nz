@@ -121,6 +121,19 @@ const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+// POST /locations/{id}/share – Share a location with others via deep link.
+const shareLocation = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const deepLink = await locationServices.shareLocation(locationId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location shared successfully",
+    data: { deepLink },
+  });
+});
+
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -130,4 +143,5 @@ export const locationController = {
   getCampgrounds,
   locationDetailsById,
   saveLocationForUser,
+  shareLocation,
 };
