@@ -6,6 +6,7 @@ import { getPlaceName } from "../../utils/getLocation";
 import AppError from "../../errorHelper/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { CategoryEnum } from "./location.interface";
+import User from "../user/user.model";
 
 const submitLocation = async (
   userId: string,
@@ -127,6 +128,22 @@ const locationDetailsById = async (locationId: string) => {
   return location;
 };
 
+const saveLocationForUser = async (userId: string, locationId: string) => {
+  // Implementation to save location for user.
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  user.savedLocations = user.savedLocations || [];
+  if (user.savedLocations.includes(locationId)) {
+    throw new AppError(400, "Location already saved for user");
+  }
+  user.savedLocations.push(locationId);
+  await user.save();
+  return;
+};
+
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -135,4 +152,5 @@ export const locationServices = {
   getFreedomCampingLocations,
   getEpicPhotoSpots,
   locationDetailsById,
+  saveLocationForUser,
 };

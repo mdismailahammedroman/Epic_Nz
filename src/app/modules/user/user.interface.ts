@@ -81,7 +81,7 @@ export interface IUser {
   is_verified: boolean;
   isDeleted: boolean;
   subscription: IUserSubscription;
-
+  savedLocations?: string[]; // Array of Location IDs
   created_at: Date;
   updated_at: Date;
 }

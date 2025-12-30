@@ -131,6 +131,12 @@ const userSchema = new Schema<IUser>(
         default: true,
       },
     },
+    savedLocations: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Location",
+      },
+    ],
   },
   {
     timestamps: {

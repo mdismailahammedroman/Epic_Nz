@@ -39,4 +39,11 @@ locationRouter.get(
   checkAuth(Role.USER),
   locationController.locationDetailsById
 );
+
+// save-location
+locationRouter.post(
+  "/:locationId/save",
+  checkAuth(Role.USER),
+  locationController.saveLocationForUser
+);
 export { locationRouter };

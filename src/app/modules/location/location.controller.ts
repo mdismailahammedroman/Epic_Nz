@@ -6,6 +6,7 @@ import { sendResponse } from "../../utils/SendResponse";
 import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
+import { send } from "node:process";
 
 // location.controller.ts
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
@@ -109,7 +110,17 @@ const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
     data: locationDetails,
   });
 });
-
+const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
+  const { locationId } = req.params;
+  const result = await locationServices.saveLocationForUser(userId, locationId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location saved for user successfully",
+    data: result,
+  });
+});
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -118,4 +129,5 @@ export const locationController = {
   getFreedomCampingLocations,
   getCampgrounds,
   locationDetailsById,
+  saveLocationForUser,
 };
