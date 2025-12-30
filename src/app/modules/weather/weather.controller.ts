@@ -4,25 +4,18 @@ import { weatherServices } from "./weather.service";
 import { sendResponse } from "../../utils/SendResponse";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";
-
-// Controller function to handle the weather request
+import Location from "../location/location.model";
 const weatherInfo = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // Extract latitude and longitude from query parameters
-    const { latitude, longitude } = req.query; // Using req.query instead of req.params
-
-    // Check if latitude and longitude are provided
+    const { latitude, longitude } = req.query as Record<string, string>;
     if (!latitude || !longitude) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
         "Latitude and longitude are required"
       );
     }
-
-    // Ensure latitude and longitude are numbers
     const lat = Number(latitude);
     const lon = Number(longitude);
-
     if (isNaN(lat) || isNaN(lon)) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
@@ -30,11 +23,8 @@ const weatherInfo = CatchAsync(
       );
     }
 
-    // Fetch the weather data using the weather service
     const result = await weatherServices.weatherInfo(lat, lon);
-    console.log("result weather:", result);
 
-    // Send the weather data in the response
     sendResponse(res, {
       success: true,
       message: "Weather data fetched successfully",
@@ -44,6 +34,27 @@ const weatherInfo = CatchAsync(
   }
 );
 
+const weatherInfoByLocationId = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id: locationId } = req.params; // Accessing 'id' from URL
+
+    if (!locationId) {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Location ID is required");
+    }
+
+    const weatherData = await weatherServices.weatherInfoByLocationId(
+      locationId
+    );
+    sendResponse(res, {
+      success: true,
+      message: "Weather data fetched successfully",
+      statusCode: StatusCodes.OK,
+      data: weatherData,
+    });
+  }
+);
+
 export const weatherController = {
   weatherInfo,
+  weatherInfoByLocationId,
 };

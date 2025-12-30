@@ -15,26 +15,34 @@ router.post(
   validateRequest(LocationValidation.createLocationValidationSchema),
   locationController.submitLocation
 );
-router.get("/all", checkAuth(Role.USER), locationController.getAllActivities);
-router.get("/hikes", checkAuth(Role.USER), locationController.getHikes);
+router.get(
+  "/all",
+  checkAuth(...Object.values(Role)),
+  locationController.getAllActivities
+);
+router.get(
+  "/hikes",
+  checkAuth(...Object.values(Role)),
+  locationController.getHikes
+);
 router.get(
   "/campgrounds",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.getCampgrounds
 );
 router.get(
   "/freedom-camping-locations",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.getFreedomCampingLocations
 );
 router.get(
   "/epic-photo-spots",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.getEpicPhotoSpots
 );
 router.get(
   "/:locationId",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.locationDetailsById
 );
 

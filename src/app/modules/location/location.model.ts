@@ -38,8 +38,8 @@ const locationSchema = new Schema(
     },
     // Create geospatial index for the coordinates field
     coordinates: {
-      type: { type: String, default: "Point" }, // 'Point' type for 2dsphere index
-      coordinates: { type: [Number] }, // [longitude, latitude]
+      type: { type: String, default: "Point" },
+      coordinates: { type: [Number] },
     },
     status: {
       type: String,

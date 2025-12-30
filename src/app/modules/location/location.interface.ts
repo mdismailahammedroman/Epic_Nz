@@ -1,9 +1,10 @@
 import { Types } from "mongoose";
 
 interface ICoordinates {
-  latitude: number;
-  longitude: number;
+  type: "Point"; // GeoJSON point type
+  coordinates: [number, number]; // Array of [longitude, latitude]
 }
+
 export enum LocationStatus {
   PENDING = "PENDING",
   APPROVED = "APPROVED",
