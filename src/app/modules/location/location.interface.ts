@@ -19,9 +19,9 @@ export enum CategoryEnum {
 // Defining the ILocation interface for Location schema
 export interface ILocation {
   user_id: Types.ObjectId; // User ID associated with this location
-  placeName?: string; // Name of the place
+  placeAs?: string; // Name of the place
   category: CategoryEnum; // Location category
-
+  name: string;
   coordinates: ICoordinates; // Latitude and Longitude
   address?: string; // Full address of the location
   description?: string; // Optional description of the location

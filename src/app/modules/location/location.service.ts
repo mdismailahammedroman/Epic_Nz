@@ -10,6 +10,7 @@ import User from "../user/user.model";
 
 const submitLocation = async (
   userId: string,
+  name: string,
   latitude: number,
   longitude: number,
   imageUrl: string,
@@ -22,24 +23,24 @@ const submitLocation = async (
     throw new AppError(400, "Invalid coordinates provided");
   }
 
-  let placeName = "";
+  let addressName = "";
   try {
-    placeName = await getPlaceName(lat, lon);
+    addressName = await getPlaceName(lat, lon);
   } catch (error) {
-    placeName = "Unknown Location";
+    addressName = "Unknown Location";
   }
 
   const newLocation = new Location({
     userId: userId, // Use 'userId' to match your schema
     imageUrl: imageUrl,
-
-    placeName: placeName,
+    name: name,
+    address: addressName,
     coordinates: {
       type: "Point",
       coordinates: [lon, lat],
     },
     // Use the category passed from form-data or a default
-    category: categoryName || CategoryEnum.epicPhotoSpots,
+    category: categoryName || CategoryEnum,
     status: "PENDING",
   });
 

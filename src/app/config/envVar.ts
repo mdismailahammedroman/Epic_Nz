@@ -55,6 +55,7 @@ interface EnvVar {
   FACEBOOK_AUTH: FACEBOOK_TYPE;
   SESSION_SECRET: string;
   OPENWEATHER_API_KEY: string;
+  WEATHER_API_URL: string;
   LOCATIONIQ_API_KEY: string;
   GOOGLE_MAPS_API_KEY: string;
 }
@@ -92,6 +93,7 @@ const loadEnvVariables = (): EnvVar => {
     "FACEBOOK_APP_CALLBACK_URL",
     "SESSION_SECRET",
     "OPENWEATHER_API_KEY",
+    "WEATHER_API_URL",
     "LOCATIONIQ_API_KEY",
     "GOOGLE_MAPS_API_KEY",
   ];
@@ -146,6 +148,7 @@ const loadEnvVariables = (): EnvVar => {
     },
     SESSION_SECRET: process.env.SESSION_SECRET!,
     OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY!,
+    WEATHER_API_URL: process.env.WEATHER_API_URL!,
     LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY!,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY!,
   };

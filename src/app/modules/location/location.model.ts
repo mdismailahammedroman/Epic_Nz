@@ -9,6 +9,10 @@ const locationSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Referencing the User model
     },
+    name: {
+      type: String,
+      require: true,
+    },
     placeName: {
       type: String,
     },

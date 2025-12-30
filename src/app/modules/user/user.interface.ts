@@ -1,3 +1,4 @@
+import { locationController } from "./../location/location.controller";
 // ===== Enums =====
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -47,8 +48,12 @@ export interface ICoord {
 // ===== Interfaces =====
 export interface IUserPreferences {
   language: string;
-  theme: string;
-  categories: string[];
+  // theme: string;
+  // categories: string[];
+  app_notifications?: boolean;
+  email_notifications?: boolean;
+  notifications_enabled?: boolean;
+  location_access?: boolean;
 }
 interface IFile {
   fieldname: string;

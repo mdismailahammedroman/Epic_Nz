@@ -13,7 +13,7 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user as JwtPayload;
 
   // Destructure category along with coordinates
-  const { latitude, longitude, category: selectedCategory } = req.body;
+  const { name, latitude, longitude, category: selectedCategory } = req.body;
 
   if (!req.file) {
     throw new AppError(StatusCodes.BAD_REQUEST, "No image uploaded");
@@ -21,6 +21,7 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
 
   const newLocation = await locationServices.submitLocation(
     userId,
+    name,
     latitude,
     longitude,
     req.file.path,
