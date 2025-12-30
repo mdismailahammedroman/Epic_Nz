@@ -1,4 +1,3 @@
-import e from "express";
 import { Types } from "mongoose";
 
 interface ICoordinates {
@@ -27,7 +26,11 @@ export interface ILocation {
   address?: string; // Full address of the location
   description?: string; // Optional description of the location
   imageUrl: string; // URL of the uploaded image
-
+  ratings?: {
+    userId: Types.ObjectId;
+    rating: number;
+    createdAt: Date;
+  }[]; // Array of ratings
   status: LocationStatus; // Location approval status
   AI_Predictions?: string; // AI-generated data like "Epic Rating" or forecasts
   weatherInfo?: string; // Weather information

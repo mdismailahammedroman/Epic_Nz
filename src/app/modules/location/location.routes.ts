@@ -49,4 +49,11 @@ router.post(
   checkAuth(Role.USER),
   locationController.shareLocation
 );
+
+// POST /locations/{id}/rating – location adventure rating .
+router.post(
+  "/:locationId/rating",
+  checkAuth(Role.USER),
+  locationController.locationRating
+);
 export const locationRouter = router;

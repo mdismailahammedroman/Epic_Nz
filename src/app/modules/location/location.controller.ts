@@ -125,12 +125,33 @@ const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
 // POST /locations/{id}/share – Share a location with others via deep link.
 const shareLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
-  const deepLink = await locationServices.shareLocation(locationId);
+  const userId = req.user as JwtPayload;
+  const deepLink = await locationServices.shareLocation(
+    locationId,
+    userId.userId
+  );
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "Location shared successfully",
     data: { deepLink },
+  });
+});
+
+const locationRating = CatchAsync(async (req: Request, res: Response) => {
+  const userId = req.user as JwtPayload;
+  const { locationId } = req.params;
+  const { rating } = req.body;
+  const updatedLocation = await locationServices.locationRating(
+    locationId,
+    rating,
+    userId.userId
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location rating updated successfully",
+    data: updatedLocation,
   });
 });
 
@@ -144,4 +165,5 @@ export const locationController = {
   locationDetailsById,
   saveLocationForUser,
   shareLocation,
+  locationRating,
 };

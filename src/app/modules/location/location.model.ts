@@ -1,4 +1,4 @@
-import mongoose, { model } from "mongoose";
+import mongoose, { model, Types } from "mongoose";
 import { CategoryEnum, ILocation } from "./location.interface";
 
 const { Schema } = mongoose;
@@ -16,6 +16,17 @@ const locationSchema = new Schema(
       type: String,
       required: true, // Assuming an image is uploaded
     },
+    ratings: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        rating: { type: Number, min: 1, max: 5 },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+
     category: {
       type: String,
       enum: Object.values(CategoryEnum),
