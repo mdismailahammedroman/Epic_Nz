@@ -56,7 +56,7 @@ interface EnvVar {
   SESSION_SECRET: string;
   OPENWEATHER_API_KEY: string;
   LOCATIONIQ_API_KEY: string;
-  googlemapsapikey: string;
+  GOOGLE_MAPS_API_KEY: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -93,7 +93,7 @@ const loadEnvVariables = (): EnvVar => {
     "SESSION_SECRET",
     "OPENWEATHER_API_KEY",
     "LOCATIONIQ_API_KEY",
-    "googlemapsapikey",
+    "GOOGLE_MAPS_API_KEY",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -147,7 +147,7 @@ const loadEnvVariables = (): EnvVar => {
     SESSION_SECRET: process.env.SESSION_SECRET!,
     OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY!,
     LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY!,
-    googlemapsapikey: process.env.googlemapsapikey!,
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY!,
   };
 };
 

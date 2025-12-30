@@ -50,7 +50,14 @@ export interface IUserPreferences {
   theme: string;
   categories: string[];
 }
-
+interface IFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  buffer: Buffer;
+  size: number;
+}
 export interface IUserSubscription {
   plan_type: Plan;
   start_date: Date;
@@ -68,7 +75,7 @@ export interface IUser {
   email: string;
   full_name: string;
   password?: string;
-  profile_picture?: string;
+  profile_picture?: IFile | string;
 
   auth_providers: IAuthProvider[]; // 👈 added
   location?: ICoord; // 👈 added (optional)
@@ -81,7 +88,7 @@ export interface IUser {
   is_verified: boolean;
   isDeleted: boolean;
   subscription: IUserSubscription;
-
+  savedLocations?: string[]; // Array of Location IDs
   created_at: Date;
   updated_at: Date;
 }

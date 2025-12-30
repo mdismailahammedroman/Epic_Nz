@@ -22,34 +22,33 @@ const credentialLogin = CatchAsync(
       }
 
       // Initialize placeName variable
-      let placeName = "";
+      // let placeName = "";
 
-      // Get latitude and longitude from the request body
-      const { latitude, longitude } = req.body;
+      // // Get latitude and longitude from the request body
+      // const { latitude, longitude } = req.body;
 
-      if (latitude && longitude) {
-        try {
-          // Call the getPlaceName function to fetch the place name using latitude and longitude
-          placeName = await getPlaceName(latitude, longitude);
+      // if (latitude && longitude) {
+      //   try {
+      //     // Call the getPlaceName function to fetch the place name using latitude and longitude
+      //     placeName = await getPlaceName(latitude, longitude);
 
-          // Check if placeName is valid before assigning it to the user
-          if (placeName) {
-            user.location = { lat: latitude, long: longitude, placeName };
-            await user.save();
-            console.log("User's location:", user.location); // Log the saved location
-          } else {
-            console.error(
-              "Place name not found for coordinates:",
-              latitude,
-              longitude
-            );
-          }
-        } catch (error) {
-          console.error("Error getting place name:", error);
-        }
-      } else {
-        console.log("No latitude or longitude provided.");
-      }
+      //     // Check if placeName is valid before assigning it to the user
+      //     if (placeName) {
+      //       user.location = { lat: latitude, long: longitude, placeName };
+      //       await user.save();
+      //     } else {
+      //       console.error(
+      //         "Place name not found for coordinates:",
+      //         latitude,
+      //         longitude
+      //       );
+      //     }
+      //   } catch (error) {
+      //     console.error("Error getting place name:", error);
+      //   }
+      // } else {
+      //   console.log("No latitude or longitude provided.");
+      // }
 
       // Generate access and refresh tokens for the user
       const userTokens = createUserTokens(user);
@@ -65,7 +64,6 @@ const credentialLogin = CatchAsync(
         data: {
           accessToken: userTokens.accessToken,
           refreshToken: userTokens.refreshToken,
-          location: placeName, // Ensure the placeName is included in the response
         },
       });
     })(req, res, next);

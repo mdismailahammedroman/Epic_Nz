@@ -4,23 +4,13 @@ import { multerUpload } from "../../config/multer.config";
 import { checkAuth } from "../../middleware/checkAuth.middleware";
 import { Role } from "./user.interface";
 
-// '/registration',
-// '/get_me',
-// '/profile/:userId',
-// '/',getAllUser
-// '/:userId',
-// '/:userId',
-
-// '/verify/:otp',
-// '/resend-otp',
-
 const router = Router();
 
-// POST request to register a new user
 router.post(
-  "/register", // Endpoint for user registration
-  multerUpload.single("profile_picture"), // Middleware to handle file upload
-  userController.userRegister // Controller function to handle user registration
+  "/register",
+
+  multerUpload.single("profile_picture"),
+  userController.userRegister
 );
 
 router.get("/get_me", checkAuth(...Object.keys(Role)), userController.getMe);

@@ -10,14 +10,15 @@ const userRegister = CatchAsync(
     const userData = req.body;
 
     // Check if a profile image was uploaded
-    let profileImage = null;
+    let profileImageUrl = null;
     if (req.file) {
-      profileImage = req.file.path; // Cloudinary URL will be saved in 'path'
+      // If file is uploaded, get the file path
+      profileImageUrl = req.file.path; // Cloudinary URL will be here
     }
 
-    // Add the profileImage to the userData if available
-    if (profileImage) {
-      userData.profileImage = profileImage;
+    // Add the profile image URL to the user data if available
+    if (profileImageUrl) {
+      userData.profile_picture = profileImageUrl; // Pass the Cloudinary URL to user data
     }
 
     // Call the service to create the user

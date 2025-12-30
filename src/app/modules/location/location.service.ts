@@ -1,11 +1,12 @@
-import { Query } from "mongoose";
+import { Types } from "mongoose";
 import Location from "./location.model";
-
+import { v4 as uuidv4 } from "uuid";
 import { getPlaceName } from "../../utils/getLocation";
 
 import AppError from "../../errorHelper/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { CategoryEnum } from "./location.interface";
+import User from "../user/user.model";
 
 const submitLocation = async (
   userId: string,
@@ -127,6 +128,108 @@ const locationDetailsById = async (locationId: string) => {
   return location;
 };
 
+const saveLocationForUser = async (userId: string, locationId: string) => {
+  // Implementation to save location for user.
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  user.savedLocations = user.savedLocations || [];
+  if (user.savedLocations.includes(locationId)) {
+    throw new AppError(400, "Location already saved for user");
+  }
+  user.savedLocations.push(locationId);
+  await user.save();
+  return;
+};
+// POST /locations/{id}/share – Share a location with others via deep link.
+const shareLocation = async (locationId: string, userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  //
+  if (!Types.ObjectId.isValid(locationId)) {
+    throw new AppError(400, "Invalid location ID format.");
+  }
+
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(404, "Location not found");
+  }
+
+  const shareLinkId = uuidv4();
+
+  const deepLink = `http://localhost:5000/api/v1/locations/${locationId}?shareId=${shareLinkId}`;
+
+  await Location.updateOne(
+    { _id: locationId },
+    {
+      $push: {
+        sharedLinks: {
+          shareLinkId: shareLinkId,
+          userId: userId,
+          createdAt: new Date(),
+        },
+      },
+    }
+  );
+
+  return {
+    deepLink,
+    message: "Location shared successfully!",
+    shareLinkId,
+  };
+};
+
+const locationRating = async (
+  locationId: string,
+  rating: number,
+  userId: string
+) => {
+  //
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  if (!Types.ObjectId.isValid(locationId)) {
+    throw new AppError(400, "Invalid location ID format.");
+  }
+
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(404, "Location not found");
+  }
+
+  if (!location.ratings) {
+    location.ratings = [];
+  }
+
+  if (rating < 1 || rating > 5) {
+    throw new AppError(400, "Rating must be between 1 and 5");
+  }
+
+  const existingRating = location.ratings.find(
+    (r) => r.userId.toString() === userId
+  );
+
+  if (existingRating) {
+    existingRating.rating = rating;
+    existingRating.createdAt = new Date();
+  } else {
+    location.ratings.push({
+      userId: new Types.ObjectId(userId),
+      rating: rating,
+      createdAt: new Date(),
+    });
+  }
+
+  await location.save();
+  return location;
+};
+
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -135,4 +238,7 @@ export const locationServices = {
   getFreedomCampingLocations,
   getEpicPhotoSpots,
   locationDetailsById,
+  saveLocationForUser,
+  shareLocation,
+  locationRating,
 };

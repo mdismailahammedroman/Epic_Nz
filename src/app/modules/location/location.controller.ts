@@ -6,6 +6,7 @@ import { sendResponse } from "../../utils/SendResponse";
 import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
+import { send } from "node:process";
 
 // location.controller.ts
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
@@ -109,6 +110,50 @@ const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
     data: locationDetails,
   });
 });
+const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
+  const { locationId } = req.params;
+  const result = await locationServices.saveLocationForUser(userId, locationId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location saved for user successfully",
+    data: result,
+  });
+});
+
+// POST /locations/{id}/share – Share a location with others via deep link.
+const shareLocation = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const userId = req.user as JwtPayload;
+  const deepLink = await locationServices.shareLocation(
+    locationId,
+    userId.userId
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location shared successfully",
+    data: { deepLink },
+  });
+});
+
+const locationRating = CatchAsync(async (req: Request, res: Response) => {
+  const userId = req.user as JwtPayload;
+  const { locationId } = req.params;
+  const { rating } = req.body;
+  const updatedLocation = await locationServices.locationRating(
+    locationId,
+    rating,
+    userId.userId
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location rating updated successfully",
+    data: updatedLocation,
+  });
+});
 
 export const locationController = {
   submitLocation,
@@ -118,4 +163,7 @@ export const locationController = {
   getFreedomCampingLocations,
   getCampgrounds,
   locationDetailsById,
+  saveLocationForUser,
+  shareLocation,
+  locationRating,
 };
