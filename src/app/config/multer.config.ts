@@ -1,9 +1,9 @@
-import multer from "multer";
-import { cloudinaryUpload } from "./cloudinary.config";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
+import { cloudinaryUpload } from "./cloudinary.config"; // Ensure Cloudinary config is correct
 
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinaryUpload,
+  cloudinary: cloudinaryUpload, // This should be the instance of Cloudinary
   params: {
     public_id: (req: any, file: Express.Multer.File) => {
       const fileName = file.originalname
@@ -18,4 +18,4 @@ const storage = new CloudinaryStorage({
   },
 });
 
-export const multerUpload = multer({ storage }); // <-- Ensure you export this
+export const multerUpload = multer({ storage }); // Ensure multer is configured to use Cloudinary storage

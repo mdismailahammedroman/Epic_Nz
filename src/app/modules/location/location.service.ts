@@ -130,11 +130,11 @@ const locationDetailsById = async (locationId: string) => {
 
 const saveLocationForUser = async (userId: string, locationId: string) => {
   // Implementation to save location for user.
-
   const user = await User.findById(userId);
   if (!user) {
     throw new AppError(404, "User not found");
   }
+
   user.savedLocations = user.savedLocations || [];
   if (user.savedLocations.includes(locationId)) {
     throw new AppError(400, "Location already saved for user");

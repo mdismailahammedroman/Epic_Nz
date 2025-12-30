@@ -12,25 +12,42 @@ import { getPlaceName } from "../../utils/getLocation";
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, profile_picture, ...rest } = payload;
 
+  // Check if the user already exists
   const isUser = await User.findOne({ email });
   if (isUser) {
     throw new AppError(400, "User already exists. Please login!");
   }
+
+  // Hash the password if provided
   const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
 
+  // If a profile picture is uploaded, handle the file upload to Cloudinary
+  let profilePictureUrl = undefined;
+  if (profile_picture) {
+    try {
+      // Assuming the profile_picture passed is the Cloudinary URL (req.file.path)
+      profilePictureUrl = profile_picture; // Cloudinary URL will be saved here
+    } catch (error) {
+      throw new AppError(500, "Error saving profile picture");
+    }
+  }
+
+  // Define the auth provider
   const authUser: IAuthProvider = {
     provider: AuthProviderType.CREDENTIAL,
     providerID: AuthProviderType.GOOGLE,
   };
 
+  // Create the new user with profile picture URL
   const newUser = new User({
     email,
     password: hashedPassword,
-    profile_picture,
+    profile_picture: profilePictureUrl, // Store the Cloudinary URL here
     auth_providers: [authUser],
     ...rest,
   });
 
+  // Save the new user
   await newUser.save();
 
   return newUser;
@@ -50,11 +67,27 @@ const getMeService = async (userId: string) => {
     },
 
     {
+      $lookup: {
+        from: "locations", // Assuming 'locations' is the collection name for your locations
+        localField: "savedLocations",
+        foreignField: "_id",
+        as: "savedLocationDetails",
+      },
+    },
+
+    {
       $project: {
         email: 1,
         full_name: 1,
-        location: 1, // Include location
+        location: 1,
+        profile_picture: 1, // Include profile picture
         interest: 1,
+        savedLocationDetails: {
+          placeName: 1,
+          coordinates: 1,
+          description: 1,
+          imageUrl: 1,
+        },
       },
     },
   ]);
