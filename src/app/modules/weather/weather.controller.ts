@@ -55,7 +55,7 @@ const weatherInfoByLocationId = CatchAsync(
 );
 const weatherSunriseAndSunset = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id: locationId } = req.params; // Accessing 'id' from URL
+    const { id: locationId } = req.params;
 
     if (!locationId) {
       throw new AppError(StatusCodes.BAD_REQUEST, "Location ID is required");
@@ -63,7 +63,6 @@ const weatherSunriseAndSunset = CatchAsync(
     const weatherData = await weatherServices.weatherSunriseAndSunset(
       locationId
     );
-    console.log(weatherData);
 
     sendResponse(res, {
       success: true,

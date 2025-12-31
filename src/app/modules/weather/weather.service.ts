@@ -86,9 +86,30 @@ const weatherInfoByLocationId = async (locationId: string) => {
     );
   }
 };
-// Get sunrise and sunset times for a specific location
-// router.get sunrise-sunset/:locationId WeatherController.getSunriseSunset
-// Fetch sunrise and sunset times from Sunrise-Sunset API based on locationId
+// Calculate the Epic Rating based on weather conditions
+const calculateEpicRating = (weatherData: any) => {
+  const { temperature, humidity, windSpeed } = weatherData;
+
+  // Example formula to calculate epic rating (adjust based on your criteria)
+  let rating = 0;
+
+  // Example conditions for rating
+  if (temperature >= 20 && temperature <= 30) {
+    rating += 5; // Good temperature for outdoor activities
+  }
+  if (humidity < 60) {
+    rating += 3; // Ideal humidity
+  }
+  if (windSpeed < 15) {
+    rating += 2; // Not too windy
+  }
+
+  // Rating will be between 0 and 10
+  if (rating > 10) rating = 10;
+
+  return rating;
+};
+
 const weatherSunriseAndSunset = async (locationId: string) => {
   // Fetch the location from the database using the locationId
   const location = await Location.findById(locationId);
@@ -111,6 +132,7 @@ const weatherSunriseAndSunset = async (locationId: string) => {
     return {
       sunrise: weatherData.sys.sunrise,
       sunset: weatherData.sys.sunset,
+      epicRating: calculateEpicRating(weatherData),
     };
   } catch (error: any) {
     console.error("Error fetching sunrise and sunset data:", error);

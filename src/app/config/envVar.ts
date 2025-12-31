@@ -49,6 +49,8 @@ interface EnvVar {
   CLOUDINARY: CLOUDINARY_TYPE;
   REQUEST_RATE_LIMIT: string;
   REQUEST_RATE_LIMIT_TIME: string;
+  STRIPE_SECRET_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
   REDIS: REDIS_TYPE;
   SMTP: SMTP_TYPE;
   GOOGLE_AUTH: GOOGLE_TYPE;
@@ -96,6 +98,8 @@ const loadEnvVariables = (): EnvVar => {
     "WEATHER_API_URL",
     "LOCATIONIQ_API_KEY",
     "GOOGLE_MAPS_API_KEY",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -124,6 +128,8 @@ const loadEnvVariables = (): EnvVar => {
     },
     REQUEST_RATE_LIMIT: process.env.REQUEST_RATE_LIMIT!,
     REQUEST_RATE_LIMIT_TIME: process.env.REQUEST_RATE_LIMIT_TIME!,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET!,
     REDIS: {
       REDIS_HOST: process.env.REDIS_HOST!,
       REDIS_PORT: process.env.REDIS_PORT!,
