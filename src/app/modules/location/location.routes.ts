@@ -1,9 +1,10 @@
-// location.route.ts
 import { locationController } from "./location.controller";
 import { Router } from "express";
 import { checkAuth } from "../../middleware/checkAuth.middleware";
 import { Role } from "../user/user.interface";
 import { multerUpload } from "../../config/multer.config";
+import { validateRequest } from "../../helper/validateRequest";
+import { LocationValidation } from "./location.validation";
 
 const router = Router();
 
@@ -11,28 +12,37 @@ router.post(
   "/submit",
   checkAuth(Role.USER),
   multerUpload.single("image"), // <-- ADD THIS LINE
+  validateRequest(LocationValidation.createLocationValidationSchema),
   locationController.submitLocation
 );
-router.get("/all", checkAuth(Role.USER), locationController.getAllActivities);
-router.get("/hikes", checkAuth(Role.USER), locationController.getHikes);
+router.get(
+  "/all",
+  checkAuth(...Object.values(Role)),
+  locationController.getAllActivities
+);
+router.get(
+  "/hikes",
+  checkAuth(...Object.values(Role)),
+  locationController.getHikes
+);
 router.get(
   "/campgrounds",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.getCampgrounds
 );
 router.get(
   "/freedom-camping-locations",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.getFreedomCampingLocations
 );
 router.get(
   "/epic-photo-spots",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.getEpicPhotoSpots
 );
 router.get(
   "/:locationId",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   locationController.locationDetailsById
 );
 

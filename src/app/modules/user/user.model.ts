@@ -56,8 +56,8 @@ const userSchema = new Schema<IUser>(
 
     preferences: {
       language: { type: String, default: "en" },
-      theme: { type: String, default: "light" },
-      categories: { type: [String], default: [] },
+      // theme: { type: String, default: "light" },
+      // categories: { type: [String], default: [] },
     },
 
     role: {
