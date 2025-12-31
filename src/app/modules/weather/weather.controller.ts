@@ -53,8 +53,29 @@ const weatherInfoByLocationId = CatchAsync(
     });
   }
 );
+const weatherSunriseAndSunset = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id: locationId } = req.params; // Accessing 'id' from URL
+
+    if (!locationId) {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Location ID is required");
+    }
+    const weatherData = await weatherServices.weatherSunriseAndSunset(
+      locationId
+    );
+    console.log(weatherData);
+
+    sendResponse(res, {
+      success: true,
+      message: "Weather data fetched successfully",
+      statusCode: StatusCodes.OK,
+      data: weatherData,
+    });
+  }
+);
 
 export const weatherController = {
   weatherInfo,
   weatherInfoByLocationId,
+  weatherSunriseAndSunset,
 };

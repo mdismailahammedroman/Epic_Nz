@@ -86,8 +86,44 @@ const weatherInfoByLocationId = async (locationId: string) => {
     );
   }
 };
+// Get sunrise and sunset times for a specific location
+// router.get sunrise-sunset/:locationId WeatherController.getSunriseSunset
+// Fetch sunrise and sunset times from Sunrise-Sunset API based on locationId
+const weatherSunriseAndSunset = async (locationId: string) => {
+  // Fetch the location from the database using the locationId
+  const location = await Location.findById(locationId);
+
+  if (!location) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Location not found");
+  }
+
+  // Extract the coordinates (longitude, latitude)
+  const [longitude, latitude] = location.coordinates.coordinates;
+
+  // Construct the request URL for the weather API
+  const url = `${envVar.WEATHER_API_URL}?lat=${latitude}&lon=${longitude}&appid=${envVar.OPENWEATHER_API_KEY}&units=metric`;
+
+  try {
+    // Make the request to the weather API
+    const response = await axios.get(url);
+    const weatherData = response.data; // Extract the data from the response
+
+    return {
+      sunrise: weatherData.sys.sunrise,
+      sunset: weatherData.sys.sunset,
+    };
+  } catch (error: any) {
+    console.error("Error fetching sunrise and sunset data:", error);
+
+    throw new AppError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to fetch sunrise and sunset times"
+    );
+  }
+};
 
 export const weatherServices = {
   weatherInfo,
   weatherInfoByLocationId,
+  weatherSunriseAndSunset,
 };

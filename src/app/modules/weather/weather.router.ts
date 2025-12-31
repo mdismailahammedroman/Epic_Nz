@@ -11,5 +11,10 @@ router.get(
   checkAuth(Role.USER),
   weatherController.weatherInfoByLocationId
 );
+router.get(
+  "/sunrise-sunset/:id",
+  checkAuth(Role.USER),
+  weatherController.weatherSunriseAndSunset
+);
 
 export const weatherRouter = router;
