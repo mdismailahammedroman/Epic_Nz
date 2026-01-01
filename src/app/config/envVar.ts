@@ -50,6 +50,7 @@ interface EnvVar {
   REQUEST_RATE_LIMIT: string;
   REQUEST_RATE_LIMIT_TIME: string;
   STRIPE_SECRET_KEY: string;
+  STRIPE_PUBLIC_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   REDIS: REDIS_TYPE;
   SMTP: SMTP_TYPE;
@@ -60,6 +61,8 @@ interface EnvVar {
   WEATHER_API_URL: string;
   LOCATIONIQ_API_KEY: string;
   GOOGLE_MAPS_API_KEY: string;
+  PRICE_WEEKLY: string;
+  PRICE_MONTHLY: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -99,7 +102,10 @@ const loadEnvVariables = (): EnvVar => {
     "LOCATIONIQ_API_KEY",
     "GOOGLE_MAPS_API_KEY",
     "STRIPE_SECRET_KEY",
+    "STRIPE_PUBLIC_KEY",
     "STRIPE_WEBHOOK_SECRET",
+    "PRICE_WEEKLY",
+    "PRICE_MONTHLY",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -129,7 +135,10 @@ const loadEnvVariables = (): EnvVar => {
     REQUEST_RATE_LIMIT: process.env.REQUEST_RATE_LIMIT!,
     REQUEST_RATE_LIMIT_TIME: process.env.REQUEST_RATE_LIMIT_TIME!,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
+    STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY!,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET!,
+    PRICE_WEEKLY: process.env.PRICE_WEEKLY!,
+    PRICE_MONTHLY: process.env.PRICE_MONTHLY!,
     REDIS: {
       REDIS_HOST: process.env.REDIS_HOST!,
       REDIS_PORT: process.env.REDIS_PORT!,

@@ -1,3 +1,4 @@
+import { ISubscription } from "../subscription/subscription.interface";
 import { locationController } from "./../location/location.controller";
 // ===== Enums =====
 export enum Role {
@@ -12,19 +13,6 @@ export enum UserStatus {
   BANNED = "BANNED",
   SUSPENDED = "SUSPENDED",
   PENDING = "PENDING",
-}
-
-export enum Plan {
-  TRIAL = "TRIAL",
-  MONTHLY = "MONTHLY",
-  ANNUAL = "ANNUAL",
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = "ACTIVE",
-  EXPIRED = "EXPIRED",
-  CANCELLED = "CANCELLED",
-  SUSPENDED = "SUSPENDED",
 }
 
 // ===== Auth =====
@@ -48,7 +36,7 @@ export interface ICoord {
 // ===== Interfaces =====
 export interface IUserPreferences {
   language: string;
-  // theme: string;
+  theme: string;
   // categories: string[];
   app_notifications?: boolean;
   email_notifications?: boolean;
@@ -62,18 +50,6 @@ interface IFile {
   mimetype: string;
   buffer: Buffer;
   size: number;
-}
-export interface IUserSubscription {
-  plan_type: Plan;
-  start_date: Date;
-  end_date: Date | null;
-  status: SubscriptionStatus;
-  ai_features_access: boolean;
-  ads_free: boolean;
-  payment_method?: string;
-  renewal_date?: Date;
-  total_spent: number;
-  auto_renew: boolean;
 }
 
 export interface IUser {
@@ -92,7 +68,7 @@ export interface IUser {
   status: UserStatus;
   is_verified: boolean;
   isDeleted: boolean;
-  subscription: IUserSubscription;
+  subscription: ISubscription;
   savedLocations?: string[]; // Array of Location IDs
   created_at: Date;
   updated_at: Date;
