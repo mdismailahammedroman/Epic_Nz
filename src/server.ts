@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import app from "./app";
 import { envVar } from "./app/config/envVar";
+import { connectRedis } from "./app/config/redisConfig";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ const startServer = async () => {
 
 (async () => {
   await startServer();
+  await connectRedis();
 })();
 
 /* Graceful shutdown */

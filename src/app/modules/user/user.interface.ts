@@ -64,6 +64,9 @@ export interface IUser {
   notifications_enabled: boolean;
   preferences?: IUserPreferences;
 
+  resetPasswordToken?: string;
+  resetPasswordExpires?: string;
+
   role: Role;
   status: UserStatus;
   is_verified: boolean;

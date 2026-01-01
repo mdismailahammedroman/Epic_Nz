@@ -63,8 +63,22 @@ const getMySubscriptions = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const turnOffAutoRenew = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).userId;
+
+  const result = await subscriptionService.turnOffAutoRenew(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: { end_date: result.end_date },
+  });
+});
+
 export const subscriptionController = {
   createCheckoutSession,
   stripeWebhook,
   getMySubscriptions,
+  turnOffAutoRenew,
 };

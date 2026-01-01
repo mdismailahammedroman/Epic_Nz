@@ -16,5 +16,10 @@ router.get(
   checkAuth(Role.USER),
   subscriptionController.getMySubscriptions
 );
+router.patch(
+  "/auto_renew/off",
+  checkAuth(Role.USER),
+  subscriptionController.turnOffAutoRenew
+);
 
 export const SubscriptionRoute = router;

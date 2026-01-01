@@ -9,6 +9,8 @@ import {
   Plan,
   SubscriptionStatus,
 } from "./subscription.interface";
+import { StatusCodes } from "http-status-codes";
+import SubscriptionModel from "./Subscription.model";
 
 // CREATE CHECKOUT SESSION
 const createCheckoutSession = async ({
@@ -60,6 +62,7 @@ const stripeWebhookHandler = async (event: Stripe.Event) => {
       stripeCustomerId: session.customer as string,
       plan_type,
       status: SubscriptionStatus.ACTIVE,
+      ai_features_access: true,
       start_date: startDate,
       end_date: endDate,
     },
@@ -73,9 +76,34 @@ const stripeWebhookHandler = async (event: Stripe.Event) => {
 const getMySubscriptions = async (userId: string) => {
   return Subscription.find({ userId }).sort({ createdAt: -1 });
 };
+const turnOffAutoRenew = async (userId: string) => {
+  const subscription = await Subscription.findOne({
+    userId,
+    status: SubscriptionStatus.ACTIVE,
+  });
+
+  if (!subscription) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Active subscription not found");
+  }
+
+  // 1️⃣ Tell Stripe to stop renewing
+  await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+    cancel_at_period_end: true,
+  });
+
+  // 2️⃣ Update local DB
+  subscription.auto_renew = false;
+  await subscription.save();
+
+  return {
+    message: "Auto-renew turned off. Subscription will expire at period end.",
+    end_date: subscription.end_date,
+  };
+};
 
 export const subscriptionService = {
   createCheckoutSession,
   stripeWebhookHandler,
   getMySubscriptions,
+  turnOffAutoRenew,
 };

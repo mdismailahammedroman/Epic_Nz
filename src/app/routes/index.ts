@@ -4,6 +4,7 @@ import { userRouter } from "../modules/user/user.route";
 import { locationRouter } from "../modules/location/location.routes";
 import { weatherRouter } from "../modules/weather/weather.router";
 import { SubscriptionRoute } from "../modules/subscription/subscription.router";
+import { otpRouter } from "../modules/otp/otp.route";
 
 export const router = Router();
 
@@ -27,6 +28,10 @@ const moduleRoutes = [
   {
     path: "/subscription",
     route: SubscriptionRoute,
+  },
+  {
+    path: "/otp",
+    route: otpRouter,
   },
 ];
 
