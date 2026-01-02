@@ -1,7 +1,13 @@
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
 import AppError from "../../errorHelper/AppError";
-import { AuthProviderType, IAuthProvider, IUser, Role } from "./user.interface";
+import {
+  AuthProviderType,
+  IAuthProvider,
+  IUser,
+  IUserPreferences,
+  Role,
+} from "./user.interface";
 
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
@@ -10,7 +16,16 @@ import User from "./user.model";
 import { getPlaceName } from "../../utils/getLocation";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, profile_picture, ...rest } = payload;
+  const { email, password, profile_picture, preferences, ...rest } = payload;
+
+  const defaultPreferences = preferences || {
+    language: "en",
+    theme: "light",
+    app_notifications: true,
+    email_notifications: true,
+    notifications_enabled: true,
+    location_access: false,
+  };
 
   // Check if the user already exists
   const isUser = await User.findOne({ email });
@@ -44,6 +59,7 @@ const createUser = async (payload: Partial<IUser>) => {
     password: hashedPassword,
     profile_picture: profilePictureUrl, // Store the Cloudinary URL here
     auth_providers: [authUser],
+    preferences: defaultPreferences,
     ...rest,
   });
 
@@ -155,7 +171,6 @@ const userUpdateService = async (
   payload: Partial<IUser>,
   decodedToken: JwtPayload
 ) => {
-  // Check if decodedToken and role exist
   if (!decodedToken || !decodedToken.role) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
@@ -163,13 +178,11 @@ const userUpdateService = async (
     );
   }
 
-  // Find the user by ID
   const user = await User.findById(userId);
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
   }
 
-  // Ensure user can only update their own profile (if role is USER)
   if (decodedToken.role === Role.USER && decodedToken.userId !== userId) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
@@ -177,7 +190,6 @@ const userUpdateService = async (
     );
   }
 
-  // Prevent password update from this route
   if (payload.password) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
@@ -185,74 +197,66 @@ const userUpdateService = async (
     );
   }
 
-  // Prevent role update (only Admins can update roles)
-  if (payload.role) {
-    if (decodedToken.role === Role.USER) {
-      throw new AppError(
-        StatusCodes.FORBIDDEN,
-        "You are not allowed to update roles!"
-      );
-    }
-  }
-
-  // Prevent certain fields update by non-Admin users
-  // if (
-  //   payload?.UserStatus !== undefined ||
-  //   payload?.isDeleted !== undefined ||
-  //   payload?.isVerified !== undefined
-  // ) {
-  //   if (decodedToken.role !== Role.ADMIN) {
-  //     // Only allow ADMIN to update these fields
-  //     throw new AppError(
-  //       StatusCodes.FORBIDDEN,
-  //       "You are not allowed to update account status fields (isActive, isDeleted, isVerified)!"
-  //     );
-  //   }
-  // }
-
-  // Allowed updates based on user role
-  if (decodedToken.role === Role.USER || decodedToken.role === Role.ADMIN) {
-    const allowedUpdates = [
-      "name",
-      "phone",
-      "picture",
-      "address",
-      "profileImage",
-      "isVerified",
-      "userStatus",
-      "approved",
-      "commissionRate",
-    ];
-
-    // Check for invalid keys in the payload
-    Object.keys(payload).forEach((key) => {
-      if (!allowedUpdates.includes(key)) {
-        throw new AppError(
-          StatusCodes.FORBIDDEN,
-          `You are not allowed to update: ${key}`
-        );
-      }
-    });
-  }
-
-  // Update the user data
-  const updatedUser = await User.findByIdAndUpdate(
-    new Types.ObjectId(userId),
-    payload,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  if (!updatedUser) {
+  if (payload.role && decodedToken.role === Role.USER) {
     throw new AppError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to update user"
+      StatusCodes.FORBIDDEN,
+      "You are not allowed to update roles!"
     );
   }
 
-  return updatedUser;
+  /** =======================
+   *  FIELD WHITELIST
+   * ======================= */
+  const allowedTopLevel = [
+    "name",
+    "phone",
+    "picture",
+    "address",
+    "profileImage",
+    "isVerified",
+    "userStatus",
+    "approved",
+    "commissionRate",
+    "preferences", // ✅ allow preferences object
+  ];
+
+  Object.keys(payload).forEach((key) => {
+    if (!allowedTopLevel.includes(key)) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        `You are not allowed to update: ${key}`
+      );
+    }
+  });
+
+  /** =======================
+   *  PREFERENCES MERGE
+   * ======================= */
+  if (payload.preferences) {
+    if (!user.preferences) {
+      user.preferences = {
+        language: "en",
+        theme: "light",
+        app_notifications: true,
+        email_notifications: true,
+        notifications_enabled: true,
+        location_access: false,
+      };
+    }
+
+    user.preferences = {
+      ...user.preferences,
+      ...payload.preferences,
+    };
+  }
+
+  /** =======================
+   *  TOP-LEVEL UPDATE
+   * ======================= */
+  Object.assign(user, payload);
+  await user.save();
+
+  return user;
 };
 
 const userDeleteService = async (userId: string, decodedToken: JwtPayload) => {
@@ -279,6 +283,19 @@ const userDeleteService = async (userId: string, decodedToken: JwtPayload) => {
   return null;
 };
 
+// Service to fetch user preferences
+const getUserPreferencesService = async (userId: string) => {
+  // Ensure the userId is passed as a valid ObjectId
+  console.log(await User.findById(userId));
+  const user = await User.findById(userId).select("preferences");
+
+  if (!user) {
+    throw new AppError(404, "User not found.");
+  }
+
+  return user.preferences;
+};
+
 export const userServices = {
   createUser,
   getMeService,
@@ -286,4 +303,5 @@ export const userServices = {
   getAllUserService,
   userUpdateService,
   userDeleteService,
+  getUserPreferencesService,
 };

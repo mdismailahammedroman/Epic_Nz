@@ -1,4 +1,5 @@
-import { locationController } from "./../location/location.controller";
+import { ISubscription } from "../subscription/subscription.interface";
+
 // ===== Enums =====
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -12,19 +13,6 @@ export enum UserStatus {
   BANNED = "BANNED",
   SUSPENDED = "SUSPENDED",
   PENDING = "PENDING",
-}
-
-export enum Plan {
-  TRIAL = "TRIAL",
-  MONTHLY = "MONTHLY",
-  ANNUAL = "ANNUAL",
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = "ACTIVE",
-  EXPIRED = "EXPIRED",
-  CANCELLED = "CANCELLED",
-  SUSPENDED = "SUSPENDED",
 }
 
 // ===== Auth =====
@@ -45,16 +33,17 @@ export interface ICoord {
   placeName?: string;
 }
 
-// ===== Interfaces =====
+// ===== Preferences =====
 export interface IUserPreferences {
   language: string;
-  // theme: string;
-  // categories: string[];
+  theme: string;
   app_notifications?: boolean;
   email_notifications?: boolean;
   notifications_enabled?: boolean;
   location_access?: boolean;
 }
+
+// ===== Profile Picture Interface =====
 interface IFile {
   fieldname: string;
   originalname: string;
@@ -63,18 +52,6 @@ interface IFile {
   buffer: Buffer;
   size: number;
 }
-export interface IUserSubscription {
-  plan_type: Plan;
-  start_date: Date;
-  end_date: Date | null;
-  status: SubscriptionStatus;
-  ai_features_access: boolean;
-  ads_free: boolean;
-  payment_method?: string;
-  renewal_date?: Date;
-  total_spent: number;
-  auto_renew: boolean;
-}
 
 export interface IUser {
   email: string;
@@ -82,18 +59,22 @@ export interface IUser {
   password?: string;
   profile_picture?: IFile | string;
 
-  auth_providers: IAuthProvider[]; // 👈 added
-  location?: ICoord; // 👈 added (optional)
+  auth_providers: IAuthProvider[];
+  location?: ICoord;
 
   notifications_enabled: boolean;
   preferences?: IUserPreferences;
+
+  resetPasswordToken?: string;
+  resetPasswordExpires?: string;
 
   role: Role;
   status: UserStatus;
   is_verified: boolean;
   isDeleted: boolean;
-  subscription: IUserSubscription;
-  savedLocations?: string[]; // Array of Location IDs
+
+  subscription: ISubscription;
+  savedLocations?: string[];
   created_at: Date;
   updated_at: Date;
 }

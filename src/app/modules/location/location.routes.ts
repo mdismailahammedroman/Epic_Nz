@@ -52,6 +52,11 @@ router.post(
   checkAuth(Role.USER),
   locationController.saveLocationForUser
 );
+router.post(
+  "/:locationId/unsave",
+  checkAuth(Role.USER),
+  locationController.unsaveLocationForUser
+);
 
 // POST /locations/{id}/share – Share a location with others via deep link.
 router.post(

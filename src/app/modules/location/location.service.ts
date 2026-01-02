@@ -67,7 +67,7 @@ const getAllActivities = async (query: Record<string, string>) => {
 const getHikes = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'Hikes' })
-    category: CategoryEnum.Hikes, // Force category to 'Hikes'
+    category: CategoryEnum.HIKE, // Force category to 'Hikes'
   })
     .filter() // Apply filtering based on query params
     .sort()
@@ -81,7 +81,7 @@ const getHikes = async (query: Record<string, string>) => {
 const getEpicPhotoSpots = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'Hikes' })
-    category: CategoryEnum.epicPhotoSpots, // Force category to 'Hikes'
+    category: CategoryEnum.EPIC_PHOTO_SPOT, // Force category to 'Hikes'
   })
     .filter() // Apply filtering based on query params
     .sort() // Apply sorting if provided
@@ -95,7 +95,7 @@ const getEpicPhotoSpots = async (query: Record<string, string>) => {
 const getCampgrounds = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'campgrounds' })
-    category: CategoryEnum.campgrounds, // Force category to 'campgrounds'
+    category: CategoryEnum.CAMPGROUND, // Force category to 'campgrounds'
   })
     .filter() // Apply filtering based on query params
     .sort() // Apply sorting if provided
@@ -109,7 +109,7 @@ const getCampgrounds = async (query: Record<string, string>) => {
 const getFreedomCampingLocations = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'Hikes' })
-    category: CategoryEnum.freedomCampingLocations, // Force category to 'Hikes'
+    category: CategoryEnum.FREEDOM_CAMPING, // Force category to 'Hikes'
   })
     .filter() // Apply filtering based on query params
     .sort() // Apply sorting if provided
@@ -142,8 +142,41 @@ const saveLocationForUser = async (userId: string, locationId: string) => {
   }
   user.savedLocations.push(locationId);
   await user.save();
+  await user.populate({
+    path: "savedLocations",
+    select: "_id placeName imageUrl coordinates",
+  });
   return;
 };
+const unsaveLocationForUser = async (userId: string, locationId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  user.savedLocations = user.savedLocations || [];
+
+  // Check if location exists in savedLocations
+  if (!user.savedLocations.includes(locationId)) {
+    throw new AppError(400, "Location is not saved for user");
+  }
+
+  // Remove location
+  user.savedLocations = user.savedLocations.filter(
+    (id) => id.toString() !== locationId
+  );
+
+  await user.save();
+
+  // Optionally populate savedLocations details
+  await user.populate({
+    path: "savedLocations",
+    select: "_id placeName imageUrl coordinates",
+  });
+
+  return user.savedLocations;
+};
+
 // POST /locations/{id}/share – Share a location with others via deep link.
 const shareLocation = async (locationId: string, userId: string) => {
   const user = await User.findById(userId);
@@ -240,6 +273,7 @@ export const locationServices = {
   getEpicPhotoSpots,
   locationDetailsById,
   saveLocationForUser,
+  unsaveLocationForUser,
   shareLocation,
   locationRating,
 };

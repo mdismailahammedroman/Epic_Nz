@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import bcrypt from "bcryptjs"; // for password hashing
+import bcrypt from "bcryptjs";
 import User from "../modules/user/user.model";
 
 // Configure the local strategy
@@ -14,9 +14,22 @@ passport.use(
           return done(null, false, { message: "Incorrect email" });
         }
 
-        // Compare hashed password
-        const isMatch =
-          user.password && bcrypt.compareSync(password, user.password);
+        // Check if the user is authenticated via OAuth (Google, Apple, etc.)
+        const isOAuthUser =
+          user.auth_providers && user.auth_providers.length > 0;
+
+        // If it's an OAuth user, skip the password check
+        if (isOAuthUser) {
+          return done(null, user); // OAuth users don't need a password check
+        }
+
+        // For non-OAuth users, compare the password
+        if (!user.password || typeof user.password !== "string") {
+          return done(null, false, { message: "Password not set for user." });
+        }
+
+        // Compare the provided password with the stored hash
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
           return done(null, false, { message: "Incorrect password" });
         }

@@ -123,6 +123,25 @@ const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const unsaveLocationForUser = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { userId } = req.user as JwtPayload;
+    const { locationId } = req.params;
+
+    const updatedSavedLocations = await locationServices.unsaveLocationForUser(
+      userId,
+      locationId
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Location removed from saved locations",
+      data: updatedSavedLocations,
+    });
+  }
+);
+
 // POST /locations/{id}/share – Share a location with others via deep link.
 const shareLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
@@ -165,6 +184,7 @@ export const locationController = {
   getCampgrounds,
   locationDetailsById,
   saveLocationForUser,
+  unsaveLocationForUser,
   shareLocation,
   locationRating,
 };

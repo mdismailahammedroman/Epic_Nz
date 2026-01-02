@@ -1,12 +1,5 @@
-import { Schema, model } from "mongoose";
-import {
-  IUser,
-  Role,
-  UserStatus,
-  Plan,
-  SubscriptionStatus,
-  AuthProviderType,
-} from "./user.interface";
+import { Schema, model, Types } from "mongoose";
+import { AuthProviderType, Role, UserStatus, IUser } from "./user.interface";
 
 const userSchema = new Schema<IUser>(
   {
@@ -17,7 +10,6 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-
     full_name: {
       type: String,
       required: true,
@@ -25,11 +17,14 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
+      required: false,
+      select: false,
     },
     profile_picture: {
       type: String,
     },
 
+    /* 🔐 AUTH PROVIDERS */
     auth_providers: [
       {
         provider: {
@@ -44,28 +39,28 @@ const userSchema = new Schema<IUser>(
       },
     ],
 
+    /* 🌍 LOCATION */
     location: {
       lat: { type: Number },
       long: { type: Number },
     },
 
-    notifications_enabled: {
-      type: Boolean,
-      default: true,
-    },
-
+    /* ⚙️ PREFERENCES */
     preferences: {
       language: { type: String, default: "en" },
-      // theme: { type: String, default: "light" },
-      // categories: { type: [String], default: [] },
+      theme: { type: String, default: "light" },
+      app_notifications: { type: Boolean, default: true },
+      email_notifications: { type: Boolean, default: true },
+      notifications_enabled: { type: Boolean, default: true },
+      location_access: { type: Boolean, default: false },
     },
 
+    /* 👤 ROLE & STATUS */
     role: {
       type: String,
       enum: Object.values(Role),
       default: Role.USER,
     },
-
     status: {
       type: String,
       enum: Object.values(UserStatus),
@@ -76,67 +71,27 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+
     isDeleted: {
       type: Boolean,
       default: false,
     },
-    subscription: {
-      plan_type: {
-        type: String,
-        enum: Object.values(Plan),
-        default: Plan.TRIAL,
-      },
 
-      start_date: {
-        type: Date,
-        default: Date.now,
-      },
-
-      end_date: {
-        type: Date,
-        default: null,
-      },
-
-      status: {
-        type: String,
-        enum: Object.values(SubscriptionStatus),
-        default: SubscriptionStatus.ACTIVE,
-      },
-
-      ai_features_access: {
-        type: Boolean,
-        default: false,
-      },
-
-      ads_free: {
-        type: Boolean,
-        default: false,
-      },
-
-      payment_method: {
-        type: String,
-      },
-
-      renewal_date: {
-        type: Date,
-      },
-
-      total_spent: {
-        type: Number,
-        default: 0,
-      },
-
-      auto_renew: {
-        type: Boolean,
-        default: true,
-      },
-    },
+    /* ❤️ SAVED LOCATIONS */
     savedLocations: [
       {
         type: Schema.Types.ObjectId,
         ref: "Location",
       },
     ],
+
+    /* 🔑 FORGOT PASSWORD FIELDS */
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: {
@@ -147,4 +102,5 @@ const userSchema = new Schema<IUser>(
 );
 
 const User = model<IUser>("User", userSchema);
+
 export default User;
