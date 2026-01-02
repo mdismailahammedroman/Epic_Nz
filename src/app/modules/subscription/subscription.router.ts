@@ -21,5 +21,16 @@ router.patch(
   checkAuth(Role.USER),
   subscriptionController.turnOffAutoRenew
 );
+router.post(
+  "/me/subscription/restore",
+  checkAuth(Role.USER),
+  subscriptionController.restoreSubscription
+); // Restore subscription
+
+// GET /users/me/subscription → Subscription info
+
+// POST /users/me/subscription/cancel → Cancel subscription
+
+// POST /users/me/subscription/restore → Restore purchase
 
 export const SubscriptionRoute = router;

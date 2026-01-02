@@ -75,10 +75,57 @@ const turnOffAutoRenew = CatchAsync(async (req: Request, res: Response) => {
     data: { end_date: result.end_date },
   });
 });
+// GET /users/me/subscription → Fetch subscription info
+const getSubscriptionInfo = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).userId;
+  const subscription = await subscriptionService.getMySubscriptions(userId);
+
+  if (!subscription || subscription.length === 0) {
+    throw new AppError(StatusCodes.NOT_FOUND, "No subscription found");
+  }
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Subscription fetched",
+    data: subscription,
+  });
+});
+
+// POST /users/me/subscription/cancel → Cancel subscription
+const cancelSubscription = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).userId;
+
+  const result = await subscriptionService.turnOffAutoRenew(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: { end_date: result.end_date },
+  });
+});
+
+// POST /users/me/subscription/restore → Restore purchase
+const restoreSubscription = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).userId;
+
+  const result = await subscriptionService.restoreSubscription(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: result.subscription,
+  });
+});
 
 export const subscriptionController = {
   createCheckoutSession,
   stripeWebhook,
   getMySubscriptions,
   turnOffAutoRenew,
+  getSubscriptionInfo,
+  cancelSubscription,
+  restoreSubscription,
 };

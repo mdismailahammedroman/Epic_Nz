@@ -100,10 +100,42 @@ const turnOffAutoRenew = async (userId: string) => {
     end_date: subscription.end_date,
   };
 };
+const restoreSubscription = async (userId: string) => {
+  // Find the canceled subscription
+  const subscription = await Subscription.findOne({
+    userId,
+    status: "canceled", // Assuming a status 'canceled' exists for canceled subscriptions
+  });
+
+  if (!subscription) {
+    throw new AppError(StatusCodes.NOT_FOUND, "No canceled subscription found");
+  }
+
+  // Check if the subscription can be restored (based on business logic)
+  if (new Date(subscription.end_date) < new Date()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Subscription has expired");
+  }
+
+  // Re-activate subscription with Stripe (if applicable)
+  const stripeSubscription = await stripe.subscriptions.update(
+    subscription.stripeSubscriptionId,
+    { cancel_at_period_end: false }
+  );
+
+  // Update local subscription status
+  subscription.status = SubscriptionStatus.ACTIVE; // Or any status indicating it's active
+  await subscription.save();
+
+  return {
+    message: "Subscription restored successfully",
+    subscription,
+  };
+};
 
 export const subscriptionService = {
   createCheckoutSession,
   stripeWebhookHandler,
   getMySubscriptions,
   turnOffAutoRenew,
+  restoreSubscription,
 };
