@@ -31,4 +31,11 @@ router.delete(
   userController.userDelete
 );
 
+// Route to get user preferences
+router.get(
+  "/preferences",
+  checkAuth(Role.USER),
+  userController.getUserPreferences
+);
+
 export const userRouter = router;

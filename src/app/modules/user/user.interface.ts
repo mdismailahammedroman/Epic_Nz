@@ -1,5 +1,5 @@
 import { ISubscription } from "../subscription/subscription.interface";
-import { locationController } from "./../location/location.controller";
+
 // ===== Enums =====
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -33,16 +33,17 @@ export interface ICoord {
   placeName?: string;
 }
 
-// ===== Interfaces =====
+// ===== Preferences =====
 export interface IUserPreferences {
   language: string;
   theme: string;
-  // categories: string[];
   app_notifications?: boolean;
   email_notifications?: boolean;
   notifications_enabled?: boolean;
   location_access?: boolean;
 }
+
+// ===== Profile Picture Interface =====
 interface IFile {
   fieldname: string;
   originalname: string;
@@ -58,8 +59,8 @@ export interface IUser {
   password?: string;
   profile_picture?: IFile | string;
 
-  auth_providers: IAuthProvider[]; // 👈 added
-  location?: ICoord; // 👈 added (optional)
+  auth_providers: IAuthProvider[];
+  location?: ICoord;
 
   notifications_enabled: boolean;
   preferences?: IUserPreferences;
@@ -71,8 +72,9 @@ export interface IUser {
   status: UserStatus;
   is_verified: boolean;
   isDeleted: boolean;
+
   subscription: ISubscription;
-  savedLocations?: string[]; // Array of Location IDs
+  savedLocations?: string[];
   created_at: Date;
   updated_at: Date;
 }

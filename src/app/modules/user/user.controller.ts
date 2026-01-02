@@ -3,6 +3,9 @@ import { CatchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/SendResponse";
 import { userServices } from "./user.service";
 import { JwtPayload } from "jsonwebtoken";
+import AppError from "../../errorHelper/AppError";
+import { IUserPreferences } from "./user.interface";
+import { StatusCodes } from "http-status-codes";
 
 // Controller to handle user registration
 const userRegister = CatchAsync(
@@ -107,6 +110,28 @@ const userDelete = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getUserPreferences = CatchAsync(async (req: Request, res: Response) => {
+  // Ensure the userId is correctly extracted from JWT
+  const { userId } = req.user as JwtPayload;
+  if (!userId) {
+    throw new AppError(400, "User ID not found in the request.");
+  }
+
+  // Call service to get user preferences
+  const preferences = await userServices.getUserPreferencesService(userId);
+
+  if (!preferences) {
+    throw new AppError(404, "User preferences not found.");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "User preferences fetched successfully",
+    StatusCodes: StatusCodes.OK,
+    data: preferences,
+  });
+});
+
 export const userController = {
   userRegister,
   getMe,
@@ -114,4 +139,5 @@ export const userController = {
   getAllUser,
   userUpdate,
   userDelete,
+  getUserPreferences,
 };

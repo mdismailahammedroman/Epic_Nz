@@ -1,5 +1,5 @@
-import { Schema, model } from "mongoose";
-import { IUser, Role, UserStatus, AuthProviderType } from "./user.interface";
+import { Schema, model, Types } from "mongoose";
+import { AuthProviderType, Role, UserStatus, IUser } from "./user.interface";
 
 const userSchema = new Schema<IUser>(
   {
@@ -17,8 +17,8 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: false, // optional for OAuth users
-      select: false, // 🔐 IMPORTANT: never return password by default
+      required: false,
+      select: false,
     },
     profile_picture: {
       type: String,
@@ -85,7 +85,7 @@ const userSchema = new Schema<IUser>(
       },
     ],
 
-    /* 🔑 FORGOT PASSWORD FIELDS (NEW) */
+    /* 🔑 FORGOT PASSWORD FIELDS */
     resetPasswordToken: {
       type: String,
     },
@@ -102,4 +102,5 @@ const userSchema = new Schema<IUser>(
 );
 
 const User = model<IUser>("User", userSchema);
+
 export default User;

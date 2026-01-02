@@ -12,11 +12,12 @@ export enum LocationStatus {
 }
 
 export enum CategoryEnum {
-  Hikes = "Hikes",
-  epicPhotoSpots = "EPIC_PHOTO_SPOTS",
-  campgrounds = "Campgrounds",
-  freedomCampingLocations = "Freedom_Camping_Locations",
+  EPIC_PHOTO_SPOT = "Epic Photo Spot",
+  HIKE = "Hike",
+  CAMPGROUND = "Campground",
+  FREEDOM_CAMPING = "Freedom Camping",
 }
+
 // Defining the ILocation interface for Location schema
 export interface ILocation {
   user_id: Types.ObjectId; // User ID associated with this location
