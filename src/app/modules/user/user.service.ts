@@ -98,6 +98,7 @@ const getMeService = async (userId: string) => {
         location: 1,
         profile_picture: 1, // Include profile picture
         interest: 1,
+        role: 1,
         savedLocationDetails: {
           placeName: 1,
           coordinates: 1,

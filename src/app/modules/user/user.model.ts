@@ -1,5 +1,5 @@
-import { Schema, model, Types } from "mongoose";
-import { AuthProviderType, Role, UserStatus, IUser } from "./user.interface";
+import { Schema, model } from "mongoose";
+import { AuthProviderType, IUser, Role, UserStatus } from "./user.interface";
 
 const userSchema = new Schema<IUser>(
   {
@@ -10,21 +10,9 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-    full_name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: false,
-      select: false,
-    },
-    profile_picture: {
-      type: String,
-    },
-
-    /* 🔐 AUTH PROVIDERS */
+    full_name: { type: String, required: true, trim: true },
+    password: { type: String, required: false, select: false },
+    profile_picture: { type: String },
     auth_providers: [
       {
         provider: {
@@ -32,20 +20,13 @@ const userSchema = new Schema<IUser>(
           enum: Object.values(AuthProviderType),
           required: true,
         },
-        providerID: {
-          type: String,
-          required: true,
-        },
+        providerID: { type: String, required: true },
       },
     ],
-
-    /* 🌍 LOCATION */
     location: {
       lat: { type: Number },
       long: { type: Number },
     },
-
-    /* ⚙️ PREFERENCES */
     preferences: {
       language: { type: String, default: "en" },
       theme: { type: String, default: "light" },
@@ -54,53 +35,20 @@ const userSchema = new Schema<IUser>(
       notifications_enabled: { type: Boolean, default: true },
       location_access: { type: Boolean, default: false },
     },
-
-    /* 👤 ROLE & STATUS */
-    role: {
-      type: String,
-      enum: Object.values(Role),
-      default: Role.USER,
-    },
+    role: { type: String, enum: Object.values(Role), default: Role.USER },
     status: {
       type: String,
       enum: Object.values(UserStatus),
       default: UserStatus.ACTIVE,
     },
-
-    is_verified: {
-      type: Boolean,
-      default: false,
-    },
-
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-
-    /* ❤️ SAVED LOCATIONS */
-    savedLocations: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Location",
-      },
-    ],
-
-    /* 🔑 FORGOT PASSWORD FIELDS */
-    resetPasswordToken: {
-      type: String,
-    },
-    resetPasswordExpires: {
-      type: Date,
-    },
+    is_verified: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+    savedLocations: [{ type: Schema.Types.ObjectId, ref: "Location" }],
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
-  {
-    timestamps: {
-      createdAt: "created_at",
-      updatedAt: "updated_at",
-    },
-  }
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
 
 const User = model<IUser>("User", userSchema);
-
 export default User;
