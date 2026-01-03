@@ -1,20 +1,61 @@
 import { model, Schema } from "mongoose";
-import { INotification } from "./notification.interface";
+import {
+  INotification,
+  INotifyPreference,
+  NotificationType,
+} from "./notification.interface";
 
-const NotificationSchema: Schema<INotification> = new Schema(
+const notificationSchema = new Schema<INotification>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    title: { type: String, required: true },
-    message: { type: String, required: true },
+    user: { type: Schema.Types.ObjectId, ref: "user" },
+    eventId: { type: Schema.Types.ObjectId, ref: "user" },
+    chatId: { type: Schema.Types.ObjectId, ref: "user" },
+    receiverIds: [{ type: Schema.Types.ObjectId, ref: "user" }],
     type: {
       type: String,
-      enum: ["location", "weather", "category", "system"],
       required: true,
+      enum: [...Object.values(NotificationType)],
     },
-    metadata: { type: Object },
-    sentAt: { type: Date, default: Date.now },
+    title: { type: String, required: true },
+    description: { type: String },
+    data: { type: Object },
+    isRead: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
 
-export default model<INotification>("Notification", NotificationSchema);
+const notifyPreferenceSchema = new Schema<INotifyPreference>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: "user", required: true },
+    channel: {
+      push: { type: Boolean, default: false },
+      email: { type: Boolean, default: true },
+      inApp: { type: Boolean, default: true },
+    },
+    direct_sms: { type: Boolean, default: true },
+    app: {
+      product_updates: { type: Boolean, default: true },
+      special_offers: { type: Boolean, default: true },
+    },
+    locationItem: {},
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+// Indexing for faster loading
+notificationSchema.index({ user: 1, createdAt: -1 });
+
+export const Notification = model<INotification>(
+  "Notification",
+  notificationSchema
+);
+export const NotificationPreference = model<INotifyPreference>(
+  "NotificationPreference",
+  notifyPreferenceSchema
+);

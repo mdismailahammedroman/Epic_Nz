@@ -1,4 +1,3 @@
-import { NotificationPreferences } from "../notification/notification.interface";
 import { ISubscription } from "../subscription/subscription.interface";
 
 export enum Role {
@@ -55,12 +54,12 @@ export interface IUser {
   password?: string;
   profile_picture?: IFile | string;
   auth_providers: IAuthProvider[];
+  fcmTokens?: string[];
   location?: ICoord;
   notifications_enabled: boolean;
   preferences?: IUserPreferences;
   resetPasswordToken?: string;
   resetPasswordExpires?: string;
-  NotificationPreferences?: NotificationPreferences;
   role: Role;
   status: UserStatus;
   is_verified: boolean;

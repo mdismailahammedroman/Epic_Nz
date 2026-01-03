@@ -1,33 +1,68 @@
-import User from "../user/user.model";
-import {
-  NotificationPayload,
-  NotificationCategory,
-} from "./notification.interface";
+import httpStatus from "http-status-codes";
+import { INotifyPreference } from "./notification.interface";
+import { Notification, NotificationPreference } from "./notification.model";
+import AppError from "../../errorHelper/AppError";
 
-const sendNotification = async ({ message, category }: NotificationPayload) => {
-  if (!category) throw new Error("Category is required");
+// Get user's notification preferences (using)
+const getUserNotificationPreferences = async (userId: string) => {
+  const preferences = await NotificationPreference.findOne({ user: userId });
 
-  // Find all users who opted-in for this category
-  const users = await User.find({
-    [`notificationPreferences.category.${category.type}`]: true,
-  });
-
-  for (const user of users) {
-    await sendPushNotification(user._id.toString(), message, category);
+  if (!preferences) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Notification preferences not found"
+    );
   }
 
-  return { message, category, recipients: users.length };
+  return preferences;
 };
 
-// Type-safe push notification
-const sendPushNotification = async (
+// Update notification preferences (using)
+const updateNotificationPreferences = async (
   userId: string,
-  message: string,
-  criteria: NotificationCategory
+  payload: Partial<INotifyPreference>
 ) => {
-  console.log(
-    `Sent "${message}" to user ${userId} for category ${criteria.type} (priority: ${criteria.priority})`
+  const preferences = await NotificationPreference.findOne({ user: userId });
+
+  if (!preferences) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Notification preferences not found"
+    );
+  }
+
+  const updatedPreferences = await NotificationPreference.findOneAndUpdate(
+    { user: userId },
+    payload,
+    { new: true, runValidators: true }
   );
+
+  return updatedPreferences;
 };
 
-export const notificationService = { sendNotification };
+// Get user's notification
+const getusersNotificationService = async (
+  userId: string,
+  query: Record<string, string>
+) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const sort = query.sort || "-createdAt";
+
+  const notifications = await Notification.find({
+    $or: [{ user: userId }, { receiverIds: [userId] }],
+  })
+    .skip(skip)
+    .limit(limit)
+    .sort(sort);
+
+  return notifications;
+};
+
+export const NotificationService = {
+  getUserNotificationPreferences,
+  updateNotificationPreferences,
+  getusersNotificationService,
+};

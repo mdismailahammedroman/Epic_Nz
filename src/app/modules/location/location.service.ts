@@ -45,6 +45,7 @@ const submitLocation = async (
   });
 
   await newLocation.save();
+
   return newLocation;
 };
 

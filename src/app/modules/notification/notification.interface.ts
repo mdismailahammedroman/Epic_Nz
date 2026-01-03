@@ -1,58 +1,45 @@
 import { Types } from "mongoose";
 
-// Location-based notification criteria
-export interface LocationCriteria {
-  locationId?: string;
-  latitude?: number;
-  longitude?: number;
-  radiusKm?: number;
+export enum NotificationType {
+  EPIC_SPOT = "EPIC_SPOT",
+  WEATHER_ALERT = "WEATHER_ALERT",
+  USER_SUBMISSION = "USER_SUBMISSION",
+  PREMIUM_FEATURE = "PREMIUM_FEATURE",
+  SUBSCRIPTION_REMINDER = "SUBSCRIPTION_REMINDER",
+  SYSTEM = "SYSTEM",
 }
 
-// Weather-based notification criteria
-export interface WeatherCriteria {
-  condition?: "clear" | "cloudy" | "rain" | "snow";
-  minTemperature?: number;
-  maxWindSpeed?: number;
-  sunriseQualityScore?: number; // AI-based
+export interface IChannel {
+  push: boolean;
+  email: boolean;
+  inApp: boolean;
 }
 
-// Category-based notification
-export interface NotificationCategory {
-  type: "epic_spot" | "hike" | "campground" | "freedom_camping";
-  priority?: "low" | "medium" | "high";
-}
-
-// Payload from controller/service
-export interface NotificationPayload {
-  userId?: string;
-  message: string;
-  location?: LocationCriteria;
-  weather?: WeatherCriteria;
-  category?: NotificationCategory;
-}
-
-// User notification preferences
-export interface NotificationPreferences {
-  location: boolean;
-  weather: boolean;
-  category: boolean;
-}
-
-// Push notification payload (FCM/APNS ready)
-export interface PushNotificationPayload {
-  token: string;
-  title: string;
-  body: string;
-  data?: Record<string, string>;
-}
-
-// DB notification entity
 export interface INotification {
-  id?: string;
-  userId: Types.ObjectId;
+  _id?: Types.ObjectId;
+  user?: Types.ObjectId;
+  eventId?: Types.ObjectId;
+  chatId?: Types.ObjectId;
+  receiverIds?: Types.ObjectId[];
+  type: NotificationType;
   title: string;
-  message: string;
-  type: "location" | "weather" | "category" | "system";
-  metadata?: Record<string, any>;
-  sentAt?: Date;
+  description?: string;
+  data?: Record<string, any>;
+  isRead?: boolean;
+}
+
+export interface INotifyPreference {
+  _id?: Types.ObjectId;
+  user: Types.ObjectId;
+  channel: IChannel;
+  direct_sms: boolean;
+  app: {
+    product_updates: boolean;
+    special_offers: boolean;
+  };
+  locationItem: {
+    nearbyAlerts: boolean; // Notify when an epic spot is nearby
+    weatherAlerts: boolean; // Notify about weather changes at a location
+    newSpotRecommendations: boolean; // Notify when new spots are added to a category the user follows
+  };
 }

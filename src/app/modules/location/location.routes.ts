@@ -10,7 +10,7 @@ const router = Router();
 
 router.post(
   "/submit",
-  checkAuth(Role.USER),
+  checkAuth(...Object.values(Role)),
   multerUpload.single("image"), // <-- ADD THIS LINE
   validateRequest(LocationValidation.createLocationValidationSchema),
   locationController.submitLocation

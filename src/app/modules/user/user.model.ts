@@ -41,6 +41,10 @@ const userSchema = new Schema<IUser>(
       enum: Object.values(UserStatus),
       default: UserStatus.ACTIVE,
     },
+    fcmTokens: {
+      type: [String],
+      default: [],
+    },
     is_verified: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     savedLocations: [{ type: Schema.Types.ObjectId, ref: "Location" }],
