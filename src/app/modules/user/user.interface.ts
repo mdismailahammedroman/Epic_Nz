@@ -1,6 +1,5 @@
 import { ISubscription } from "../subscription/subscription.interface";
 
-// ===== Enums =====
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
@@ -15,7 +14,6 @@ export enum UserStatus {
   PENDING = "PENDING",
 }
 
-// ===== Auth =====
 export enum AuthProviderType {
   GOOGLE = "google",
   CREDENTIAL = "credential",
@@ -26,14 +24,15 @@ export interface IAuthProvider {
   providerID: string;
 }
 
-// ===== Location =====
 export interface ICoord {
-  lat: number;
-  long: number;
+  type: "Point";
+  coordinates: [number, number]; // [longitude, latitude]
   placeName?: string;
+  // keeping lat/long for backward compatibility if needed, but ideally we switch to coordinates
+  lat?: number;
+  long?: number;
 }
 
-// ===== Preferences =====
 export interface IUserPreferences {
   language: string;
   theme: string;
@@ -43,7 +42,6 @@ export interface IUserPreferences {
   location_access?: boolean;
 }
 
-// ===== Profile Picture Interface =====
 interface IFile {
   fieldname: string;
   originalname: string;
@@ -58,21 +56,17 @@ export interface IUser {
   full_name: string;
   password?: string;
   profile_picture?: IFile | string;
-
   auth_providers: IAuthProvider[];
+  fcmTokens?: string[];
   location?: ICoord;
-
   notifications_enabled: boolean;
   preferences?: IUserPreferences;
-
   resetPasswordToken?: string;
   resetPasswordExpires?: string;
-
   role: Role;
   status: UserStatus;
   is_verified: boolean;
   isDeleted: boolean;
-
   subscription: ISubscription;
   savedLocations?: string[];
   created_at: Date;

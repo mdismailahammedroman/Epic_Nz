@@ -63,6 +63,7 @@ interface EnvVar {
   GOOGLE_MAPS_API_KEY: string;
   PRICE_WEEKLY: string;
   PRICE_MONTHLY: string;
+  FIREBASE_SERVICE_ACCOUNT_PATH: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -106,6 +107,7 @@ const loadEnvVariables = (): EnvVar => {
     "STRIPE_WEBHOOK_SECRET",
     "PRICE_WEEKLY",
     "PRICE_MONTHLY",
+    "FIREBASE_SERVICE_ACCOUNT_PATH",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -166,6 +168,7 @@ const loadEnvVariables = (): EnvVar => {
     WEATHER_API_URL: process.env.WEATHER_API_URL!,
     LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY!,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY!,
+    FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH!,
   };
 };
 

@@ -1,5 +1,7 @@
 node_modules
+firebase-service-account.json
 .env
+
 dist
 text
 `build

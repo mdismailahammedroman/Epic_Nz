@@ -4,7 +4,6 @@ import { weatherServices } from "./weather.service";
 import { sendResponse } from "../../utils/SendResponse";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";
-import Location from "../location/location.model";
 const weatherInfo = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { latitude, longitude } = req.query as Record<string, string>;

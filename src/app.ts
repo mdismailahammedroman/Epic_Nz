@@ -12,6 +12,8 @@ import safeSanitizeMiddleware from "./app/middleware/mongo-sanitize";
 import passport from "./app/config/passport.config";
 import { subscriptionController } from "./app/modules/subscription/subscription.controller";
 
+import "./app/config/firebase.config"; // ensures init at startup
+
 dotenv.config();
 
 const app: Application = express();

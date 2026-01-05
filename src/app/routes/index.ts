@@ -5,6 +5,7 @@ import { locationRouter } from "../modules/location/location.routes";
 import { weatherRouter } from "../modules/weather/weather.router";
 import { SubscriptionRoute } from "../modules/subscription/subscription.router";
 import { otpRouter } from "../modules/otp/otp.route";
+import { notifyRoute } from "../modules/notification/notification.router";
 
 export const router = Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
   {
     path: "/otp",
     route: otpRouter,
+  },
+  {
+    path: "/notification",
+    route: notifyRoute,
   },
 ];
 
