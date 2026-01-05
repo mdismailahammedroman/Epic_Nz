@@ -6,7 +6,6 @@ import { sendResponse } from "../../utils/SendResponse";
 import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
-import { send } from "node:process";
 
 // location.controller.ts
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
@@ -175,6 +174,17 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const approveLocation = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const result = await locationServices.approveLocation(locationId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location approved successfully",
+    data: result,
+  });
+});
+
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -187,4 +197,5 @@ export const locationController = {
   unsaveLocationForUser,
   shareLocation,
   locationRating,
+  approveLocation,
 };

@@ -5,8 +5,9 @@ import { getPlaceName } from "../../utils/getLocation";
 
 import AppError from "../../errorHelper/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
-import { CategoryEnum } from "./location.interface";
+import { CategoryEnum, LocationStatus } from "./location.interface";
 import User from "../user/user.model";
+import { NotificationService } from "../notification/notification.service";
 
 const submitLocation = async (
   userId: string,
@@ -43,6 +44,11 @@ const submitLocation = async (
     category: categoryName || CategoryEnum,
     status: "PENDING",
   });
+
+  // const allUsers = await User.find({ is_verified: true }); // Retrieve all verified users
+  // for (let user of allUsers) {
+  //   await sendPushNotification(user._id, title, body);
+  // }
 
   await newLocation.save();
 
@@ -265,6 +271,21 @@ const locationRating = async (
   return location;
 };
 
+const approveLocation = async (locationId: string) => {
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(404, "Location not found");
+  }
+
+  location.status = LocationStatus.APPROVED;
+  await location.save();
+
+  // Notify nearby users
+  await NotificationService.notifyNearbyUsers(location);
+
+  return location;
+};
+
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -277,4 +298,5 @@ export const locationServices = {
   unsaveLocationForUser,
   shareLocation,
   locationRating,
+  approveLocation,
 };

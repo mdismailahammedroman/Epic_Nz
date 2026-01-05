@@ -24,8 +24,9 @@ const userSchema = new Schema<IUser>(
       },
     ],
     location: {
-      lat: { type: Number },
-      long: { type: Number },
+      type: { type: String, default: "Point" },
+      coordinates: { type: [Number], default: [0, 0] },
+      placeName: { type: String },
     },
     preferences: {
       language: { type: String, default: "en" },
@@ -53,6 +54,8 @@ const userSchema = new Schema<IUser>(
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
+
+userSchema.index({ "location.coordinates": "2dsphere" });
 
 const User = model<IUser>("User", userSchema);
 export default User;

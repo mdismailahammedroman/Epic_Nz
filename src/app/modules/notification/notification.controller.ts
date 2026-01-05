@@ -5,6 +5,59 @@ import { CatchAsync } from "../../utils/catchAsync";
 import { Request, Response } from "express";
 import { NotificationService } from "./notification.service";
 import { sendResponse } from "../../utils/SendResponse";
+import Location from "../location/location.model";
+import AppError from "../../errorHelper/AppError";
+
+const notifyNearbyUsers = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.body;
+
+  if (!locationId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Location ID is required");
+  }
+
+  const location = await Location.findById(locationId);
+
+  if (!location) {
+    throw new AppError(httpStatus.NOT_FOUND, "Location not found");
+  }
+
+  const result = await NotificationService.notifyNearbyUsers(location);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Nearby users notified successfully",
+    data: result,
+  });
+});
+
+const pushNotification = CatchAsync(async (req: Request, res: Response) => {
+  const { tokens, title, body, data } = req.body;
+
+  if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Valid tokens array is required"
+    );
+  }
+  if (!title || !body) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Title and body are required");
+  }
+
+  const result = await NotificationService.sendPushNotification(
+    tokens,
+    title,
+    body,
+    data
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Push notification sent successfully",
+    data: result,
+  });
+});
 
 // Get user's notification preferences (using)
 const getUserNotificationPreferences = CatchAsync(
@@ -67,4 +120,6 @@ export const NotificationController = {
   getUserNotificationPreferences,
   updateNotificationPreferences,
   getUserNotifications,
+  notifyNearbyUsers,
+  pushNotification,
 };

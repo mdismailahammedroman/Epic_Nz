@@ -71,4 +71,12 @@ router.post(
   checkAuth(Role.USER),
   locationController.locationRating
 );
+
+// Approve location (ADMIN only)
+router.patch(
+  "/:locationId/approve",
+  checkAuth(Role.ADMIN),
+  locationController.approveLocation
+);
+
 export const locationRouter = router;

@@ -25,9 +25,12 @@ export interface IAuthProvider {
 }
 
 export interface ICoord {
-  lat: number;
-  long: number;
+  type: "Point";
+  coordinates: [number, number]; // [longitude, latitude]
   placeName?: string;
+  // keeping lat/long for backward compatibility if needed, but ideally we switch to coordinates
+  lat?: number;
+  long?: number;
 }
 
 export interface IUserPreferences {

@@ -16,7 +16,8 @@ import User from "./user.model";
 import { getPlaceName } from "../../utils/getLocation";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, profile_picture, preferences, ...rest } = payload;
+  const { email, password, profile_picture, preferences, fcmTokens, ...rest } =
+    payload;
 
   const defaultPreferences = preferences || {
     language: "en",
@@ -60,6 +61,7 @@ const createUser = async (payload: Partial<IUser>) => {
     profile_picture: profilePictureUrl, // Store the Cloudinary URL here
     auth_providers: [authUser],
     preferences: defaultPreferences,
+    fcmTokens: fcmTokens ? [fcmTokens] : [],
     ...rest,
   });
 
