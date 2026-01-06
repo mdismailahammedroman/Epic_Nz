@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { envVar } from "./../config/envVar";
 import axios from "axios";
 

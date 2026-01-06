@@ -1,5 +1,15 @@
 import { Schema, model } from "mongoose";
-import { AuthProviderType, IUser, Role, UserStatus } from "./user.interface";
+import { IAuthProvider, IUser, Role, UserStatus } from "./user.interface";
+const authProviderSchema = new Schema<IAuthProvider>(
+  {
+    provider: { type: String, required: true },
+    providerId: { type: String, required: true },
+  },
+  {
+    versionKey: false,
+    _id: false,
+  }
+);
 
 const userSchema = new Schema<IUser>(
   {
@@ -13,16 +23,7 @@ const userSchema = new Schema<IUser>(
     full_name: { type: String, required: true, trim: true },
     password: { type: String, required: false, select: false },
     profile_picture: { type: String },
-    auth_providers: [
-      {
-        provider: {
-          type: String,
-          enum: Object.values(AuthProviderType),
-          required: true,
-        },
-        providerID: { type: String, required: true },
-      },
-    ],
+    auth_providers: [authProviderSchema],
     location: {
       type: { type: String, default: "Point" },
       coordinates: { type: [Number], default: [0, 0] },

@@ -3,37 +3,37 @@ import dotenv from "dotenv";
 // Load environment variables from .env file
 dotenv.config();
 
-type CLOUDINARY_TYPE = {
+interface CLOUDINARY_TYPE {
   CLOUDINARY_NAME: string;
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_SECRET: string;
-};
+}
 
-type REDIS_TYPE = {
+interface REDIS_TYPE {
   REDIS_HOST: string;
   REDIS_PORT: string;
   REDIS_USERNAME: string;
   REDIS_PASSWORD: string;
-};
+}
 
-type SMTP_TYPE = {
+interface SMTP_TYPE {
   SMTP_HOST: string;
   SMTP_PORT: string;
   SMTP_USER: string;
   SMTP_PASSWORD: string;
-};
+}
 
-type GOOGLE_TYPE = {
-  GOOGLE_OAUTH_ID: string;
-  GOOGLE_OAUTH_SECRET: string;
+interface GOOGLE_TYPE {
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
   GOOGLE_CALLBACK_URL: string;
-};
+}
 
-type FACEBOOK_TYPE = {
+interface FACEBOOK_TYPE {
   FACEBOOK_APP_ID: string;
   FACEBOOK_APP_SECRET: string;
   FACEBOOK_APP_CALLBACK_URL: string;
-};
+}
 
 interface EnvVar {
   PORT: string;
@@ -52,6 +52,8 @@ interface EnvVar {
   STRIPE_SECRET_KEY: string;
   STRIPE_PUBLIC_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
+  PRICE_WEEKLY: string;
+  PRICE_MONTHLY: string;
   REDIS: REDIS_TYPE;
   SMTP: SMTP_TYPE;
   GOOGLE_AUTH: GOOGLE_TYPE;
@@ -61,8 +63,6 @@ interface EnvVar {
   WEATHER_API_URL: string;
   LOCATIONIQ_API_KEY: string;
   GOOGLE_MAPS_API_KEY: string;
-  PRICE_WEEKLY: string;
-  PRICE_MONTHLY: string;
   FIREBASE_SERVICE_ACCOUNT_PATH: string;
 }
 
@@ -91,8 +91,8 @@ const loadEnvVariables = (): EnvVar => {
     "SMTP_PORT",
     "SMTP_USER",
     "SMTP_PASSWORD",
-    "GOOGLE_OAUTH_ID",
-    "GOOGLE_OAUTH_SECRET",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
     "GOOGLE_CALLBACK_URL",
     "FACEBOOK_APP_ID",
     "FACEBOOK_APP_SECRET",
@@ -119,56 +119,58 @@ const loadEnvVariables = (): EnvVar => {
   });
 
   return {
-    PORT: process.env.PORT!,
+    PORT: process.env.PORT as string,
     NODE_ENV: process.env.NODE_ENV as "development" | "production",
-    MONGO_URI: process.env.MONGO_URI!,
-    JWT_SECRET: process.env.JWT_SECRET!,
-    JWT_EXPIRATION: process.env.JWT_EXPIRATION!,
-    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-    JWT_REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION!,
-    BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND!,
-    EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET!,
-    FRONTEND_URL: process.env.FRONTEND_URL!,
+    MONGO_URI: process.env.MONGO_URI as string,
+    JWT_SECRET: process.env.JWT_SECRET as string,
+    JWT_EXPIRATION: process.env.JWT_EXPIRATION as string,
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
+    JWT_REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION as string,
+    BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
+    EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
+    FRONTEND_URL: process.env.FRONTEND_URL as string,
     CLOUDINARY: {
-      CLOUDINARY_NAME: process.env.CLOUDINARY_NAME!,
-      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY!,
-      CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET!,
+      CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
+      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+      CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET as string,
     },
-    REQUEST_RATE_LIMIT: process.env.REQUEST_RATE_LIMIT!,
-    REQUEST_RATE_LIMIT_TIME: process.env.REQUEST_RATE_LIMIT_TIME!,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
-    STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY!,
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET!,
-    PRICE_WEEKLY: process.env.PRICE_WEEKLY!,
-    PRICE_MONTHLY: process.env.PRICE_MONTHLY!,
+    REQUEST_RATE_LIMIT: process.env.REQUEST_RATE_LIMIT as string,
+    REQUEST_RATE_LIMIT_TIME: process.env.REQUEST_RATE_LIMIT_TIME as string,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
+    STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY as string,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
+    PRICE_WEEKLY: process.env.PRICE_WEEKLY as string,
+    PRICE_MONTHLY: process.env.PRICE_MONTHLY as string,
     REDIS: {
-      REDIS_HOST: process.env.REDIS_HOST!,
-      REDIS_PORT: process.env.REDIS_PORT!,
-      REDIS_USERNAME: process.env.REDIS_USERNAME!,
-      REDIS_PASSWORD: process.env.REDIS_PASSWORD!,
+      REDIS_HOST: process.env.REDIS_HOST as string,
+      REDIS_PORT: process.env.REDIS_PORT as string,
+      REDIS_USERNAME: process.env.REDIS_USERNAME as string,
+      REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
     },
     SMTP: {
-      SMTP_HOST: process.env.SMTP_HOST!,
-      SMTP_PORT: process.env.SMTP_PORT!,
-      SMTP_USER: process.env.SMTP_USER!,
-      SMTP_PASSWORD: process.env.SMTP_PASSWORD!,
+      SMTP_HOST: process.env.SMTP_HOST as string,
+      SMTP_PORT: process.env.SMTP_PORT as string,
+      SMTP_USER: process.env.SMTP_USER as string,
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
     },
     GOOGLE_AUTH: {
-      GOOGLE_OAUTH_ID: process.env.GOOGLE_OAUTH_ID!,
-      GOOGLE_OAUTH_SECRET: process.env.GOOGLE_OAUTH_SECRET!,
-      GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL!,
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+      GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
     },
     FACEBOOK_AUTH: {
-      FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID!,
-      FACEBOOK_APP_SECRET: process.env.FACEBOOK_APP_SECRET!,
-      FACEBOOK_APP_CALLBACK_URL: process.env.FACEBOOK_APP_CALLBACK_URL!,
+      FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID as string,
+      FACEBOOK_APP_SECRET: process.env.FACEBOOK_APP_SECRET as string,
+      FACEBOOK_APP_CALLBACK_URL: process.env
+        .FACEBOOK_APP_CALLBACK_URL as string,
     },
-    SESSION_SECRET: process.env.SESSION_SECRET!,
-    OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY!,
-    WEATHER_API_URL: process.env.WEATHER_API_URL!,
-    LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY!,
-    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY!,
-    FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH!,
+    SESSION_SECRET: process.env.SESSION_SECRET as string,
+    OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY as string,
+    WEATHER_API_URL: process.env.WEATHER_API_URL as string,
+    LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY as string,
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY as string,
+    FIREBASE_SERVICE_ACCOUNT_PATH: process.env
+      .FIREBASE_SERVICE_ACCOUNT_PATH as string,
   };
 };
 

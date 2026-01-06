@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 import { cloudinaryUpload } from "./cloudinary.config"; // Ensure Cloudinary config is correct

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";

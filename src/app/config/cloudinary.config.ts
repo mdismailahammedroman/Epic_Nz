@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import stream from "stream";
 import { envVar } from "./envVar";

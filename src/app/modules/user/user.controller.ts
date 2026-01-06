@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/SendResponse";
 import { userServices } from "./user.service";
 import { JwtPayload } from "jsonwebtoken";
 import AppError from "../../errorHelper/AppError";
-import { IUserPreferences } from "./user.interface";
 import { StatusCodes } from "http-status-codes";
 
 // Controller to handle user registration

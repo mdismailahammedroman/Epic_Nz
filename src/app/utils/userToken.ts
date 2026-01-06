@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { generateToken, verifyToken } from "./jwt";
 import AppError from "../errorHelper/AppError";
@@ -7,29 +6,11 @@ import { envVar } from "../config/envVar";
 import { IUser, Role, UserStatus } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
 
-type IUserWithId = Partial<IUser> & { _id: Types.ObjectId | string };
-
-export const createUserTokens = (user: IUserWithId) => {
-  if (!user || !user._id) {
-    throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "User ID is missing");
-  }
-
-  // Handle ObjectId or string _id safely
-  const userId =
-    typeof user._id === "string"
-      ? user._id
-      : (user._id as Types.ObjectId).toString();
-
-  const jwtPayload: JwtPayload & {
-    userId: string;
-    email: string;
-    role: Role;
-    status: UserStatus;
-  } = {
-    userId,
-    email: user.email as string,
-    role: user.role as Role,
-    status: user.status as UserStatus,
+export const createUserTokens = (user: IUser) => {
+  const jwtPayload = {
+    userId: user._id,
+    email: user.email,
+    role: user.role,
   };
 
   const accessToken = generateToken(
