@@ -27,7 +27,8 @@ const submitLocation = async (
   let addressName = "";
   try {
     addressName = await getPlaceName(lat, lon);
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error retrieving address:", error);
     addressName = "Unknown Location";
   }
 

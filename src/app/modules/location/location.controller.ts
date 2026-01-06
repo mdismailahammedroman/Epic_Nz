@@ -1,4 +1,3 @@
-import { CategoryEnum } from "./location.interface";
 import { StatusCodes } from "http-status-codes";
 import { Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";

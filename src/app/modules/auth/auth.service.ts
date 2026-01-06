@@ -1,16 +1,77 @@
+import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../user/user.model";
+import AppError from "../../errorHelper/AppError";
+import { StatusCodes } from "http-status-codes";
+import { sendEmail } from "../../utils/sendMail";
+import { envVar } from "../../config/envVar";
+import { createNewAccessTokenWithRefreshToken } from "../../utils/userToken";
 
-const forgetPassword = async (email: string) => {
-  // Generate OTP, save in DB, send email
+const getNewAccessToken = async (refreshToken: string) => {
+  const newAccessToken = await createNewAccessTokenWithRefreshToken(
+    refreshToken
+  );
+
+  return {
+    accessToken: newAccessToken,
+  };
 };
+const forgetPassword = async (email: string) => {
+  const isUserExist = await User.findOne({ email });
+  if (!isUserExist) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
+  }
+  if (!isUserExist.is_verified) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "User is not verified");
+  }
 
+  if (isUserExist.isDeleted) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
+  }
+
+  const jwtPayload = {
+    userId: isUserExist._id,
+    email: isUserExist.email,
+    role: isUserExist.role,
+  };
+
+  const resetToken = jwt.sign(jwtPayload, envVar.JWT_REFRESH_EXPIRATION, {
+    expiresIn: "10m",
+  });
+
+  const resetUILink = `${envVar.FRONTEND_URL}/reset-password?id=${isUserExist._id}&token=${resetToken}`;
+
+  sendEmail({
+    to: isUserExist.email,
+    subject: "Password Reset",
+    templateName: "forgetPassword",
+    templateData: {
+      name: isUserExist.full_name,
+      resetUILink,
+    },
+  });
+};
 const resetPassword = async (
-  email: string,
-  otp: string,
-  newPassword: string
+  payload: Record<string, any>,
+  decodedToken: JwtPayload
 ) => {
-  // Validate OTP, update password
+  if (payload.id != decodedToken.userId) {
+    throw new AppError(401, "You can not reset your password");
+  }
+
+  const isUserExist = await User.findById(decodedToken.userId);
+  if (!isUserExist) {
+    throw new AppError(401, "User does not exist");
+  }
+
+  const hashedPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(envVar.BCRYPT_SALT_ROUND)
+  );
+
+  isUserExist.password = hashedPassword;
+
+  await isUserExist.save();
 };
 
 const changePassword = async (
@@ -28,4 +89,9 @@ const changePassword = async (
   await user.save();
 };
 
-export const authService = { forgetPassword, resetPassword, changePassword };
+export const authService = {
+  getNewAccessToken,
+  forgetPassword,
+  resetPassword,
+  changePassword,
+};
