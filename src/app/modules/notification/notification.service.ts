@@ -4,8 +4,6 @@ import { Notification, NotificationPreference } from "./notification.model";
 import AppError from "../../errorHelper/AppError";
 import { fcm } from "../../config/firebase.config";
 import User from "../user/user.model";
-import { ILocation } from "../location/location.interface"; // Assuming ILocation is exported
-import Location from "../location/location.model";
 
 // Get user's notification preferences (using)
 const getUserNotificationPreferences = async (userId: string) => {
@@ -66,13 +64,17 @@ const getusersNotificationService = async (
 };
 
 // Send Push Notification
+// Service to send push notifications
 const sendPushNotification = async (
   tokens: string[],
   title: string,
   body: string,
   data: Record<string, string> = {}
 ) => {
-  if (!tokens.length) return;
+  if (!tokens || tokens.length === 0) {
+    console.log("No tokens provided. Skipping notification.");
+    return; // Early return if no tokens are provided
+  }
 
   try {
     const message = {
@@ -84,37 +86,47 @@ const sendPushNotification = async (
       tokens,
     };
 
+    // Send notifications to all tokens using Firebase Cloud Messaging (FCM)
     const response = await fcm.sendEachForMulticast(message);
+
+    // Log the response from FCM
     console.log("Successfully sent message:", response);
+
     if (response.failureCount > 0) {
       const failedTokens: string[] = [];
       response.responses.forEach((resp: any, idx: number) => {
         if (!resp.success) {
-          failedTokens.push(tokens[idx]);
+          failedTokens.push(tokens[idx]); // Collect failed tokens
         }
       });
-      console.log("List of tokens that caused failures: " + failedTokens);
+
+      console.log(
+        "List of tokens that caused failures: " + failedTokens.join(", ")
+      );
+    } else {
+      console.log("All notifications were sent successfully!");
     }
+
     return response;
   } catch (error) {
-    console.log("Error sending message:", error);
-    throw error;
+    console.error("Error sending push notification:", error); // Improved error logging
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Failed to send push notification"
+    );
   }
 };
 
 // Notify nearby users about a new location
 const notifyNearbyUsers = async (location: any) => {
-  // Find users within 10km (10000 meters)
-  // Assuming 'coordinates' in Location is { type: "Point", coordinates: [lon, lat] }
-  // And User model has 'location.coordinates' indexed with 2dsphere
-
   if (!location.coordinates || !location.coordinates.coordinates) {
-    console.log("Location has no coordinates");
+    console.log("Location has no coordinates.");
     return;
   }
 
   const [longitude, latitude] = location.coordinates.coordinates;
 
+  // Find nearby users within a 10 km radius
   const nearbyUsers = await User.find({
     "location.coordinates": {
       $near: {
@@ -122,28 +134,31 @@ const notifyNearbyUsers = async (location: any) => {
           type: "Point",
           coordinates: [longitude, latitude],
         },
-        $maxDistance: 10000, // 10km
+        $maxDistance: 10000, // 10 km radius
       },
     },
-    // Only notify users who have notifications enabled
-    "preferences.notifications_enabled": true,
-    // Ensure they have FCM tokens
-    fcmTokens: { $exists: true, $not: { $size: 0 } },
+    "preferences.notifications_enabled": true, // Only notify users with notifications enabled
+    fcmTokens: { $exists: true, $not: { $size: 0 } }, // Ensure users have FCM tokens
   }).select("fcmTokens");
 
   const tokens = nearbyUsers.flatMap((user) => user.fcmTokens || []);
   const uniqueTokens = [...new Set(tokens)];
 
   if (uniqueTokens.length > 0) {
-    return await sendPushNotification(
-      uniqueTokens,
-      "New Location Alert! 📍",
-      `A new location "${location.name}" has been approved nearby! Check it out.`,
-      { locationId: location._id.toString() }
-    );
-  }
+    const title = "New Location Alert!";
+    const body = `A new location "${location.name}" has been approved nearby! Check it out.`;
+    const data = { locationId: location._id.toString() };
 
-  return { message: "No nearby users found to notify" };
+    // Send push notification to all nearby users
+    await NotificationService.sendPushNotification(
+      uniqueTokens,
+      title,
+      body,
+      data
+    );
+  } else {
+    console.log("No nearby users found to notify.");
+  }
 };
 
 export const NotificationService = {

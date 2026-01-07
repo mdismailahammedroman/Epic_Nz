@@ -8,6 +8,8 @@ import { QueryBuilder } from "../../utils/QueryBuilder";
 import { CategoryEnum, LocationStatus } from "./location.interface";
 import User from "../user/user.model";
 import { NotificationService } from "../notification/notification.service";
+import { StatusCodes } from "http-status-codes";
+import { getAllFcmTokens } from "../../utils/randomFCMToken";
 
 const submitLocation = async (
   userId: string,
@@ -45,11 +47,6 @@ const submitLocation = async (
     category: categoryName || CategoryEnum,
     status: "PENDING",
   });
-
-  // const allUsers = await User.find({ is_verified: true }); // Retrieve all verified users
-  // for (let user of allUsers) {
-  //   await sendPushNotification(user._id, title, body);
-  // }
 
   await newLocation.save();
 
@@ -273,18 +270,101 @@ const locationRating = async (
 };
 
 const approveLocation = async (locationId: string) => {
+  // Find the location by its ID
   const location = await Location.findById(locationId);
+
+  // If location is not found, throw an error
   if (!location) {
-    throw new AppError(404, "Location not found");
+    throw new AppError(StatusCodes.NOT_FOUND, "Location not found");
   }
 
-  location.status = LocationStatus.APPROVED;
-  await location.save();
+  // If the location is already approved, throw an error
+  if (location.status === LocationStatus.APPROVED) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Location is already approved");
+  }
 
-  // Notify nearby users
-  await NotificationService.notifyNearbyUsers(location);
+  // Update the location's status to APPROVED
+  location.status = LocationStatus.APPROVED;
+  await location.save(); // Save the updated location
+
+  // 🔔 Notify nearby users
+  await NotificationService.notifyNearbyUsers(location); // Send notification to nearby users
+
+  // Optionally, you can also send a push notification to all users (based on your logic)
+  const title = "New Location Approved!";
+  const body = `The location "${location.name}" has been approved and is now visible to everyone.`;
+  const data = { locationId: location._id.toString() };
+
+  // Fetch all FCM tokens (or filtered tokens as needed) and send notifications
+  const allTokens = await getAllFcmTokens(); // This can be a function that fetches all user tokens
+  if (allTokens.length > 0) {
+    await NotificationService.sendPushNotification(
+      allTokens,
+      title,
+      body,
+      data
+    );
+  }
+
+  return location; // Return the updated location
+};
+
+const rejectLocation = async (locationId: string, adminId: Types.ObjectId) => {
+  // Find the location by ID
+  const location = await Location.findById(locationId);
+  if (!location) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Location not found");
+  }
+
+  // If the location is already rejected, throw an error
+  if (location.status === LocationStatus.REJECTED) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Location is already rejected");
+  }
+
+  // Update the location's status to REJECTED
+  location.status = LocationStatus.REJECTED;
+  location.approvedByAdmin = adminId; // Store the admin who rejected the location
+  await location.save(); // Save the updated location
+
+  // Notify the creator (user) that the location was rejected
+  const creator = await User.findById(location.userId);
+  if (!creator) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Location creator not found");
+  }
+
+  const title = "Your Location was Rejected";
+  const body = `The location "${location.name}" has been rejected by the admin.`;
+  const data = { locationId: location._id.toString() };
+
+  // Send push notification to the creator
+  if (creator.fcmTokens && creator.fcmTokens.length > 0) {
+    await NotificationService.sendPushNotification(
+      creator.fcmTokens,
+      title,
+      body,
+      data
+    );
+  }
 
   return location;
+};
+
+const getLocationPinsService = async () => {
+  const locations = await Location.find({
+    isDeleted: false, // Only get non-deleted locations
+  }).select("coordinates placeName"); // Only select coordinates and placeName for the map
+
+  if (!locations || locations.length === 0) {
+    throw new AppError(404, "No locations found");
+  }
+
+  // Map locations to pins format (coordinates and placeName)
+  const locationPins = locations.map((location) => ({
+    coordinates: location.coordinates,
+    placeName: Location.name,
+  }));
+
+  return locationPins;
 };
 
 export const locationServices = {
@@ -300,4 +380,6 @@ export const locationServices = {
   shareLocation,
   locationRating,
   approveLocation,
+  rejectLocation,
+  getLocationPinsService,
 };

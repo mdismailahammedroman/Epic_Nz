@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import { IAuthProvider, IUser, Role, UserStatus } from "./user.interface";
+
 const authProviderSchema = new Schema<IAuthProvider>(
   {
     provider: { type: String, required: true },
@@ -57,6 +58,14 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ "location.coordinates": "2dsphere" });
+
+// userSchema.pre("save", function (next: NextFunction) {
+//   // Example: Remove duplicate fcmTokens when user saves a new token
+//   if (this.isModified("fcmTokens")) {
+//     this.fcmTokens = [...new Set(this.fcmTokens)]; // Ensure no duplicates
+//   }
+//   next();
+// });
 
 const User = model<IUser>("User", userSchema);
 export default User;

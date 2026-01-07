@@ -4,6 +4,11 @@ export const CatchAsync = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res, next).catch(next); // This catches async errors and passes them to the next middleware
+    try {
+      fn(req, res, next);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
   };
 };

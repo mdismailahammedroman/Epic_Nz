@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { StatusCodes } from "http-status-codes";
 import { NextFunction, Request, Response } from "express";
@@ -13,6 +14,7 @@ import { setAuthCookie } from "../../utils/SetCookies";
 import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
 import { IUser } from "../user/user.interface";
+import { JwtPayload } from "jsonwebtoken";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -139,19 +141,20 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
 });
 
 // Reset Password (using OTP/email)
-const resetPassword = CatchAsync(async (req: Request, res: Response) => {
-  const { email, otp } = req.params;
-  const { newPassword } = req.body;
+const resetPassword = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JwtPayload;
 
-  await authService.resetPassword(email, otp, newPassword);
+    await authService.resetUserPassword(req.body, decodedToken);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Password reset successfully",
-    data: null,
-  });
-});
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Password reset successfully",
+      data: null,
+    });
+  }
+);
 
 export const authController = {
   credentialLogin,

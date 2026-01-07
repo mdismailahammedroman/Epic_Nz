@@ -79,4 +79,12 @@ router.patch(
   locationController.approveLocation
 );
 
+// router.patch(
+//   "/:locationId/reject",
+//   checkAuth(Role.ADMIN),
+//   locationController.rejectLocation
+// );
+
+router.get("/pins", locationController.getLocationPins);
+
 export const locationRouter = router;

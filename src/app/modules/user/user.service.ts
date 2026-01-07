@@ -1,8 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
 import AppError from "../../errorHelper/AppError";
-import { IUser, Role } from "./user.interface";
-
+import { IUser, IUserPreferences, Role } from "./user.interface";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -272,6 +271,26 @@ const getUserPreferencesService = async (userId: string) => {
   return user.preferences;
 };
 
+const updateUserPreferences = async (
+  userId: string,
+  payload: Partial<IUserPreferences>
+) => {
+  // Here you can perform any logic with the decodedToken if needed
+  // For example, you can verify if the user is authorized to update their own preferences
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: payload }, // Update the user with the provided payload
+    { new: true, runValidators: true }
+  ).select("preferences"); // Return the updated preferences
+
+  if (!updatedUser) {
+    throw new AppError(404, "User not found");
+  }
+
+  return updatedUser.preferences;
+};
+
 export const userServices = {
   createUser,
   getMeService,
@@ -280,4 +299,5 @@ export const userServices = {
   userUpdateService,
   userDeleteService,
   getUserPreferencesService,
+  updateUserPreferences,
 };

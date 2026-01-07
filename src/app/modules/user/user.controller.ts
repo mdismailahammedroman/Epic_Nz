@@ -132,6 +132,47 @@ const getUserPreferences = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateUserPreferences = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { userId } = req.user as JwtPayload; // Extract user ID from the JWT token.
+    const decodedToken = req.user as JwtPayload; // This is typically the decoded JWT token
+
+    // Get new preferences from the request body
+    const {
+      language,
+      theme,
+      app_notifications,
+      email_notifications,
+      notifications_enabled,
+      location_access,
+    } = req.body;
+
+    // Prepare the preferences object
+    const preferences = {
+      language,
+      theme,
+      app_notifications,
+      email_notifications,
+      notifications_enabled,
+      location_access,
+    };
+
+    // Pass the decodedToken along with userId and preferences to the service
+    const updatedPreferences = await userServices.updateUserPreferences(
+      userId,
+      preferences
+    );
+
+    // Send the updated preferences in the response
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "User preferences updated successfully!",
+      data: updatedPreferences,
+    });
+  }
+);
+
 export const userController = {
   userRegister,
   getMe,
@@ -140,4 +181,5 @@ export const userController = {
   userUpdate,
   userDelete,
   getUserPreferences,
+  updateUserPreferences,
 };

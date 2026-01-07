@@ -45,9 +45,13 @@ router.post(
 );
 
 // Forget Password (send OTP or reset link)
-router.post("/forget-password/:email", authController.forgetPassword);
+router.post("/forget-password", authController.forgetPassword);
 
 // Reset Password using email + OTP
-router.post("/reset-password/:email/:otp", authController.resetPassword);
+router.post(
+  "/reset-password",
+  checkAuth(...Object.values(Role)),
+  authController.resetPassword
+);
 
 export const AuthRouter = router;

@@ -51,16 +51,17 @@ const forgetPassword = async (email: string) => {
     },
   });
 };
-const resetPassword = async (
-  payload: Record<string, any>,
+
+const resetUserPassword = async (
+  payload: { id: string; newPassword: string },
   decodedToken: JwtPayload
 ) => {
-  if (payload.id != decodedToken.userId) {
+  if (payload.id !== decodedToken.userId) {
     throw new AppError(401, "You can not reset your password");
   }
 
-  const isUserExist = await User.findById(decodedToken.userId);
-  if (!isUserExist) {
+  const user = await User.findById(decodedToken.userId);
+  if (!user) {
     throw new AppError(401, "User does not exist");
   }
 
@@ -69,9 +70,8 @@ const resetPassword = async (
     Number(envVar.BCRYPT_SALT_ROUND)
   );
 
-  isUserExist.password = hashedPassword;
-
-  await isUserExist.save();
+  user.password = hashedPassword;
+  await user.save();
 };
 
 const changePassword = async (
@@ -92,6 +92,6 @@ const changePassword = async (
 export const authService = {
   getNewAccessToken,
   forgetPassword,
-  resetPassword,
+  resetUserPassword,
   changePassword,
 };
