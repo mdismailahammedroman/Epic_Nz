@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { ISubscription } from "../subscription/subscription.interface";
 
 export enum Role {
@@ -14,14 +15,9 @@ export enum UserStatus {
   PENDING = "PENDING",
 }
 
-export enum AuthProviderType {
-  GOOGLE = "google",
-  CREDENTIAL = "credential",
-}
-
 export interface IAuthProvider {
-  provider: AuthProviderType;
-  providerID: string;
+  provider: "google" | "credentials"; // "Google", "Credential"
+  providerId: string;
 }
 
 export interface ICoord {
@@ -52,6 +48,7 @@ interface IFile {
 }
 
 export interface IUser {
+  _id?: Types.ObjectId;
   email: string;
   full_name: string;
   password?: string;

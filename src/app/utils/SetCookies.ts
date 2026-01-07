@@ -13,7 +13,7 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 1000 * 60 * 60 * 24,
     path: "/",
   });
 

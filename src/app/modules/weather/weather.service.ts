@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";
@@ -25,7 +26,6 @@ const weatherInfo = async (latitude: number, longitude: number) => {
     });
 
     const weatherData = responseData.data;
-
     return {
       location: weatherData.name,
       country: weatherData.sys.country,
@@ -33,6 +33,7 @@ const weatherInfo = async (latitude: number, longitude: number) => {
       description: weatherData.weather[0].description,
       humidity: weatherData.main.humidity,
       windSpeed: weatherData.wind.speed,
+      precipitation: weatherData.rain?.["1h"],
       icon: weatherData.weather[0].icon,
     };
   } catch (error) {

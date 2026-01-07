@@ -1,4 +1,4 @@
-import mongoose, { model, Types } from "mongoose";
+import mongoose, { model } from "mongoose";
 import { CategoryEnum, ILocation } from "./location.interface";
 
 const { Schema } = mongoose;

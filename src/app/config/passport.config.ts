@@ -1,7 +1,14 @@
-import passport from "passport";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import passport, { Profile } from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import {
+  Strategy as GoogleStrategy,
+  VerifyCallback,
+} from "passport-google-oauth20";
 import bcrypt from "bcryptjs";
 import User from "../modules/user/user.model";
+import { envVar } from "./envVar";
+import { Role } from "../modules/user/user.interface";
 
 // Configure the local strategy
 passport.use(
@@ -37,6 +44,61 @@ passport.use(
         return done(null, user); // success
       } catch (err) {
         return done(err);
+      }
+    }
+  )
+);
+// Passport Google Strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: envVar.GOOGLE_AUTH.GOOGLE_CLIENT_ID,
+      clientSecret: envVar.GOOGLE_AUTH.GOOGLE_CLIENT_SECRET,
+      callbackURL: envVar.GOOGLE_AUTH.GOOGLE_CALLBACK_URL,
+    },
+    async (
+      accessToken: string,
+      refreshToken: string,
+      profile: Profile,
+      done: VerifyCallback
+    ) => {
+      try {
+        const email = profile.emails?.[0]?.value;
+
+        if (!email) {
+          return done(null, false, { message: "No email found" });
+        }
+
+        let user = await User.findOne({ email });
+
+        if (user && !user.is_verified) {
+          return done(null, false, { message: "User is not verified" });
+        }
+
+        if (user && user.isDeleted) {
+          return done(null, false, { message: "User is deleted" });
+        }
+
+        if (!user) {
+          user = await User.create({
+            email,
+            full_name: profile.displayName,
+            profile_picture: profile.photos?.[0]?.value,
+            role: Role.USER,
+            is_verified: true,
+            auth_providers: [
+              {
+                provider: "google",
+                providerId: profile.id,
+              },
+            ],
+          });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        console.error("Google Strategy Error", error);
+        return done(error);
       }
     }
   )

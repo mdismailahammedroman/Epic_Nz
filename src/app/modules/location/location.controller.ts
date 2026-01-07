@@ -1,4 +1,3 @@
-import { CategoryEnum } from "./location.interface";
 import { StatusCodes } from "http-status-codes";
 import { Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";
@@ -185,6 +184,18 @@ const approveLocation = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getLocationPins = CatchAsync(async (req: Request, res: Response) => {
+  // Call the service to fetch location pins
+  const locationPins = await locationServices.getLocationPinsService();
+
+  // Send the response with the location pins
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Location pins fetched successfully!",
+    data: locationPins,
+  });
+});
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -198,4 +209,5 @@ export const locationController = {
   shareLocation,
   locationRating,
   approveLocation,
+  getLocationPins,
 };

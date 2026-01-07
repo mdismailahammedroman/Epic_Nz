@@ -38,4 +38,10 @@ router.get(
   userController.getUserPreferences
 );
 
+router.put(
+  "/preferences",
+  checkAuth(Role.USER),
+  userController.updateUserPreferences
+);
+
 export const userRouter = router;

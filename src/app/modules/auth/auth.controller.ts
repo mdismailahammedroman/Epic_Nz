@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { StatusCodes } from "http-status-codes";
 import { NextFunction, Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";
@@ -11,7 +13,8 @@ import { sendResponse } from "../../utils/SendResponse";
 import { setAuthCookie } from "../../utils/SetCookies";
 import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
-import { getPlaceName } from "../../utils/getLocation";
+import { IUser } from "../user/user.interface";
+import { JwtPayload } from "jsonwebtoken";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -20,40 +23,7 @@ const credentialLogin = CatchAsync(
       if (!user) {
         return next(new AppError(StatusCodes.FORBIDDEN, info.message));
       }
-
-      // Initialize placeName variable
-      // let placeName = "";
-
-      // // Get latitude and longitude from the request body
-      // const { latitude, longitude } = req.body;
-
-      // if (latitude && longitude) {
-      //   try {
-      //     // Call the getPlaceName function to fetch the place name using latitude and longitude
-      //     placeName = await getPlaceName(latitude, longitude);
-
-      //     // Check if placeName is valid before assigning it to the user
-      //     if (placeName) {
-      //       user.location = { lat: latitude, long: longitude, placeName };
-      //       await user.save();
-      //     } else {
-      //       console.error(
-      //         "Place name not found for coordinates:",
-      //         latitude,
-      //         longitude
-      //       );
-      //     }
-      //   } catch (error) {
-      //     console.error("Error getting place name:", error);
-      //   }
-      // } else {
-      //   console.log("No latitude or longitude provided.");
-      // }
-
-      // Generate access and refresh tokens for the user
       const userTokens = createUserTokens(user);
-
-      // Set authentication cookies with the user tokens
       setAuthCookie(res, userTokens);
 
       // Send response with the user tokens and location data (placeName)
@@ -67,6 +37,39 @@ const credentialLogin = CatchAsync(
         },
       });
     })(req, res, next);
+  }
+);
+
+// Add googleCallback handler
+const googleCallbackController = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    let redirectTo = typeof req.query.state === "string" ? req.query.state : "";
+
+    // Remove leading slash
+    if (redirectTo.startsWith("/")) {
+      redirectTo = redirectTo.slice(1);
+    }
+
+    // Prevent open redirects
+    if (redirectTo.includes("://") || redirectTo.startsWith("//")) {
+      redirectTo = "";
+    }
+
+    const user = req.user as IUser | undefined;
+
+    if (!user) {
+      throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+    }
+
+    const tokenInfo = createUserTokens(user);
+
+    setAuthCookie(res, tokenInfo);
+
+    const redirectUrl = redirectTo
+      ? `${envVar.FRONTEND_URL}/${encodeURI(redirectTo)}`
+      : envVar.FRONTEND_URL;
+
+    return res.redirect(redirectUrl);
   }
 );
 
@@ -138,19 +141,20 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
 });
 
 // Reset Password (using OTP/email)
-const resetPassword = CatchAsync(async (req: Request, res: Response) => {
-  const { email, otp } = req.params;
-  const { newPassword } = req.body;
+const resetPassword = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JwtPayload;
 
-  await authService.resetPassword(email, otp, newPassword);
+    await authService.resetUserPassword(req.body, decodedToken);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Password reset successfully",
-    data: null,
-  });
-});
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Password reset successfully",
+      data: null,
+    });
+  }
+);
 
 export const authController = {
   credentialLogin,
@@ -159,4 +163,5 @@ export const authController = {
   changePassword,
   forgetPassword,
   resetPassword,
+  googleCallbackController,
 };
