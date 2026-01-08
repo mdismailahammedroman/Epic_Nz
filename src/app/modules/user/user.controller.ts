@@ -7,24 +7,20 @@ import { JwtPayload } from "jsonwebtoken";
 import AppError from "../../errorHelper/AppError";
 import { StatusCodes } from "http-status-codes";
 
-// Controller to handle user registration
+//
 const userRegister = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userData = req.body;
 
-    // Check if a profile image was uploaded
     let profileImageUrl = null;
     if (req.file) {
-      // If file is uploaded, get the file path
-      profileImageUrl = req.file.path; // Cloudinary URL will be here
+      profileImageUrl = req.file.path;
     }
 
-    // Add the profile image URL to the user data if available
     if (profileImageUrl) {
-      userData.profile_picture = profileImageUrl; // Pass the Cloudinary URL to user data
+      userData.profile_picture = profileImageUrl;
     }
 
-    // Call the service to create the user
     const createUser = await userServices.createUser(userData);
 
     sendResponse(res, {

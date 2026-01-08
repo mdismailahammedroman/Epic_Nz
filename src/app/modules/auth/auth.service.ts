@@ -88,10 +88,31 @@ const changePassword = async (
   user.password = bcrypt.hashSync(newPassword, 10);
   await user.save();
 };
+const setPassword = async (email: string, password: string) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  if (!user.is_verified) {
+    throw new AppError(403, "OTP not verified");
+  }
+
+  if (user.password) {
+    throw new AppError(400, "Password already set");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, envVar.BCRYPT_SALT_ROUND);
+
+  user.password = hashedPassword;
+  await user.save();
+};
 
 export const authService = {
   getNewAccessToken,
   forgetPassword,
   resetUserPassword,
   changePassword,
+  setPassword,
 };

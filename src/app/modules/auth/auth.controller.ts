@@ -156,6 +156,31 @@ const resetPassword = CatchAsync(
   }
 );
 
+const setPassword = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (!email || !newPassword || !confirmPassword) {
+      throw new AppError(
+        400,
+        "Email, password and confirm password are required"
+      );
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new AppError(400, "Password and confirm password do not match");
+    }
+
+    await authService.setPassword(email, newPassword);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Password set successfully. Registration completed!",
+    });
+  }
+);
+
 export const authController = {
   credentialLogin,
   logout,
@@ -164,4 +189,5 @@ export const authController = {
   forgetPassword,
   resetPassword,
   googleCallbackController,
+  setPassword,
 };
