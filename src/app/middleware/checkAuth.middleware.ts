@@ -13,7 +13,6 @@ export const checkAuth =
     try {
       // const authHeader = req.headers.authorization; // Get the Authorization header
       const authHeader = req.headers.authorization || req.cookies.accessToken;
-      console.log(req.headers.authorization);
 
       // Check if the token exists and starts with 'Bearer '
       if (!authHeader || !authHeader.startsWith("")) {

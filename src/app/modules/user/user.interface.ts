@@ -31,9 +31,7 @@ export interface ICoord {
 
 export interface IUserPreferences {
   language: string;
-  theme: string;
   app_notifications?: boolean;
-  email_notifications?: boolean;
   notifications_enabled?: boolean;
   location_access?: boolean;
 }

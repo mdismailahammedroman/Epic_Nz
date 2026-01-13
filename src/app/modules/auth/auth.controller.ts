@@ -129,7 +129,7 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
 
 // Forget Password (send OTP/email)
 const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
-  const { email } = req.params;
+  const { email } = req.body;
   await authService.forgetPassword(email);
 
   sendResponse(res, {
@@ -160,23 +160,26 @@ const setPassword = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, newPassword, confirmPassword } = req.body;
 
+    // Validate the input fields
     if (!email || !newPassword || !confirmPassword) {
       throw new AppError(
         400,
-        "Email, password and confirm password are required"
+        "Email, password, and confirm password are required"
       );
     }
 
+    // Check if the passwords match
     if (newPassword !== confirmPassword) {
       throw new AppError(400, "Password and confirm password do not match");
     }
 
+    // Call the service to set the password
     await authService.setPassword(email, newPassword);
 
     sendResponse(res, {
       success: true,
       statusCode: 200,
-      message: "Password set successfully. Registration completed!",
+      message: "Password set successfully.",
     });
   }
 );

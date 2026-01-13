@@ -44,10 +44,10 @@ const forgetPassword = async (email: string) => {
   sendEmail({
     to: isUserExist.email,
     subject: "Password Reset",
-    templateName: "forgetPassword",
+    templateName: "otp",
     templateData: {
       name: isUserExist.full_name,
-      resetUILink,
+      otp: resetUILink, // REQUIRED
     },
   });
 };
@@ -99,14 +99,16 @@ const setPassword = async (email: string, password: string) => {
     throw new AppError(403, "OTP not verified");
   }
 
-  if (user.password) {
+  if (user.password && user.password !== "") {
     throw new AppError(400, "Password already set");
   }
 
-  const hashedPassword = await bcrypt.hash(password, envVar.BCRYPT_SALT_ROUND);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   user.password = hashedPassword;
   await user.save();
+
+  return user;
 };
 
 export const authService = {

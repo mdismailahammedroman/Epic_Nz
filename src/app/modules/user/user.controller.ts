@@ -6,8 +6,10 @@ import { userServices } from "./user.service";
 import { JwtPayload } from "jsonwebtoken";
 import AppError from "../../errorHelper/AppError";
 import { StatusCodes } from "http-status-codes";
+import { createUserTokens } from "../../utils/userToken";
+import { setAuthCookie } from "../../utils/SetCookies";
 
-//
+// Controller to handle user registration
 const userRegister = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userData = req.body;
@@ -23,11 +25,17 @@ const userRegister = CatchAsync(
 
     const createUser = await userServices.createUser(userData);
 
+    const userTokens = createUserTokens(createUser);
+    setAuthCookie(res, userTokens);
     sendResponse(res, {
       success: true,
       statusCode: 200,
       message: "User created successfully!",
-      data: createUser,
+      data: {
+        createUser,
+        accessToken: userTokens.accessToken,
+        refreshToken: userTokens.refreshToken,
+      },
     });
   }
 );
@@ -130,36 +138,29 @@ const getUserPreferences = CatchAsync(async (req: Request, res: Response) => {
 
 const updateUserPreferences = CatchAsync(
   async (req: Request, res: Response) => {
-    const { userId } = req.user as JwtPayload; // Extract user ID from the JWT token.
-    const decodedToken = req.user as JwtPayload; // This is typically the decoded JWT token
+    const { userId } = req.user as JwtPayload;
 
-    // Get new preferences from the request body
     const {
       language,
-      theme,
       app_notifications,
-      email_notifications,
       notifications_enabled,
       location_access,
+      category,
     } = req.body;
 
-    // Prepare the preferences object
     const preferences = {
       language,
-      theme,
       app_notifications,
-      email_notifications,
       notifications_enabled,
       location_access,
+      category,
     };
 
-    // Pass the decodedToken along with userId and preferences to the service
     const updatedPreferences = await userServices.updateUserPreferences(
       userId,
       preferences
     );
 
-    // Send the updated preferences in the response
     sendResponse(res, {
       success: true,
       statusCode: 200,

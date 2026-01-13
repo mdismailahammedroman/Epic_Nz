@@ -7,13 +7,14 @@ import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import User from "./user.model";
 import { getPlaceName } from "../../utils/getLocation";
+import { OTPService } from "../otp/otp.service";
+import { CategoryEnum } from "../location/location.interface";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, profile_picture, preferences, fcmTokens, ...rest } =
     payload;
 
   if (!email) throw new AppError(400, "Email is required");
-  if (!password) throw new AppError(400, "Password is required");
   if (!rest.full_name) throw new AppError(400, "Full name is required");
 
   const isUser = await User.findOne({ email });
@@ -21,11 +22,9 @@ const createUser = async (payload: Partial<IUser>) => {
     throw new AppError(400, "User already exists. Please login!");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   const newUser = new User({
     email,
-    password: hashedPassword,
+    password: password ? await bcrypt.hash(password, 10) : undefined,
     profile_picture,
     preferences: preferences ?? {
       language: "en",
@@ -40,6 +39,9 @@ const createUser = async (payload: Partial<IUser>) => {
   });
 
   await newUser.save();
+
+  await OTPService.sendOTP(email);
+
   return newUser;
 };
 
@@ -58,7 +60,7 @@ const getMeService = async (userId: string) => {
 
     {
       $lookup: {
-        from: "locations", // Assuming 'locations' is the collection name for your locations
+        from: "locations",
         localField: "savedLocations",
         foreignField: "_id",
         as: "savedLocationDetails",
@@ -70,7 +72,7 @@ const getMeService = async (userId: string) => {
         email: 1,
         full_name: 1,
         location: 1,
-        profile_picture: 1, // Include profile picture
+        profile_picture: 1,
         interest: 1,
         role: 1,
         savedLocationDetails: {
@@ -87,9 +89,8 @@ const getMeService = async (userId: string) => {
     throw new AppError(404, "User not found");
   }
 
-  const userData = user[0]; // Extract the first user (since it's an array)
+  const userData = user[0];
 
-  // If the user has a location, fetch the place name
   if (userData.location && userData.location.lat && userData.location.long) {
     const placeName = await getPlaceName(
       userData.location.lat,
@@ -106,7 +107,6 @@ const getProfileService = async (userId: string) => {
     throw new AppError(400, "User ID is required");
   }
 
-  // Fetch user from the database, excluding password and auths for security
   const user = await User.findById(userId).select("-password -auths");
 
   if (!user) {
@@ -192,7 +192,7 @@ const userUpdateService = async (
     "userStatus",
     "approved",
     "commissionRate",
-    "preferences", // ✅ allow preferences object
+    "preferences",
   ];
 
   Object.keys(payload).forEach((key) => {
@@ -211,9 +211,7 @@ const userUpdateService = async (
     if (!user.preferences) {
       user.preferences = {
         language: "en",
-        theme: "light",
         app_notifications: true,
-        email_notifications: true,
         notifications_enabled: true,
         location_access: false,
       };
@@ -258,31 +256,28 @@ const userDeleteService = async (userId: string, decodedToken: JwtPayload) => {
   return null;
 };
 
-// Service to fetch user preferences
 const getUserPreferencesService = async (userId: string) => {
-  // Ensure the userId is passed as a valid ObjectId
-  console.log(await User.findById(userId));
   const user = await User.findById(userId).select("preferences");
 
   if (!user) {
     throw new AppError(404, "User not found.");
   }
 
-  return user.preferences;
+  return {
+    preferences: user.preferences,
+    availableCategories: Object.values(CategoryEnum),
+  };
 };
 
 const updateUserPreferences = async (
   userId: string,
   payload: Partial<IUserPreferences>
 ) => {
-  // Here you can perform any logic with the decodedToken if needed
-  // For example, you can verify if the user is authorized to update their own preferences
-
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { $set: payload }, // Update the user with the provided payload
+    { $set: payload },
     { new: true, runValidators: true }
-  ).select("preferences"); // Return the updated preferences
+  ).select("preferences");
 
   if (!updatedUser) {
     throw new AppError(404, "User not found");

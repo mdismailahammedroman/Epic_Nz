@@ -32,9 +32,7 @@ const userSchema = new Schema<IUser>(
     },
     preferences: {
       language: { type: String, default: "en" },
-      theme: { type: String, default: "light" },
       app_notifications: { type: Boolean, default: true },
-      email_notifications: { type: Boolean, default: true },
       notifications_enabled: { type: Boolean, default: true },
       location_access: { type: Boolean, default: false },
     },
@@ -58,14 +56,6 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ "location.coordinates": "2dsphere" });
-
-// userSchema.pre("save", function (next: NextFunction) {
-//   // Example: Remove duplicate fcmTokens when user saves a new token
-//   if (this.isModified("fcmTokens")) {
-//     this.fcmTokens = [...new Set(this.fcmTokens)]; // Ensure no duplicates
-//   }
-//   next();
-// });
 
 const User = model<IUser>("User", userSchema);
 export default User;
