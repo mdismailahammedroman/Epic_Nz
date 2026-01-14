@@ -29,17 +29,12 @@ const forgetPassword = async (email: string) => {
   if (isUserExist.isDeleted) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
   }
-
-  const resetUILink = OTPService.ForgotPasswordSendOTP(email);
-
+  const otp = OTPService.sendForgotPasswordOTP(isUserExist.email);
   sendEmail({
     to: isUserExist.email,
     subject: "Password Reset",
     templateName: "otp",
-    templateData: {
-      name: isUserExist.full_name,
-      otp: resetUILink, // REQUIRED
-    },
+    templateData: { name: isUserExist.full_name || "User", otp },
   });
 };
 
@@ -79,7 +74,6 @@ const changePassword = async (
   user.password = bcrypt.hashSync(newPassword, 10);
   await user.save();
 };
-
 const setPassword = async (email: string, password: string) => {
   const user = await User.findOne({ email });
 

@@ -42,10 +42,9 @@ export const verifyOTP = async (email: string, otp: string) => {
 };
 
 // Send forgot password OTP
-export const sendForgotPasswordOTP = async (email: string) => {
+const sendForgotPasswordOTP = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(404, "User not found");
-  if (!user.is_verified) throw new AppError(400, "User not verified");
 
   const otp = randomOTP();
   const redisKey = `otp:forgot-password:${email}`;
@@ -63,7 +62,7 @@ export const sendForgotPasswordOTP = async (email: string) => {
 };
 
 // Verify forgot password OTP
-export const verifyForgotPasswordOTP = async (email: string, otp: string) => {
+const verifyForgotPasswordOTP = async (email: string, otp: string) => {
   const redisKey = `otp:forgot-password:${email}`;
   const savedOtp = await redisClient.get(redisKey);
 
