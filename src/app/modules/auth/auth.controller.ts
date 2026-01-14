@@ -15,6 +15,7 @@ import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
 import { IUser } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
+import { redisClient } from "../../config/redisConfig";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -147,20 +148,16 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
 });
 
 // Reset Password (using OTP/email)
-const resetPassword = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const decodedToken = req.user as JwtPayload;
-
-    await authService.resetUserPassword(req.body, decodedToken);
-
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Password reset successfully",
-      data: null,
-    });
-  }
-);
+const resetPassword = CatchAsync(async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  await authService.resetUserPassword(email, newPassword);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Password reset successfully",
+    data: null,
+  });
+});
 
 const setPassword = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

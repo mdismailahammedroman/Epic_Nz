@@ -50,7 +50,7 @@ router.post("/forget-password", authController.forgetPassword);
 // Reset Password using email + OTP
 router.post(
   "/reset-password",
-  checkAuth(...Object.values(Role)),
+
   authController.resetPassword
 );
 // set Password using email + OTP

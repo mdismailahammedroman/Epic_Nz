@@ -11,7 +11,7 @@ const router = Router();
 router.post(
   "/submit",
   checkAuth(...Object.values(Role)),
-  multerUpload.single("image"), // <-- ADD THIS LINE
+  multerUpload.array("image", 5),
   validateRequest(LocationValidation.createLocationValidationSchema),
   locationController.submitLocation
 );
@@ -20,6 +20,13 @@ router.get(
   checkAuth(...Object.values(Role)),
   locationController.getAllActivities
 );
+
+router.get(
+  "/my-submissions",
+  checkAuth(Role.USER), // Ensure the user is authenticated
+  locationController.getUserSubmissions // Call the controller method
+);
+
 router.get(
   "/hikes",
   checkAuth(...Object.values(Role)),

@@ -7,18 +7,18 @@ const locationSchema = new Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Referencing the User model
+      ref: "User",
     },
     name: {
       type: String,
-      require: true,
+      required: true,
     },
     placeName: {
       type: String,
     },
     imageUrl: {
-      type: String,
-      required: true, // Assuming an image is uploaded
+      type: [String],
+      required: true,
     },
     ratings: [
       {
@@ -30,13 +30,11 @@ const locationSchema = new Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
-
     category: {
       type: String,
       enum: Object.values(CategoryEnum),
       required: true,
     },
-    // Create geospatial index for the coordinates field
     coordinates: {
       type: { type: String, default: "Point" },
       coordinates: { type: [Number] },
@@ -52,12 +50,11 @@ const locationSchema = new Schema(
     description: {
       type: String,
     },
-
     AI_Predictions: {
-      type: Object, // Store AI-generated data like "Epic Rating" or forecasts
+      type: Object,
     },
     weatherInfo: {
-      type: Object, // Store weather information
+      type: Object,
     },
     createdAt: {
       type: Date,
@@ -69,11 +66,11 @@ const locationSchema = new Schema(
     },
     approvedByAdmin: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Admin", // Referencing the Admin model (optional)
+      ref: "Admin",
     },
   },
   {
-    timestamps: true, // Automatically add createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 

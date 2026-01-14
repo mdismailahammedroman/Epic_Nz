@@ -17,7 +17,7 @@ const submitLocation = async (
   name: string,
   latitude: number,
   longitude: number,
-  imageUrl: string,
+  imageUrl: string[],
   categoryName: string // New parameter
 ) => {
   const lat = Number(latitude);
@@ -70,6 +70,20 @@ const getAllActivities = async (query: Record<string, string>) => {
   };
 };
 
+const getUserSubmissions = async (userId: string) => {
+  const locations = await Location.find({ userId })
+    .select("name imageUrl coordinates address") // Select only relevant fields
+    .exec(); // Execute the query
+
+  if (!locations || locations.length === 0) {
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "No submissions found for this user"
+    );
+  }
+
+  return locations;
+};
 const getHikes = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'Hikes' })
@@ -371,6 +385,7 @@ const getLocationPinsService = async () => {
 export const locationServices = {
   submitLocation,
   getAllActivities,
+  getUserSubmissions,
   getHikes,
   getCampgrounds,
   getFreedomCampingLocations,

@@ -49,6 +49,7 @@ const getMeService = async (userId: string) => {
   const user = await User.aggregate([
     { $match: { _id: new Types.ObjectId(userId) } },
 
+    // Lookup for interests (categories)
     {
       $lookup: {
         from: "categories",
@@ -58,6 +59,7 @@ const getMeService = async (userId: string) => {
       },
     },
 
+    // Lookup for saved locations
     {
       $lookup: {
         from: "locations",
@@ -67,6 +69,22 @@ const getMeService = async (userId: string) => {
       },
     },
 
+    // Lookup to calculate average ratings from saved locations
+    {
+      $addFields: {
+        avgRating: {
+          $avg: {
+            $map: {
+              input: "$savedLocationDetails.ratings", // The ratings array in each saved location
+              as: "rating",
+              in: "$$rating.rating", // Get the rating value
+            },
+          },
+        },
+      },
+    },
+
+    // Project required fields, including average rating
     {
       $project: {
         email: 1,
@@ -81,6 +99,7 @@ const getMeService = async (userId: string) => {
           description: 1,
           imageUrl: 1,
         },
+        avgRating: 1, // Include the average rating in the final result
       },
     },
   ]);
@@ -91,10 +110,15 @@ const getMeService = async (userId: string) => {
 
   const userData = user[0];
 
-  if (userData.location && userData.location.lat && userData.location.long) {
+  // Fetch the place name for location using lat/long
+  if (
+    userData.location &&
+    userData.location.coordinates &&
+    userData.location.coordinates.length === 2
+  ) {
     const placeName = await getPlaceName(
-      userData.location.lat,
-      userData.location.long
+      userData.location.coordinates[1],
+      userData.location.coordinates[0]
     );
     userData.location.placeName = placeName;
   }
