@@ -1,4 +1,4 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../user/user.model";
 import AppError from "../../errorHelper/AppError";
@@ -6,6 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import { sendEmail } from "../../utils/sendMail";
 import { envVar } from "../../config/envVar";
 import { createNewAccessTokenWithRefreshToken } from "../../utils/userToken";
+import { OTPService } from "../otp/otp.service";
 
 const getNewAccessToken = async (refreshToken: string) => {
   const newAccessToken = await createNewAccessTokenWithRefreshToken(
@@ -29,17 +30,7 @@ const forgetPassword = async (email: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
   }
 
-  const jwtPayload = {
-    userId: isUserExist._id,
-    email: isUserExist.email,
-    role: isUserExist.role,
-  };
-
-  const resetToken = jwt.sign(jwtPayload, envVar.JWT_REFRESH_EXPIRATION, {
-    expiresIn: "10m",
-  });
-
-  const resetUILink = `${envVar.FRONTEND_URL}/reset-password?id=${isUserExist._id}&token=${resetToken}`;
+  const resetUILink = OTPService.ForgotPasswordSendOTP(email);
 
   sendEmail({
     to: isUserExist.email,
@@ -88,6 +79,7 @@ const changePassword = async (
   user.password = bcrypt.hashSync(newPassword, 10);
   await user.save();
 };
+
 const setPassword = async (email: string, password: string) => {
   const user = await User.findOne({ email });
 

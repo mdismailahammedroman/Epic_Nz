@@ -44,13 +44,10 @@ const credentialLogin = CatchAsync(
 const googleCallbackController = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     let redirectTo = typeof req.query.state === "string" ? req.query.state : "";
-
-    // Remove leading slash
     if (redirectTo.startsWith("/")) {
       redirectTo = redirectTo.slice(1);
     }
 
-    // Prevent open redirects
     if (redirectTo.includes("://") || redirectTo.startsWith("//")) {
       redirectTo = "";
     }
@@ -58,17 +55,26 @@ const googleCallbackController = CatchAsync(
     const user = req.user as IUser | undefined;
 
     if (!user) {
-      throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+      return next(new AppError(StatusCodes.NOT_FOUND, "User not found"));
     }
 
     const tokenInfo = createUserTokens(user);
 
     setAuthCookie(res, tokenInfo);
 
-    const redirectUrl = redirectTo
-      ? `${envVar.FRONTEND_URL}/${encodeURI(redirectTo)}`
-      : envVar.FRONTEND_URL;
+    const redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
+    // const platform = req.query.platform; // Default to 'web' if not provided
+    // let redirectUrl;
 
+    // if (platform === "mobile") {
+    //   // For mobile: Redirect using custom deep linking URL (mobile app)
+    //   redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
+    // } else {
+    //   // For web: Redirect to frontend URL
+    //   redirectUrl = redirectTo
+    //     ? `${envVar.FRONTEND_URL}/${encodeURI(redirectTo)}`
+    //     : envVar.FRONTEND_URL;
+    // // }
     return res.redirect(redirectUrl);
   }
 );
@@ -160,7 +166,6 @@ const setPassword = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, newPassword, confirmPassword } = req.body;
 
-    // Validate the input fields
     if (!email || !newPassword || !confirmPassword) {
       throw new AppError(
         400,
