@@ -14,9 +14,11 @@ import { Role } from "../modules/user/user.interface";
 passport.use(
   new LocalStrategy(
     { usernameField: "email", passwordField: "password" },
+
     async (email, password, done) => {
       try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select("+password");
+
         if (!user) {
           return done(null, false, { message: "Incorrect email" });
         }
@@ -30,9 +32,11 @@ passport.use(
           return done(null, user); // OAuth users don't need a password check
         }
 
-        // For non-OAuth users, compare the password
+        // For non-OAuth users, check if the password is set
         if (!user.password || typeof user.password !== "string") {
-          return done(null, false, { message: "Password not set for user." });
+          return done(null, false, {
+            message: "Password not set for user. Please set your password.",
+          });
         }
 
         // Compare the provided password with the stored hash
@@ -48,6 +52,7 @@ passport.use(
     }
   )
 );
+
 // Passport Google Strategy
 passport.use(
   new GoogleStrategy(

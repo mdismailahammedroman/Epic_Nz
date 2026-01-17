@@ -1,4 +1,5 @@
-import crypto from "crypto";
 export const randomOTP = (length = 6) => {
-  return crypto.randomInt(10 ** (length - 1), 10 ** length).toString();
+  const min = 10 ** (length - 1);
+  const max = 10 ** length - 1;
+  return Math.floor(min + Math.random() * (max - min + 1));
 };

@@ -52,42 +52,35 @@ const startServer = async () => {
   await connectRedis();
 })();
 
-/* Graceful shutdown */
-process.on("SIGTERM", (signal: string, error?: unknown) => {
-  console.log(`${signal} received. Shutting down...`, error);
-  if (server) {
-    server.close(() => {
-      process.exit(1);
-    });
-  }
-  process.exit(1);
-});
+// ---------------- Global Error & Shutdown Handlers ----------------
 
-process.on("SIGINT", (error) => {
-  console.log("SIGINT received...........Server shutting down", error);
-  if (server) {
-    server.close(() => {
-      process.exit(1);
-    });
-  }
-  process.exit(1);
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception! Server shutting down.", err);
+  shutdown(1);
 });
 
 process.on("unhandledRejection", (error) => {
-  console.error("Unhandled Rejection...........Server shutting down", error);
+  console.error("⚠️ Unhandled Rejection! Server shutting down.", error);
+  shutdown(1);
+});
+
+process.on("SIGTERM", (signal) => {
+  console.log("🧩 SIGTERM received. Shutting down gracefully.", signal);
+  shutdown(0);
+});
+
+process.on("SIGINT", (signal) => {
+  console.log("🧩 SIGINT received (Ctrl+C). Shutting down.", signal);
+  shutdown(0);
+});
+
+function shutdown(exitCode: number) {
   if (server) {
     server.close(() => {
-      process.exit(1);
+      console.log("✅ Server closed.");
+      process.exit(exitCode);
     });
+  } else {
+    process.exit(exitCode);
   }
-  process.exit(1);
-});
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception...........Server shutting down", err);
-  if (server) {
-    server.close(() => {
-      process.exit(1);
-    });
-  }
-  process.exit(1);
-});
+}

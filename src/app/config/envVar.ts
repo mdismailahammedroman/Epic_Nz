@@ -52,7 +52,7 @@ interface EnvVar {
   STRIPE_SECRET_KEY: string;
   STRIPE_PUBLIC_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
-  PRICE_WEEKLY: string;
+  PRICE_YEARLY: string;
   PRICE_MONTHLY: string;
   REDIS: REDIS_TYPE;
   SMTP: SMTP_TYPE;
@@ -105,7 +105,7 @@ const loadEnvVariables = (): EnvVar => {
     "STRIPE_SECRET_KEY",
     "STRIPE_PUBLIC_KEY",
     "STRIPE_WEBHOOK_SECRET",
-    "PRICE_WEEKLY",
+    "PRICE_YEARLY",
     "PRICE_MONTHLY",
     "FIREBASE_SERVICE_ACCOUNT_PATH",
   ];
@@ -139,7 +139,7 @@ const loadEnvVariables = (): EnvVar => {
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
     STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY as string,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
-    PRICE_WEEKLY: process.env.PRICE_WEEKLY as string,
+    PRICE_YEARLY: process.env.PRICE_YEARLY as string,
     PRICE_MONTHLY: process.env.PRICE_MONTHLY as string,
     REDIS: {
       REDIS_HOST: process.env.REDIS_HOST as string,

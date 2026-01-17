@@ -38,7 +38,7 @@ router.get(
   userController.getUserPreferences
 );
 
-router.put(
+router.patch(
   "/preferences",
   checkAuth(Role.USER),
   userController.updateUserPreferences

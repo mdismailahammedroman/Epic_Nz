@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
 import Location from "./location.model";
 import { v4 as uuidv4 } from "uuid";
@@ -16,8 +17,9 @@ const submitLocation = async (
   name: string,
   latitude: number,
   longitude: number,
-  imageUrl: string,
-  categoryName: string // New parameter
+  imageUrl: string[],
+  categoryName: string,
+  description: string
 ) => {
   const lat = Number(latitude);
   const lon = Number(longitude);
@@ -38,6 +40,7 @@ const submitLocation = async (
     userId: userId, // Use 'userId' to match your schema
     imageUrl: imageUrl,
     name: name,
+    description,
     address: addressName,
     coordinates: {
       type: "Point",
@@ -69,6 +72,20 @@ const getAllActivities = async (query: Record<string, string>) => {
   };
 };
 
+const getUserSubmissions = async (userId: string) => {
+  const locations = await Location.find({ userId })
+    .select("name imageUrl coordinates address") // Select only relevant fields
+    .exec(); // Execute the query
+
+  if (!locations || locations.length === 0) {
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "No submissions found for this user"
+    );
+  }
+
+  return locations;
+};
 const getHikes = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'Hikes' })
@@ -370,6 +387,7 @@ const getLocationPinsService = async () => {
 export const locationServices = {
   submitLocation,
   getAllActivities,
+  getUserSubmissions,
   getHikes,
   getCampgrounds,
   getFreedomCampingLocations,

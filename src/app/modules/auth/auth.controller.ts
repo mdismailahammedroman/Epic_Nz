@@ -15,6 +15,7 @@ import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
 import { IUser } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
+import { redisClient } from "../../config/redisConfig";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -44,13 +45,10 @@ const credentialLogin = CatchAsync(
 const googleCallbackController = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     let redirectTo = typeof req.query.state === "string" ? req.query.state : "";
-
-    // Remove leading slash
     if (redirectTo.startsWith("/")) {
       redirectTo = redirectTo.slice(1);
     }
 
-    // Prevent open redirects
     if (redirectTo.includes("://") || redirectTo.startsWith("//")) {
       redirectTo = "";
     }
@@ -58,17 +56,26 @@ const googleCallbackController = CatchAsync(
     const user = req.user as IUser | undefined;
 
     if (!user) {
-      throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+      return next(new AppError(StatusCodes.NOT_FOUND, "User not found"));
     }
 
     const tokenInfo = createUserTokens(user);
 
     setAuthCookie(res, tokenInfo);
 
-    const redirectUrl = redirectTo
-      ? `${envVar.FRONTEND_URL}/${encodeURI(redirectTo)}`
-      : envVar.FRONTEND_URL;
+    const redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
+    // const platform = req.query.platform; // Default to 'web' if not provided
+    // let redirectUrl;
 
+    // if (platform === "mobile") {
+    //   // For mobile: Redirect using custom deep linking URL (mobile app)
+    //   redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
+    // } else {
+    //   // For web: Redirect to frontend URL
+    //   redirectUrl = redirectTo
+    //     ? `${envVar.FRONTEND_URL}/${encodeURI(redirectTo)}`
+    //     : envVar.FRONTEND_URL;
+    // // }
     return res.redirect(redirectUrl);
   }
 );
@@ -129,7 +136,7 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
 
 // Forget Password (send OTP/email)
 const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
-  const { email } = req.params;
+  const { email } = req.body;
   await authService.forgetPassword(email);
 
   sendResponse(res, {
@@ -141,17 +148,40 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
 });
 
 // Reset Password (using OTP/email)
-const resetPassword = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const decodedToken = req.user as JwtPayload;
+const resetPassword = CatchAsync(async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  await authService.resetUserPassword(email, newPassword);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Password reset successfully",
+    data: null,
+  });
+});
 
-    await authService.resetUserPassword(req.body, decodedToken);
+const setPassword = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (!email || !newPassword || !confirmPassword) {
+      throw new AppError(
+        400,
+        "Email, password, and confirm password are required"
+      );
+    }
+
+    // Check if the passwords match
+    if (newPassword !== confirmPassword) {
+      throw new AppError(400, "Password and confirm password do not match");
+    }
+
+    // Call the service to set the password
+    await authService.setPassword(email, newPassword);
 
     sendResponse(res, {
       success: true,
-      statusCode: StatusCodes.OK,
-      message: "Password reset successfully",
-      data: null,
+      statusCode: 200,
+      message: "Password set successfully.",
     });
   }
 );
@@ -164,4 +194,5 @@ export const authController = {
   forgetPassword,
   resetPassword,
   googleCallbackController,
+  setPassword,
 };

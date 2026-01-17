@@ -6,30 +6,41 @@ import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
 
-// location.controller.ts
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user as JwtPayload;
+  // Check if files are uploaded and handle the image paths
+  const imageUrls = req.files
+    ? (req.files as Express.Multer.File[]).map((file) => file.path) // Extract file paths from Cloudinary
+    : []; // Default to an empty array if no files are uploaded
 
-  // Destructure category along with coordinates
-  const { name, latitude, longitude, category: selectedCategory } = req.body;
-
-  if (!req.file) {
+  // If no files are uploaded, handle the error
+  if (imageUrls.length === 0) {
     throw new AppError(StatusCodes.BAD_REQUEST, "No image uploaded");
   }
 
+  const { userId } = req.user as JwtPayload;
+  const {
+    name,
+    latitude,
+    longitude,
+    category: selectedCategory,
+    description,
+  } = req.body;
+
+  // Use the extracted image URLs for the location submission
   const newLocation = await locationServices.submitLocation(
     userId,
     name,
     latitude,
     longitude,
-    req.file.path,
-    selectedCategory // Pass the category from form-data to the service
+    imageUrls, // Pass the array of image URLs to the service
+    selectedCategory,
+    description
   );
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.CREATED,
-    message: "Location submitted successfully",
+    message: "Location submitted successfully with images",
     data: newLocation,
   });
 });
@@ -43,6 +54,20 @@ const getAllActivities = CatchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.OK,
     message: "Locations retrieved successfully",
     data: locationsData,
+  });
+});
+
+const getUserSubmissions = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload; // Get userId from the authenticated user (via JWT)
+
+  // Fetch the user's submitted locations from the service
+  const submissions = await locationServices.getUserSubmissions(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "User's submissions fetched successfully",
+    data: submissions,
   });
 });
 
@@ -199,6 +224,7 @@ const getLocationPins = CatchAsync(async (req: Request, res: Response) => {
 export const locationController = {
   submitLocation,
   getAllActivities,
+  getUserSubmissions,
   getHikes,
   getEpicPhotoSpots,
   getFreedomCampingLocations,

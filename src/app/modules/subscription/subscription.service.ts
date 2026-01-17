@@ -10,7 +10,6 @@ import {
   SubscriptionStatus,
 } from "./subscription.interface";
 import { StatusCodes } from "http-status-codes";
-import SubscriptionModel from "./Subscription.model";
 
 // CREATE CHECKOUT SESSION
 const createCheckoutSession = async ({
@@ -21,7 +20,7 @@ const createCheckoutSession = async ({
   if (!user) throw new AppError(404, "User not found");
 
   const priceId =
-    plan_type === Plan.MONTHLY ? envVar.PRICE_MONTHLY : envVar.PRICE_WEEKLY;
+    plan_type === Plan.MONTHLY ? envVar.PRICE_MONTHLY : envVar.PRICE_YEARLY;
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -117,10 +116,9 @@ const restoreSubscription = async (userId: string) => {
   }
 
   // Re-activate subscription with Stripe (if applicable)
-  const stripeSubscription = await stripe.subscriptions.update(
-    subscription.stripeSubscriptionId,
-    { cancel_at_period_end: false }
-  );
+  await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+    cancel_at_period_end: false,
+  });
 
   // Update local subscription status
   subscription.status = SubscriptionStatus.ACTIVE; // Or any status indicating it's active

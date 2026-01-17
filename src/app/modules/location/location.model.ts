@@ -17,7 +17,7 @@ const locationSchema = new Schema(
       type: String,
     },
     imageUrl: {
-      type: String,
+      type: [String], // Change this to an array of strings
       required: true, // Assuming an image is uploaded
     },
     ratings: [
