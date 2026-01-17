@@ -51,11 +51,13 @@ const userSchema = new Schema<IUser>(
     savedLocations: [{ type: Schema.Types.ObjectId, ref: "Location" }],
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
+
+    notification: { type: Schema.Types.ObjectId, ref: "Notification" }, // Link to the Notification model
+    offline_maps: { type: Boolean, default: false }, // Flag for offline map access
+    help_support: { type: Boolean, default: false }, // Flag for helpl & support access
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
-
-userSchema.index({ "location.coordinates": "2dsphere" });
 
 const User = model<IUser>("User", userSchema);
 export default User;

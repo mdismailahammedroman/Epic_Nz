@@ -18,7 +18,8 @@ const submitLocation = async (
   latitude: number,
   longitude: number,
   imageUrl: string[],
-  categoryName: string // New parameter
+  categoryName: string,
+  description: string
 ) => {
   const lat = Number(latitude);
   const lon = Number(longitude);
@@ -39,6 +40,7 @@ const submitLocation = async (
     userId: userId, // Use 'userId' to match your schema
     imageUrl: imageUrl,
     name: name,
+    description,
     address: addressName,
     coordinates: {
       type: "Point",

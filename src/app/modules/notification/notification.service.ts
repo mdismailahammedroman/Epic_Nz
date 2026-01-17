@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status-codes";
 import { INotifyPreference } from "./notification.interface";
 import { Notification, NotificationPreference } from "./notification.model";
@@ -43,7 +44,7 @@ const updateNotificationPreferences = async (
 };
 
 // Get user's notification
-const getusersNotificationService = async (
+const getUsersNotificationService = async (
   userId: string,
   query: Record<string, string>
 ) => {
@@ -164,7 +165,7 @@ const notifyNearbyUsers = async (location: any) => {
 export const NotificationService = {
   getUserNotificationPreferences,
   updateNotificationPreferences,
-  getusersNotificationService,
+  getUsersNotificationService,
   sendPushNotification,
   notifyNearbyUsers,
 };

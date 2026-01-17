@@ -84,13 +84,26 @@ const getMeService = async (userId: string) => {
       },
     },
 
-    // Project required fields, including average rating
+    // Lookup for notification preferences (ensure this collection exists)
+    {
+      $lookup: {
+        from: "notificationpreferences", // Correct this if the collection name is different
+        localField: "_id",
+        foreignField: "user",
+        as: "notificationPreferences",
+      },
+    },
+
+    // Project required fields, including helpl_support, offline_maps, and notification preferences
     {
       $project: {
         email: 1,
         full_name: 1,
-        location: 1,
         profile_picture: 1,
+        location: 1,
+        preferences: 1,
+        help_support: 1, // Include helpl_support
+        offline_maps: 1, // Include offline_maps
         interest: 1,
         role: 1,
         savedLocationDetails: {
@@ -99,7 +112,13 @@ const getMeService = async (userId: string) => {
           description: 1,
           imageUrl: 1,
         },
-        avgRating: 1, // Include the average rating in the final result
+        avgRating: 1,
+        notificationPreferences: {
+          // Include notification preferences
+          channel: 1,
+          direct_sms: 1,
+          app: 1,
+        },
       },
     },
   ]);
@@ -114,13 +133,17 @@ const getMeService = async (userId: string) => {
   if (
     userData.location &&
     userData.location.coordinates &&
-    userData.location.coordinates.length === 2
+    userData.location.coordinates.length === 2 &&
+    (userData.location.coordinates[0] !== 0 ||
+      userData.location.coordinates[1] !== 0)
   ) {
     const placeName = await getPlaceName(
       userData.location.coordinates[1],
       userData.location.coordinates[0]
     );
     userData.location.placeName = placeName;
+  } else {
+    userData.location.placeName = "No valid location data";
   }
 
   return userData;
@@ -140,6 +163,7 @@ const getProfileService = async (userId: string) => {
   return {
     email: user.email,
     full_name: user.full_name,
+    profile_picture: user.profile_picture,
     location: user.location?.placeName || "No place name available",
   };
 };

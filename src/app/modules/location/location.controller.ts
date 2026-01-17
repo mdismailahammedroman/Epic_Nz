@@ -18,7 +18,13 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   }
 
   const { userId } = req.user as JwtPayload;
-  const { name, latitude, longitude, category: selectedCategory } = req.body;
+  const {
+    name,
+    latitude,
+    longitude,
+    category: selectedCategory,
+    description,
+  } = req.body;
 
   // Use the extracted image URLs for the location submission
   const newLocation = await locationServices.submitLocation(
@@ -27,7 +33,8 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
     latitude,
     longitude,
     imageUrls, // Pass the array of image URLs to the service
-    selectedCategory
+    selectedCategory,
+    description
   );
 
   sendResponse(res, {
