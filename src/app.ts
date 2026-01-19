@@ -22,7 +22,7 @@ const app: Application = express();
 app.post(
   "/api/v1/subscription/webhook",
   express.raw({ type: "application/json" }),
-  subscriptionController.stripeWebhook
+  subscriptionController.stripeWebhook,
 );
 
 /* 🌐 STANDARD MIDDLEWARE */
@@ -34,7 +34,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 
 app.use(safeSanitizeMiddleware);
@@ -44,7 +44,7 @@ app.use(
     secret: envVar.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-  })
+  }),
 );
 
 app.use(passport.initialize());
