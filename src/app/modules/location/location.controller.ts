@@ -34,7 +34,7 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
     longitude,
     imageUrls, // Pass the array of image URLs to the service
     selectedCategory,
-    description
+    description,
   );
 
   sendResponse(res, {
@@ -96,7 +96,7 @@ const getFreedomCampingLocations = CatchAsync(
       data: FreedomCampingLocations.data,
       meta: FreedomCampingLocations.meta,
     });
-  }
+  },
 );
 const getCampgrounds = CatchAsync(async (req: Request, res: Response) => {
   const query = req.query as Record<string, string>;
@@ -124,9 +124,8 @@ const getEpicPhotoSpots = CatchAsync(async (req: Request, res: Response) => {
 });
 const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
-  const locationDetails = await locationServices.locationDetailsById(
-    locationId
-  );
+  const locationDetails =
+    await locationServices.locationDetailsById(locationId);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -153,7 +152,7 @@ const unsaveLocationForUser = CatchAsync(
 
     const updatedSavedLocations = await locationServices.unsaveLocationForUser(
       userId,
-      locationId
+      locationId,
     );
 
     sendResponse(res, {
@@ -162,16 +161,15 @@ const unsaveLocationForUser = CatchAsync(
       message: "Location removed from saved locations",
       data: updatedSavedLocations,
     });
-  }
+  },
 );
-
 // POST /locations/{id}/share – Share a location with others via deep link.
 const shareLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const userId = req.user as JwtPayload;
   const deepLink = await locationServices.shareLocation(
     locationId,
-    userId.userId
+    userId.userId,
   );
   sendResponse(res, {
     success: true,
@@ -188,7 +186,7 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
   const updatedLocation = await locationServices.locationRating(
     locationId,
     rating,
-    userId.userId
+    userId.userId,
   );
   sendResponse(res, {
     success: true,

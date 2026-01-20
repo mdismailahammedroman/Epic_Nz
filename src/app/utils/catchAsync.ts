@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 export const CatchAsync = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>,
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
