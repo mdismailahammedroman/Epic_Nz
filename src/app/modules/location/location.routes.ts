@@ -13,77 +13,77 @@ router.post(
   checkAuth(...Object.values(Role)),
   multerUpload.array("image", 5),
   validateRequest(LocationValidation.createLocationValidationSchema),
-  locationController.submitLocation
+  locationController.submitLocation,
 );
 router.get(
   "/all",
   checkAuth(...Object.values(Role)),
-  locationController.getAllActivities
+  locationController.getAllActivities,
 );
 
 router.get(
   "/my-submissions",
   checkAuth(Role.USER), // Ensure the user is authenticated
-  locationController.getUserSubmissions // Call the controller method
+  locationController.getUserSubmissions, // Call the controller method
 );
 
 router.get(
   "/hikes",
   checkAuth(...Object.values(Role)),
-  locationController.getHikes
+  locationController.getHikes,
 );
 router.get(
   "/campgrounds",
   checkAuth(...Object.values(Role)),
-  locationController.getCampgrounds
+  locationController.getCampgrounds,
 );
 router.get(
   "/freedom-camping-locations",
   checkAuth(...Object.values(Role)),
-  locationController.getFreedomCampingLocations
+  locationController.getFreedomCampingLocations,
 );
 router.get(
   "/epic-photo-spots",
   checkAuth(...Object.values(Role)),
-  locationController.getEpicPhotoSpots
+  locationController.getEpicPhotoSpots,
 );
 router.get(
   "/:locationId",
   checkAuth(...Object.values(Role)),
-  locationController.locationDetailsById
+  locationController.locationDetailsById,
 );
 
 // save-location
 router.post(
   "/:locationId/save",
   checkAuth(Role.USER),
-  locationController.saveLocationForUser
+  locationController.saveLocationForUser,
 );
 router.post(
   "/:locationId/unsave",
   checkAuth(Role.USER),
-  locationController.unsaveLocationForUser
+  locationController.unsaveLocationForUser,
 );
 
 // POST /locations/{id}/share – Share a location with others via deep link.
 router.post(
   "/:locationId/share",
   checkAuth(Role.USER),
-  locationController.shareLocation
+  locationController.shareLocation,
 );
 
 // POST /locations/{id}/rating – location adventure rating .
 router.post(
   "/:locationId/rating",
   checkAuth(Role.USER),
-  locationController.locationRating
+  locationController.locationRating,
 );
 
 // Approve location (ADMIN only)
 router.patch(
   "/:locationId/approve",
   checkAuth(Role.ADMIN),
-  locationController.approveLocation
+  locationController.approveLocation,
 );
 
 // router.patch(

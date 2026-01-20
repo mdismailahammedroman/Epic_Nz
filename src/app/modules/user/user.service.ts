@@ -84,37 +84,38 @@ const getMeService = async (userId: string) => {
       },
     },
 
-    // Lookup for notification preferences (ensure this collection exists)
+    // Lookup for notification preferences
     {
       $lookup: {
-        from: "notificationpreferences", // Correct this if the collection name is different
+        from: "notificationpreferences", // Ensure this collection name is correct
         localField: "_id",
         foreignField: "user",
         as: "notificationPreferences",
       },
     },
 
-    // Project required fields, including helpl_support, offline_maps, and notification preferences
+    // Project required fields, including help_support, offline_maps, and notification preferences
     {
       $project: {
         email: 1,
         full_name: 1,
         profile_picture: 1,
-        location: 1,
+        location: 1, // Ensure location is included here
         preferences: 1,
         help_support: 1, // Include helpl_support
         offline_maps: 1, // Include offline_maps
         interest: 1,
         role: 1,
         savedLocationDetails: {
-          placeName: 1,
-          coordinates: 1,
+          _id: 1,
+          name: 1,
           description: 1,
+          address: 1,
+          coordinates: 1,
           imageUrl: 1,
         },
         avgRating: 1,
         notificationPreferences: {
-          // Include notification preferences
           channel: 1,
           direct_sms: 1,
           app: 1,
@@ -139,7 +140,7 @@ const getMeService = async (userId: string) => {
   ) {
     const placeName = await getPlaceName(
       userData.location.coordinates[1],
-      userData.location.coordinates[0]
+      userData.location.coordinates[0],
     );
     userData.location.placeName = placeName;
   } else {
@@ -192,12 +193,12 @@ const getAllUserService = async (query: Record<string, string>) => {
 const userUpdateService = async (
   userId: string,
   payload: Partial<IUser>,
-  decodedToken: JwtPayload
+  decodedToken: JwtPayload,
 ) => {
   if (!decodedToken || !decodedToken.role) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
-      "Invalid or missing role in token"
+      "Invalid or missing role in token",
     );
   }
 
@@ -209,21 +210,21 @@ const userUpdateService = async (
   if (decodedToken.role === Role.USER && decodedToken.userId !== userId) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
-      "You can only update your own profile"
+      "You can only update your own profile",
     );
   }
 
   if (payload.password) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      "You can't update your password from this route!"
+      "You can't update your password from this route!",
     );
   }
 
   if (payload.role && decodedToken.role === Role.USER) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
-      "You are not allowed to update roles!"
+      "You are not allowed to update roles!",
     );
   }
 
@@ -247,7 +248,7 @@ const userUpdateService = async (
     if (!allowedTopLevel.includes(key)) {
       throw new AppError(
         StatusCodes.FORBIDDEN,
-        `You are not allowed to update: ${key}`
+        `You are not allowed to update: ${key}`,
       );
     }
   });
@@ -319,12 +320,12 @@ const getUserPreferencesService = async (userId: string) => {
 
 const updateUserPreferences = async (
   userId: string,
-  payload: Partial<IUserPreferences>
+  payload: Partial<IUserPreferences>,
 ) => {
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { $set: payload },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   ).select("preferences");
 
   if (!updatedUser) {

@@ -10,38 +10,38 @@ router.post(
   "/register",
 
   multerUpload.single("profile_picture"),
-  userController.userRegister
+  userController.userRegister,
 );
 
 router.get("/get_me", checkAuth(...Object.keys(Role)), userController.getMe);
 router.get(
   "/profile/:userId",
   checkAuth(...Object.keys(Role)),
-  userController.getProfile
+  userController.getProfile,
 );
 router.get(
   "/",
   checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.USER),
-  userController.getAllUser
+  userController.getAllUser,
 );
 router.patch("/:userId", checkAuth(Role.USER), userController.userUpdate);
 router.delete(
   "/:userId",
   checkAuth(...Object.keys(Role)),
-  userController.userDelete
+  userController.userDelete,
 );
 
 // Route to get user preferences
 router.get(
   "/preferences",
   checkAuth(Role.USER),
-  userController.getUserPreferences
+  userController.getUserPreferences,
 );
 
 router.patch(
   "/preferences",
   checkAuth(Role.USER),
-  userController.updateUserPreferences
+  userController.updateUserPreferences,
 );
 
 export const userRouter = router;

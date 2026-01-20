@@ -19,7 +19,7 @@ const submitLocation = async (
   longitude: number,
   imageUrl: string[],
   categoryName: string,
-  description: string
+  description: string,
 ) => {
   const lat = Number(latitude);
   const lon = Number(longitude);
@@ -40,7 +40,7 @@ const submitLocation = async (
     userId: userId, // Use 'userId' to match your schema
     imageUrl: imageUrl,
     name: name,
-    description,
+    description: description,
     address: addressName,
     coordinates: {
       type: "Point",
@@ -80,7 +80,7 @@ const getUserSubmissions = async (userId: string) => {
   if (!locations || locations.length === 0) {
     throw new AppError(
       StatusCodes.NOT_FOUND,
-      "No submissions found for this user"
+      "No submissions found for this user",
     );
   }
 
@@ -153,23 +153,25 @@ const locationDetailsById = async (locationId: string) => {
 
 const saveLocationForUser = async (userId: string, locationId: string) => {
   // Implementation to save location for user.
-  const user = await User.findById(userId);
+  const user = await User.findById(userId); // Find user by userId
   if (!user) {
     throw new AppError(404, "User not found");
   }
-
   user.savedLocations = user.savedLocations || [];
   if (user.savedLocations.includes(locationId)) {
     throw new AppError(400, "Location already saved for user");
   }
   user.savedLocations.push(locationId);
   await user.save();
+
   await user.populate({
     path: "savedLocations",
-    select: "_id placeName imageUrl coordinates",
+    select: "_id name placeName imageUrl coordinates category description",
   });
-  return;
+
+  return user.savedLocations;
 };
+
 const unsaveLocationForUser = async (userId: string, locationId: string) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -185,7 +187,7 @@ const unsaveLocationForUser = async (userId: string, locationId: string) => {
 
   // Remove location
   user.savedLocations = user.savedLocations.filter(
-    (id) => id.toString() !== locationId
+    (id) => id.toString() !== locationId,
   );
 
   await user.save();
@@ -198,7 +200,6 @@ const unsaveLocationForUser = async (userId: string, locationId: string) => {
 
   return user.savedLocations;
 };
-
 // POST /locations/{id}/share – Share a location with others via deep link.
 const shareLocation = async (locationId: string, userId: string) => {
   const user = await User.findById(userId);
@@ -217,7 +218,7 @@ const shareLocation = async (locationId: string, userId: string) => {
 
   const shareLinkId = uuidv4();
 
-  const deepLink = `http://localhost:5000/api/v1/locations/${locationId}?shareId=${shareLinkId}`;
+  const deepLink = `http://localhost:5000/api/v1/location/${locationId}`;
 
   await Location.updateOne(
     { _id: locationId },
@@ -229,7 +230,7 @@ const shareLocation = async (locationId: string, userId: string) => {
           createdAt: new Date(),
         },
       },
-    }
+    },
   );
 
   return {
@@ -242,7 +243,7 @@ const shareLocation = async (locationId: string, userId: string) => {
 const locationRating = async (
   locationId: string,
   rating: number,
-  userId: string
+  userId: string,
 ) => {
   //
   const user = await User.findById(userId);
@@ -268,7 +269,7 @@ const locationRating = async (
   }
 
   const existingRating = location.ratings.find(
-    (r) => r.userId.toString() === userId
+    (r) => r.userId.toString() === userId,
   );
 
   if (existingRating) {
@@ -319,7 +320,7 @@ const approveLocation = async (locationId: string) => {
       allTokens,
       title,
       body,
-      data
+      data,
     );
   }
 
@@ -359,7 +360,7 @@ const rejectLocation = async (locationId: string, adminId: Types.ObjectId) => {
       creator.fcmTokens,
       title,
       body,
-      data
+      data,
     );
   }
 
