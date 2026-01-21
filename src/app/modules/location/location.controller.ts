@@ -5,6 +5,7 @@ import { sendResponse } from "../../utils/SendResponse";
 import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
+import { LocationStatus } from "./location.interface";
 
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   // Check if files are uploaded and handle the image paths
@@ -219,6 +220,44 @@ const getLocationPins = CatchAsync(async (req: Request, res: Response) => {
     data: locationPins,
   });
 });
+
+const rejectLocation = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const adminId = (req.user as JwtPayload).userId; // Get admin ID from JWT token
+
+  const location = await locationServices.rejectLocation(locationId, adminId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location rejected successfully",
+    data: location,
+  });
+});
+
+const getLocationsByStatuses = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { status } = req.query;
+    if (
+      !status ||
+      !Object.values(LocationStatus).includes(status as LocationStatus)
+    ) {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid or missing status");
+    }
+
+    const locations = await locationServices.getLocationsByStatus(
+      status as LocationStatus,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: `Locations with status ${status} retrieved successfully`,
+      data: locations,
+    });
+  },
+);
+
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -234,4 +273,6 @@ export const locationController = {
   locationRating,
   approveLocation,
   getLocationPins,
+  rejectLocation,
+  getLocationsByStatuses,
 };

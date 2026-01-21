@@ -8,24 +8,30 @@ const router = express.Router();
 router.post(
   "/create-subscription",
   checkAuth(Role.USER),
-  subscriptionController.createCheckoutSession
+  subscriptionController.createCheckoutSession,
 );
 
 router.get(
   "/my",
   checkAuth(Role.USER),
-  subscriptionController.getMySubscriptions
+  subscriptionController.getMySubscriptions,
 );
 router.patch(
   "/auto_renew/off",
   checkAuth(Role.USER),
-  subscriptionController.turnOffAutoRenew
+  subscriptionController.turnOffAutoRenew,
 );
 router.post(
   "/me/subscription/restore",
   checkAuth(Role.USER),
-  subscriptionController.restoreSubscription
-); // Restore subscription
+  subscriptionController.restoreSubscription,
+);
+
+router.get(
+  "/all",
+  checkAuth(Role.ADMIN),
+  subscriptionController.getAllSubscriptions,
+);
 
 // GET /users/me/subscription → Subscription info
 

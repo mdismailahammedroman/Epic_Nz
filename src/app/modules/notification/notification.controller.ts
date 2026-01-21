@@ -39,7 +39,7 @@ const pushNotification = CatchAsync(async (req: Request, res: Response) => {
   if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Valid tokens array is required"
+      "Valid tokens array is required",
     );
   }
 
@@ -56,7 +56,7 @@ const pushNotification = CatchAsync(async (req: Request, res: Response) => {
     tokens,
     title,
     body,
-    notificationData
+    notificationData,
   );
 
   sendResponse(res, {
@@ -73,9 +73,8 @@ const getUserNotificationPreferences = CatchAsync(
     const user = req.user as JwtPayload;
     const userId = user?.userId;
 
-    const result = await NotificationService.getUserNotificationPreferences(
-      userId
-    );
+    const result =
+      await NotificationService.getUserNotificationPreferences(userId);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -83,7 +82,7 @@ const getUserNotificationPreferences = CatchAsync(
       message: "Notification preferences retrieved successfully",
       data: result,
     });
-  }
+  },
 );
 
 // Update notification preferences (bulk update) (using)
@@ -95,7 +94,7 @@ const updateNotificationPreferences = CatchAsync(
 
     const result = await NotificationService.updateNotificationPreferences(
       userId,
-      payload
+      payload,
     );
 
     sendResponse(res, {
@@ -104,7 +103,7 @@ const updateNotificationPreferences = CatchAsync(
       message: "Notification preferences updated successfully",
       data: result,
     });
-  }
+  },
 );
 
 // Get user's notification preferences (using)
@@ -113,7 +112,7 @@ const getUserNotifications = CatchAsync(async (req: Request, res: Response) => {
   const query = req.query as Record<string, string>;
   const result = await NotificationService.getUsersNotificationService(
     userId,
-    query
+    query,
   );
 
   sendResponse(res, {

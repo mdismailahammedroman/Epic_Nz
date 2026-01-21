@@ -385,6 +385,17 @@ const getLocationPinsService = async () => {
   return locationPins;
 };
 
+const getLocationsByStatus = async (status: LocationStatus) => {
+  const locations = await Location.find({ status }).sort({ createdAt: -1 });
+  if (!locations || locations.length === 0) {
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      `No locations with status ${status}`,
+    );
+  }
+  return locations;
+};
+
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -401,4 +412,5 @@ export const locationServices = {
   approveLocation,
   rejectLocation,
   getLocationPinsService,
+  getLocationsByStatus,
 };
