@@ -1,9 +1,9 @@
+import { sendPushNotification } from "./../../utils/notificationUtils";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status-codes";
 import { INotifyPreference } from "./notification.interface";
 import { Notification, NotificationPreference } from "./notification.model";
 import AppError from "../../errorHelper/AppError";
-import { fcm } from "../../config/firebase.config";
 import User from "../user/user.model";
 
 // Get user's notification preferences (using)
@@ -13,7 +13,7 @@ const getUserNotificationPreferences = async (userId: string) => {
   if (!preferences) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      "Notification preferences not found"
+      "Notification preferences not found",
     );
   }
 
@@ -23,21 +23,21 @@ const getUserNotificationPreferences = async (userId: string) => {
 // Update notification preferences (using)
 const updateNotificationPreferences = async (
   userId: string,
-  payload: Partial<INotifyPreference>
+  payload: Partial<INotifyPreference>,
 ) => {
   const preferences = await NotificationPreference.findOne({ user: userId });
 
   if (!preferences) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      "Notification preferences not found"
+      "Notification preferences not found",
     );
   }
 
   const updatedPreferences = await NotificationPreference.findOneAndUpdate(
     { user: userId },
     payload,
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   return updatedPreferences;
@@ -46,7 +46,7 @@ const updateNotificationPreferences = async (
 // Get user's notification
 const getUsersNotificationService = async (
   userId: string,
-  query: Record<string, string>
+  query: Record<string, string>,
 ) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
@@ -66,57 +66,6 @@ const getUsersNotificationService = async (
 
 // Send Push Notification
 // Service to send push notifications
-const sendPushNotification = async (
-  tokens: string[],
-  title: string,
-  body: string,
-  data: Record<string, string> = {}
-) => {
-  if (!tokens || tokens.length === 0) {
-    console.log("No tokens provided. Skipping notification.");
-    return; // Early return if no tokens are provided
-  }
-
-  try {
-    const message = {
-      notification: {
-        title,
-        body,
-      },
-      data,
-      tokens,
-    };
-
-    // Send notifications to all tokens using Firebase Cloud Messaging (FCM)
-    const response = await fcm.sendEachForMulticast(message);
-
-    // Log the response from FCM
-    console.log("Successfully sent message:", response);
-
-    if (response.failureCount > 0) {
-      const failedTokens: string[] = [];
-      response.responses.forEach((resp: any, idx: number) => {
-        if (!resp.success) {
-          failedTokens.push(tokens[idx]); // Collect failed tokens
-        }
-      });
-
-      console.log(
-        "List of tokens that caused failures: " + failedTokens.join(", ")
-      );
-    } else {
-      console.log("All notifications were sent successfully!");
-    }
-
-    return response;
-  } catch (error) {
-    console.error("Error sending push notification:", error); // Improved error logging
-    throw new AppError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      "Failed to send push notification"
-    );
-  }
-};
 
 // Notify nearby users about a new location
 const notifyNearbyUsers = async (location: any) => {
@@ -151,12 +100,7 @@ const notifyNearbyUsers = async (location: any) => {
     const data = { locationId: location._id.toString() };
 
     // Send push notification to all nearby users
-    await NotificationService.sendPushNotification(
-      uniqueTokens,
-      title,
-      body,
-      data
-    );
+    sendPushNotification(uniqueTokens, title, body, data);
   } else {
     console.log("No nearby users found to notify.");
   }
@@ -166,6 +110,5 @@ export const NotificationService = {
   getUserNotificationPreferences,
   updateNotificationPreferences,
   getUsersNotificationService,
-  sendPushNotification,
   notifyNearbyUsers,
 };

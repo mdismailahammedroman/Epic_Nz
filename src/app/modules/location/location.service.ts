@@ -8,9 +8,10 @@ import AppError from "../../errorHelper/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { CategoryEnum, LocationStatus } from "./location.interface";
 import User from "../user/user.model";
-import { NotificationService } from "../notification/notification.service";
 import { StatusCodes } from "http-status-codes";
 import { getAllFcmTokens } from "../../utils/randomFCMToken";
+import { sendPushNotification } from "../../utils/notificationUtils";
+import { NotificationService } from "../notification/notification.service";
 
 const submitLocation = async (
   userId: string,
@@ -316,12 +317,7 @@ const approveLocation = async (locationId: string) => {
   // Fetch all FCM tokens (or filtered tokens as needed) and send notifications
   const allTokens = await getAllFcmTokens(); // This can be a function that fetches all user tokens
   if (allTokens.length > 0) {
-    await NotificationService.sendPushNotification(
-      allTokens,
-      title,
-      body,
-      data,
-    );
+    sendPushNotification(allTokens, title, body, data);
   }
 
   return location; // Return the updated location
@@ -356,12 +352,7 @@ const rejectLocation = async (locationId: string, adminId: Types.ObjectId) => {
 
   // Send push notification to the creator
   if (creator.fcmTokens && creator.fcmTokens.length > 0) {
-    await NotificationService.sendPushNotification(
-      creator.fcmTokens,
-      title,
-      body,
-      data,
-    );
+    sendPushNotification(creator.fcmTokens, title, body, data);
   }
 
   return location;

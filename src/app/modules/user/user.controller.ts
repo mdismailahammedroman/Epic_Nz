@@ -8,6 +8,7 @@ import AppError from "../../errorHelper/AppError";
 import { StatusCodes } from "http-status-codes";
 import { createUserTokens } from "../../utils/userToken";
 import { setAuthCookie } from "../../utils/SetCookies";
+import { IUser } from "./user.interface";
 
 // Controller to handle user registration
 const userRegister = CatchAsync(
@@ -37,7 +38,7 @@ const userRegister = CatchAsync(
         refreshToken: userTokens.refreshToken,
       },
     });
-  }
+  },
 );
 
 // get  user
@@ -81,13 +82,22 @@ const getAllUser = CatchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const userUpdate = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const body = req.body;
+
     const { userId } = req.user as JwtPayload;
+    const payload = {
+      ...body,
+      profile_picture: req.file?.path as string,
+      coverPicture: req.file?.path as string,
+    };
+    // Proceed with user update using the updated data (including file paths)
     const result = await userServices.userUpdateService(
       userId,
-      req.body,
-      req.user as JwtPayload
+      payload,
+      req.user as JwtPayload,
     );
 
     sendResponse(res, {
@@ -96,7 +106,7 @@ const userUpdate = CatchAsync(
       message: "User updated successfully!",
       data: result,
     });
-  }
+  },
 );
 
 // USER UPDATE
@@ -158,7 +168,7 @@ const updateUserPreferences = CatchAsync(
 
     const updatedPreferences = await userServices.updateUserPreferences(
       userId,
-      preferences
+      preferences,
     );
 
     sendResponse(res, {
@@ -167,7 +177,7 @@ const updateUserPreferences = CatchAsync(
       message: "User preferences updated successfully!",
       data: updatedPreferences,
     });
-  }
+  },
 );
 
 export const userController = {

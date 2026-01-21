@@ -31,42 +31,6 @@ const notifyNearbyUsers = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Request handler for sending push notifications
-const pushNotification = CatchAsync(async (req: Request, res: Response) => {
-  const { tokens, title, body, data } = req.body;
-
-  // Validate tokens array
-  if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Valid tokens array is required",
-    );
-  }
-
-  // Validate title and body
-  if (!title || !body) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Title and body are required");
-  }
-
-  // If no data is provided, pass an empty object instead
-  const notificationData = data || {};
-
-  // Send push notification via the service
-  const result = await NotificationService.sendPushNotification(
-    tokens,
-    title,
-    body,
-    notificationData,
-  );
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Push notification sent successfully",
-    data: result,
-  });
-});
-
 // Get user's notification preferences (using)
 const getUserNotificationPreferences = CatchAsync(
   async (req: Request, res: Response) => {
@@ -128,5 +92,4 @@ export const NotificationController = {
   updateNotificationPreferences,
   getUserNotifications,
   notifyNearbyUsers,
-  pushNotification,
 };

@@ -195,14 +195,11 @@ const userUpdateService = async (
   payload: Partial<IUser>,
   decodedToken: JwtPayload,
 ) => {
-  if (!decodedToken || !decodedToken.role) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "Invalid or missing role in token",
-    );
-  }
+  const user = await User.findById(userId).populate({
+    path: "savedLocations", // Populate the savedLocations field
+    select: "_id name placeName imageUrl coordinates description", // Include specific fields you want
+  });
 
-  const user = await User.findById(userId);
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
   }
@@ -228,20 +225,22 @@ const userUpdateService = async (
     );
   }
 
-  /** =======================
-   *  FIELD WHITELIST
-   * ======================= */
+  // =======================
+  // FIELD WHITELISTING
+  // =======================
   const allowedTopLevel = [
-    "name",
+    "full_name",
     "phone",
     "picture",
     "address",
-    "profileImage",
+    "profile_picture",
+    "coverPicture",
     "isVerified",
     "userStatus",
     "approved",
     "commissionRate",
     "preferences",
+    "location", // Include location as an allowed field
   ];
 
   Object.keys(payload).forEach((key) => {
@@ -253,9 +252,9 @@ const userUpdateService = async (
     }
   });
 
-  /** =======================
-   *  PREFERENCES MERGE
-   * ======================= */
+  // =======================
+  // PREFERENCES MERGE
+  // =======================
   if (payload.preferences) {
     if (!user.preferences) {
       user.preferences = {
@@ -272,9 +271,9 @@ const userUpdateService = async (
     };
   }
 
-  /** =======================
-   *  TOP-LEVEL UPDATE
-   * ======================= */
+  // =======================
+  // UPDATE FIELDS
+  // =======================
   Object.assign(user, payload);
   await user.save();
 
