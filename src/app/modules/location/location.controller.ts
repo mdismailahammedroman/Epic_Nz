@@ -235,9 +235,11 @@ const rejectLocation = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getLocationsByStatuses = CatchAsync(
+const getLocationsByStatusWise = CatchAsync(
   async (req: Request, res: Response) => {
     const { status } = req.query;
+
+    // Ensure status is valid
     if (
       !status ||
       !Object.values(LocationStatus).includes(status as LocationStatus)
@@ -245,14 +247,17 @@ const getLocationsByStatuses = CatchAsync(
       throw new AppError(StatusCodes.BAD_REQUEST, "Invalid or missing status");
     }
 
-    const locations = await locationServices.getLocationsByStatus(
+    // Fetch locations by status with filters, sorting, and pagination
+    const { locations, meta } = await locationServices.getLocationsByStatus(
       status as LocationStatus,
+      req.query as Record<string, string>,
     );
 
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
       message: `Locations with status ${status} retrieved successfully`,
+      meta,
       data: locations,
     });
   },
@@ -274,5 +279,5 @@ export const locationController = {
   approveLocation,
   getLocationPins,
   rejectLocation,
-  getLocationsByStatuses,
+  getLocationsByStatusWise,
 };

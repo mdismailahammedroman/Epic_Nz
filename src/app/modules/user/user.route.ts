@@ -26,8 +26,12 @@ router.get(
 );
 router.patch(
   "/update-user",
-
-  multerUpload.single("coverPicture"),
+  // multerUpload.single("coverPicture"),
+  // multerUpload.single("profile_picture"),
+  multerUpload.fields([
+    { name: "coverPicture", maxCount: 1 },
+    { name: "profile_picture", maxCount: 1 },
+  ]),
   checkAuth(Role.USER),
   userController.userUpdate,
 );

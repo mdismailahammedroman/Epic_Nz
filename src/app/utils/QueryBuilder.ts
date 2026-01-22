@@ -51,7 +51,7 @@ export class QueryBuilder<T> {
     this.queryModel = this.queryModel
       .find(
         { $text: { $search: searchTerm } },
-        { score: { $meta: "textScore" } } // relevance score for text search
+        { score: { $meta: "textScore" } }, // relevance score for text search
       )
       .sort({ score: { $meta: "textScore" } });
 

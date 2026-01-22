@@ -376,15 +376,25 @@ const getLocationPinsService = async () => {
   return locationPins;
 };
 
-const getLocationsByStatus = async (status: LocationStatus) => {
-  const locations = await Location.find({ status }).sort({ createdAt: -1 });
-  if (!locations || locations.length === 0) {
-    throw new AppError(
-      StatusCodes.NOT_FOUND,
-      `No locations with status ${status}`,
-    );
-  }
-  return locations;
+const getLocationsByStatus = async (
+  status: LocationStatus,
+  query: Record<string, string>,
+) => {
+  const queryBuilder = new QueryBuilder(Location.find({ status }), query);
+
+  // Apply filters, sorting, pagination, etc.
+  const locations = await queryBuilder
+    .filter() // Apply filter
+    .sort() // Apply sorting
+    .paginate() // Apply pagination
+    .build(); // Execute the query
+
+  const meta = await queryBuilder.getMeta(); // Get pagination metadata
+
+  return {
+    locations,
+    meta,
+  };
 };
 
 export const locationServices = {

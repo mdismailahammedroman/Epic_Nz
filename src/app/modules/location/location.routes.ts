@@ -93,5 +93,10 @@ router.patch(
 );
 
 router.get("/pins", locationController.getLocationPins);
+router.get(
+  "/",
+  checkAuth(Role.ADMIN),
+  locationController.getLocationsByStatusWise,
+);
 
 export const locationRouter = router;

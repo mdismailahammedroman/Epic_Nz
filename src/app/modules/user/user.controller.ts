@@ -83,31 +83,29 @@ const getAllUser = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const userUpdate = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const body = req.body;
+const userUpdate = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
 
-    const { userId } = req.user as JwtPayload;
-    const payload = {
-      ...body,
-      profile_picture: req.file?.path as string,
-      coverPicture: req.file?.path as string,
-    };
-    // Proceed with user update using the updated data (including file paths)
-    const result = await userServices.userUpdateService(
-      userId,
-      payload,
-      req.user as JwtPayload,
-    );
+  const files = req.files as {
+    coverPicture?: Express.Multer.File[];
+    profile_picture?: Express.Multer.File[];
+  };
 
-    sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: "User updated successfully!",
-      data: result,
-    });
-  },
-);
+  const payload: Partial<IUser> = {
+    ...req.body,
+    profile_picture: files?.profile_picture?.[0]?.path,
+    coverPicture: files?.coverPicture?.[0]?.path,
+  };
+
+  const updatedUser = await userServices.userUpdateService(userId, payload);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User updated successfully!",
+    data: updatedUser,
+  });
+});
 
 // USER UPDATE
 const userDelete = CatchAsync(async (req: Request, res: Response) => {
