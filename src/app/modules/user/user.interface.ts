@@ -47,6 +47,7 @@ export interface IUser {
   full_name: string;
   password?: string;
   profile_picture?: string;
+  coverPicture?: string;
   auth_providers: IAuthProvider[];
   fcmTokens?: string[];
   location?: ICoord;

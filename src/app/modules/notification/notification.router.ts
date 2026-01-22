@@ -11,7 +11,7 @@ const router = express.Router();
 router.get(
   "/preferences",
   checkAuth(),
-  NotificationController.getUserNotificationPreferences
+  NotificationController.getUserNotificationPreferences,
 );
 
 // Update notification preferences (bulk update)
@@ -19,25 +19,20 @@ router.patch(
   "/preferences",
   checkAuth(),
   validateRequest(NotificationValidation.updateNotificationPreferencesSchema),
-  NotificationController.updateNotificationPreferences
+  NotificationController.updateNotificationPreferences,
 );
 
 router.get(
   "/my_notifications",
   checkAuth(...Object.keys(Role)),
-  NotificationController.getUserNotifications
+  NotificationController.getUserNotifications,
 );
-router.post(
-  "/push_notification",
-  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
-  validateRequest(NotificationValidation.pushNotificationSchema),
-  NotificationController.pushNotification
-);
+
 router.post(
   "/notify_nearby_users",
   checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
   validateRequest(NotificationValidation.notifyNearbyUsersSchema),
-  NotificationController.notifyNearbyUsers
+  NotificationController.notifyNearbyUsers,
 );
 
 export const notifyRoute = router;

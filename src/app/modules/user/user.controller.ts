@@ -8,6 +8,7 @@ import AppError from "../../errorHelper/AppError";
 import { StatusCodes } from "http-status-codes";
 import { createUserTokens } from "../../utils/userToken";
 import { setAuthCookie } from "../../utils/SetCookies";
+import { IUser } from "./user.interface";
 
 // Controller to handle user registration
 const userRegister = CatchAsync(
@@ -37,7 +38,7 @@ const userRegister = CatchAsync(
         refreshToken: userTokens.refreshToken,
       },
     });
-  }
+  },
 );
 
 // get  user
@@ -81,23 +82,30 @@ const getAllUser = CatchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-const userUpdate = CatchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.user as JwtPayload;
-    const result = await userServices.userUpdateService(
-      userId,
-      req.body,
-      req.user as JwtPayload
-    );
 
-    sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: "User updated successfully!",
-      data: result,
-    });
-  }
-);
+const userUpdate = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
+
+  const files = req.files as {
+    coverPicture?: Express.Multer.File[];
+    profile_picture?: Express.Multer.File[];
+  };
+
+  const payload: Partial<IUser> = {
+    ...req.body,
+    profile_picture: files?.profile_picture?.[0]?.path,
+    coverPicture: files?.coverPicture?.[0]?.path,
+  };
+
+  const updatedUser = await userServices.userUpdateService(userId, payload);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User updated successfully!",
+    data: updatedUser,
+  });
+});
 
 // USER UPDATE
 const userDelete = CatchAsync(async (req: Request, res: Response) => {
@@ -158,7 +166,7 @@ const updateUserPreferences = CatchAsync(
 
     const updatedPreferences = await userServices.updateUserPreferences(
       userId,
-      preferences
+      preferences,
     );
 
     sendResponse(res, {
@@ -167,7 +175,7 @@ const updateUserPreferences = CatchAsync(
       message: "User preferences updated successfully!",
       data: updatedPreferences,
     });
-  }
+  },
 );
 
 export const userController = {

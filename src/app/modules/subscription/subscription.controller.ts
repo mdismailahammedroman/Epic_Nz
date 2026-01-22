@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";
 import { subscriptionService } from "./subscription.service";
@@ -27,7 +28,7 @@ const createCheckoutSession = CatchAsync(
       message: "Checkout session created",
       data: session,
     });
-  }
+  },
 );
 
 const stripeWebhook = async (req: Request, res: Response) => {
@@ -40,7 +41,7 @@ const stripeWebhook = async (req: Request, res: Response) => {
     event = stripe.webhooks.constructEvent(
       req.body,
       signature,
-      envVar.STRIPE_WEBHOOK_SECRET
+      envVar.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err: any) {
     return res.status(400).send(err.message);
@@ -52,7 +53,7 @@ const stripeWebhook = async (req: Request, res: Response) => {
 
 const getMySubscriptions = CatchAsync(async (req: Request, res: Response) => {
   const subs = await subscriptionService.getMySubscriptions(
-    (req.user as JwtPayload).userId
+    (req.user as JwtPayload).userId,
   );
 
   sendResponse(res, {
@@ -120,6 +121,17 @@ const restoreSubscription = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllSubscriptions = CatchAsync(async (req: Request, res: Response) => {
+  const subscriptions = await subscriptionService.getAllSubscriptions();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "All subscriptions fetched",
+    data: subscriptions,
+  });
+});
+
 export const subscriptionController = {
   createCheckoutSession,
   stripeWebhook,
@@ -128,4 +140,5 @@ export const subscriptionController = {
   getSubscriptionInfo,
   cancelSubscription,
   restoreSubscription,
+  getAllSubscriptions,
 };

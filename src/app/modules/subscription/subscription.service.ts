@@ -65,7 +65,7 @@ const stripeWebhookHandler = async (event: Stripe.Event) => {
       start_date: startDate,
       end_date: endDate,
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 
   console.log(`✔ Subscription stored for user ${userId}`);
@@ -130,10 +130,15 @@ const restoreSubscription = async (userId: string) => {
   };
 };
 
+// Fetch all subscriptions for the admin
+const getAllSubscriptions = async () => {
+  return Subscription.find().sort({ createdAt: -1 }); // You can modify the sorting as per your requirement
+};
 export const subscriptionService = {
   createCheckoutSession,
   stripeWebhookHandler,
   getMySubscriptions,
   turnOffAutoRenew,
+  getAllSubscriptions,
   restoreSubscription,
 };

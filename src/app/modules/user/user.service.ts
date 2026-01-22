@@ -100,6 +100,7 @@ const getMeService = async (userId: string) => {
         email: 1,
         full_name: 1,
         profile_picture: 1,
+        coverPicture: 1,
         location: 1, // Ensure location is included here
         preferences: 1,
         help_support: 1, // Include helpl_support
@@ -191,94 +192,24 @@ const getAllUserService = async (query: Record<string, string>) => {
 };
 
 const userUpdateService = async (
-  userId: string,
+  userId: JwtPayload,
   payload: Partial<IUser>,
-  decodedToken: JwtPayload,
 ) => {
-  if (!decodedToken || !decodedToken.role) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "Invalid or missing role in token",
-    );
+  const { profile_picture, coverPicture } = payload;
+
+  // Handle update of the profile picture separately from cover picture
+  if (profile_picture) {
+    payload.profile_picture = profile_picture; // You may save the image URL or path here
   }
 
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
+  if (coverPicture) {
+    payload.coverPicture = coverPicture; // Similarly, save the cover picture URL/path here
   }
 
-  if (decodedToken.role === Role.USER && decodedToken.userId !== userId) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "You can only update your own profile",
-    );
-  }
-
-  if (payload.password) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "You can't update your password from this route!",
-    );
-  }
-
-  if (payload.role && decodedToken.role === Role.USER) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "You are not allowed to update roles!",
-    );
-  }
-
-  /** =======================
-   *  FIELD WHITELIST
-   * ======================= */
-  const allowedTopLevel = [
-    "name",
-    "phone",
-    "picture",
-    "address",
-    "profileImage",
-    "isVerified",
-    "userStatus",
-    "approved",
-    "commissionRate",
-    "preferences",
-  ];
-
-  Object.keys(payload).forEach((key) => {
-    if (!allowedTopLevel.includes(key)) {
-      throw new AppError(
-        StatusCodes.FORBIDDEN,
-        `You are not allowed to update: ${key}`,
-      );
-    }
-  });
-
-  /** =======================
-   *  PREFERENCES MERGE
-   * ======================= */
-  if (payload.preferences) {
-    if (!user.preferences) {
-      user.preferences = {
-        language: "en",
-        app_notifications: true,
-        notifications_enabled: true,
-        location_access: false,
-      };
-    }
-
-    user.preferences = {
-      ...user.preferences,
-      ...payload.preferences,
-    };
-  }
-
-  /** =======================
-   *  TOP-LEVEL UPDATE
-   * ======================= */
-  Object.assign(user, payload);
-  await user.save();
-
-  return user;
+  const updatedUser = await User.findByIdAndUpdate(userId, payload, {
+    new: true,
+  }).populate("savedLocations");
+  return updatedUser;
 };
 
 const userDeleteService = async (userId: string, decodedToken: JwtPayload) => {

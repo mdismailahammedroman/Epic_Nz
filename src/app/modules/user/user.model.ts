@@ -9,7 +9,7 @@ const authProviderSchema = new Schema<IAuthProvider>(
   {
     versionKey: false,
     _id: false,
-  }
+  },
 );
 
 const userSchema = new Schema<IUser>(
@@ -24,6 +24,7 @@ const userSchema = new Schema<IUser>(
     full_name: { type: String, required: true, trim: true },
     password: { type: String, required: false, select: false },
     profile_picture: { type: String },
+    coverPicture: { type: String },
     auth_providers: [authProviderSchema],
     location: {
       type: { type: String, default: "Point" },
@@ -56,7 +57,7 @@ const userSchema = new Schema<IUser>(
     offline_maps: { type: Boolean, default: false }, // Flag for offline map access
     help_support: { type: Boolean, default: false }, // Flag for helpl & support access
   },
-  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
 
 const User = model<IUser>("User", userSchema);

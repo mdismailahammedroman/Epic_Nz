@@ -14,7 +14,7 @@ cloudinary.config({
 // Upload buffer to Cloudinary
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
-  fileName: string
+  fileName: string,
 ): Promise<UploadApiResponse> => {
   try {
     return new Promise((resolve, reject) => {
@@ -33,10 +33,10 @@ export const uploadBufferToCloudinary = async (
           (error, result) => {
             if (error)
               return reject(
-                new AppError(500, "Cloudinary upload failed", error.message)
+                new AppError(500, "Cloudinary upload failed", error.message),
               );
             resolve(result as UploadApiResponse);
-          }
+          },
         )
         .end(buffer);
     });

@@ -12,7 +12,7 @@ export const checkAuth =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // const authHeader = req.headers.authorization; // Get the Authorization header
-      const authHeader = req.headers.authorization || req.cookies.accessToken;
+      const authHeader = req.cookies.accessToken;
 
       // Check if the token exists and starts with 'Bearer '
       if (!authHeader || !authHeader.startsWith("")) {
@@ -24,7 +24,7 @@ export const checkAuth =
       // VERIFY ACCESS TOKEN
       const verifyUser = verifyToken(
         authHeader,
-        envVar.JWT_SECRET
+        envVar.JWT_SECRET,
       ) as JwtPayload;
 
       // CHECK Verified
@@ -46,7 +46,7 @@ export const checkAuth =
       ) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
-          `User is ${isUser.status} and cannot access the system.`
+          `User is ${isUser.status} and cannot access the system.`,
         );
       }
 
@@ -59,7 +59,7 @@ export const checkAuth =
       if (restRole.length && !restRole.includes(verifyUser.role)) {
         throw new AppError(
           httpStatus.FORBIDDEN,
-          "You are not permitted to access this route!"
+          "You are not permitted to access this route!",
         );
       }
 

@@ -24,7 +24,17 @@ router.get(
   checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.USER),
   userController.getAllUser,
 );
-router.patch("/:userId", checkAuth(Role.USER), userController.userUpdate);
+router.patch(
+  "/update-user",
+  // multerUpload.single("coverPicture"),
+  // multerUpload.single("profile_picture"),
+  multerUpload.fields([
+    { name: "coverPicture", maxCount: 1 },
+    { name: "profile_picture", maxCount: 1 },
+  ]),
+  checkAuth(Role.USER),
+  userController.userUpdate,
+);
 router.delete(
   "/:userId",
   checkAuth(...Object.keys(Role)),
