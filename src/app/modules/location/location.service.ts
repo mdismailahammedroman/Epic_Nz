@@ -6,7 +6,13 @@ import { getPlaceName } from "../../utils/getLocation";
 
 import AppError from "../../errorHelper/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
-import { CategoryEnum, LocationStatus } from "./location.interface";
+import {
+  CategoryEnum,
+  IAnimalClearance,
+  INetworkQuality,
+  IWaterTheaterType,
+  LocationStatus,
+} from "./location.interface";
 import User from "../user/user.model";
 import { StatusCodes } from "http-status-codes";
 import { getAllFcmTokens } from "../../utils/randomFCMToken";
@@ -21,6 +27,9 @@ const submitLocation = async (
   imageUrl: string[],
   categoryName: string,
   description: string,
+  watererType: IWaterTheaterType,
+  animalClearance: IAnimalClearance,
+  networkQuality: INetworkQuality,
 ) => {
   const lat = Number(latitude);
   const lon = Number(longitude);
@@ -43,13 +52,16 @@ const submitLocation = async (
     name: name,
     description: description,
     address: addressName,
+    watererType: watererType,
+    animalClearance: animalClearance,
+    networkQuality: networkQuality,
     coordinates: {
       type: "Point",
       coordinates: [lon, lat],
     },
     // Use the category passed from form-data or a default
     category: categoryName || CategoryEnum,
-    status: "PENDING",
+    status: LocationStatus.PENDING,
   });
 
   await newLocation.save();

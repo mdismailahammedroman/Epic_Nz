@@ -25,7 +25,11 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
     longitude,
     category: selectedCategory,
     description,
+    watererType,
+    animalClearance,
+    networkQuality,
   } = req.body;
+  console.log("Received category:", req.body.category);
 
   // Use the extracted image URLs for the location submission
   const newLocation = await locationServices.submitLocation(
@@ -36,7 +40,11 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
     imageUrls, // Pass the array of image URLs to the service
     selectedCategory,
     description,
+    watererType,
+    animalClearance,
+    networkQuality,
   );
+  console.log("Received category:", selectedCategory);
 
   sendResponse(res, {
     success: true,

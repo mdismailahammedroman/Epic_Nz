@@ -17,6 +17,30 @@ export enum CategoryEnum {
   CAMPGROUND = "Campground",
   FREEDOM_CAMPING = "Freedom Camping",
 }
+export enum IWaterTheaterType {
+  CLOUDY = "cloudy",
+  RAINY = "rainy",
+  SUNNY = "sunny",
+  STORMY = "stormy",
+  WINDY = "windy",
+  FOGGY = "foggy",
+}
+
+// Animal clearance
+export enum IAnimalClearance {
+  PET_FRIENDLY = "Pet Friendly",
+  SERVICE_ANIMALS_ONLY = "Service Animals only",
+  NOT_PET_FRIENDLY = "Not Pet Friendly",
+}
+
+// Network quality
+export enum INetworkQuality {
+  EXCELLENT = "Excellent",
+  GOOD = "Good",
+  FAIR = "Fair",
+  POOR = "Poor",
+  BAD = "Bad",
+}
 
 export interface ILocation {
   userId: Types.ObjectId;
@@ -26,6 +50,9 @@ export interface ILocation {
   coordinates: ICoordinates;
   address?: string;
   description?: string;
+  watererType: IWaterTheaterType;
+  animalClearance: IAnimalClearance;
+  networkQuality: INetworkQuality;
   imageUrl: string;
   ratings?: {
     userId: Types.ObjectId;

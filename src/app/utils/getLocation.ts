@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { envVar } from "../config/envVar";
 import axios from "axios";
 
 export const getPlaceName = async (
   lat: number,
-  long: number
+  long: number,
 ): Promise<string> => {
   // Ensure coordinates are valid
   if (isNaN(lat) || isNaN(long)) {
@@ -40,10 +41,10 @@ export const getPlaceName = async (
     if (error.response && error.response.status === 401) {
       console.error(
         "Invalid API key or unauthorized access:",
-        error.response.data
+        error.response.data,
       );
       throw new Error(
-        "Invalid API key or unauthorized access. Check your key."
+        "Invalid API key or unauthorized access. Check your key.",
       );
     } else if (error.response && error.response.status === 404) {
       console.error("No results found for the given coordinates.");

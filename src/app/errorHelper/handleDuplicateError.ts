@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TGenericsErrorResponse } from "../types/error.types";
 
 export const handleDuplicateError = (err: any): TGenericsErrorResponse => {
