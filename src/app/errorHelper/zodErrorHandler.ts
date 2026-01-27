@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TErrorSources, TGenericsErrorResponse } from "../types/error.types";
 
 export const zodErrorHandler = (err: any): TGenericsErrorResponse => {

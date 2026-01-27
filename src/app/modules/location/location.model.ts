@@ -1,5 +1,12 @@
 import mongoose, { model } from "mongoose";
-import { CategoryEnum, ILocation } from "./location.interface";
+import {
+  CategoryEnum,
+  IAnimalClearance,
+  ILocation,
+  INetworkQuality,
+  IWaterTheaterType,
+  LocationStatus,
+} from "./location.interface";
 
 const { Schema } = mongoose;
 
@@ -43,7 +50,7 @@ const locationSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["PENDING", "APPROVED", "REJECTED"],
+      enum: Object.values(LocationStatus),
       default: "PENDING",
     },
     address: {
@@ -51,6 +58,18 @@ const locationSchema = new Schema(
     },
     description: {
       type: String,
+    },
+    watererType: {
+      type: String,
+      enum: Object.values(IWaterTheaterType),
+    },
+    animalClearance: {
+      type: String,
+      enum: Object.values(IAnimalClearance),
+    },
+    networkQuality: {
+      type: String,
+      enum: Object.values(INetworkQuality),
     },
 
     AI_Predictions: {
@@ -74,7 +93,7 @@ const locationSchema = new Schema(
   },
   {
     timestamps: true, // Automatically add createdAt and updatedAt fields
-  }
+  },
 );
 
 locationSchema.index({ coordinates: "2dsphere" });

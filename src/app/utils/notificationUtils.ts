@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status-codes";
 import AppError from "../errorHelper/AppError";
 import { fcm } from "../config/firebase.config";

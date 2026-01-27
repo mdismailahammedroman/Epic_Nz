@@ -1,29 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-useless-escape */
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 import { cloudinaryUpload } from "./cloudinary.config";
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinaryUpload,
-  params: {
-    public_id: (req: any, file: Express.Multer.File) => {
-      const fileName = file.originalname
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/\./g, "-")
-        .replace(/[^a-z0-9\-\.]/g, "");
+  params: async (_req: any, file: Express.Multer.File) => {
+    const sanitizedName = file.originalname
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-.]/g, "");
 
-      const uniqueFileName =
-        Math.random().toString(15).substring(2) +
-        "-" +
-        Date.now() +
-        "-" +
-        fileName;
+    const uniqueFileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}-${sanitizedName}`;
 
-      return uniqueFileName;
-    },
+    return {
+      folder: "uploads",
+      public_id: uniqueFileName,
+      resource_type: "image",
+      format: "webp",
+      transformation: [{ quality: "auto" }],
+    };
   },
 });
 
-export const multerUpload = multer({ storage: storage });
+export const multerUpload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 30 * 1024 * 1024, // 5MB
+  },
+});

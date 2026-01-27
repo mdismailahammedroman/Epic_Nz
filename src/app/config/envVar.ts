@@ -63,6 +63,7 @@ interface EnvVar {
   WEATHER_API_URL: string;
   LOCATIONIQ_API_KEY: string;
   GOOGLE_MAPS_API_KEY: string;
+  MAPBOX_ACCESS_TOKEN: string;
   FIREBASE_SERVICE_ACCOUNT_PATH: string;
 }
 
@@ -102,6 +103,7 @@ const loadEnvVariables = (): EnvVar => {
     "WEATHER_API_URL",
     "LOCATIONIQ_API_KEY",
     "GOOGLE_MAPS_API_KEY",
+    "MAPBOX_ACCESS_TOKEN",
     "STRIPE_SECRET_KEY",
     "STRIPE_PUBLIC_KEY",
     "STRIPE_WEBHOOK_SECRET",
@@ -113,7 +115,7 @@ const loadEnvVariables = (): EnvVar => {
   requiredEnvVariables.forEach((varName) => {
     if (!process.env[varName]) {
       throw new Error(
-        `Environment variable ${varName} is required but not defined.`
+        `Environment variable ${varName} is required but not defined.`,
       );
     }
   });
@@ -169,6 +171,7 @@ const loadEnvVariables = (): EnvVar => {
     WEATHER_API_URL: process.env.WEATHER_API_URL as string,
     LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY as string,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY as string,
+    MAPBOX_ACCESS_TOKEN: process.env.MAPBOX_ACCESS_TOKEN as string,
     FIREBASE_SERVICE_ACCOUNT_PATH: process.env
       .FIREBASE_SERVICE_ACCOUNT_PATH as string,
   };

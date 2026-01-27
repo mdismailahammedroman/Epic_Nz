@@ -18,11 +18,16 @@ export enum UserStatus {
 }
 
 // Auth providers used for user login (e.g., Google, credentials)
-export interface IAuthProvider {
-  provider: "google" | "credentials"; // "Google", "Credential"
-  providerId: string;
+export enum AuthProviderType {
+  GOOGLE = "google",
+  CREDENTIAL = "credential",
 }
+// Interface for authentication providers linked to the user
 
+export interface IAuthProvider {
+  provider: AuthProviderType;
+  providerID: string;
+}
 // User location coordinates
 export interface ICoord {
   type: "Point";

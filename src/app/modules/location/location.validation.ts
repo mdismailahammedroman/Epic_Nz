@@ -1,5 +1,10 @@
 import z from "zod";
-import { CategoryEnum } from "./location.interface";
+import {
+  CategoryEnum,
+  IAnimalClearance,
+  INetworkQuality,
+  IWaterTheaterType,
+} from "./location.interface";
 
 const createLocationValidationSchema = z.object({
   body: z.object({
@@ -32,6 +37,21 @@ const createLocationValidationSchema = z.object({
       .string()
       .min(5, "Description must be at least 5 characters long")
       .optional(),
+
+    // Water Theater Type
+    watererType: z.enum(IWaterTheaterType, {
+      message: "Valid WaterTheaterType is required",
+    }),
+
+    // Animal Clearance
+    animalClearance: z.enum(IAnimalClearance, {
+      message: "Valid Animal Clearance is required",
+    }),
+
+    // Network Quality
+    networkQuality: z.enum(INetworkQuality, {
+      message: "Valid Network Quality is required",
+    }),
   }),
 });
 

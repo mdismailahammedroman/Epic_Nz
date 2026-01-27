@@ -1,20 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { envVar } from "../config/envVar";
 import axios from "axios";
 
 export const getPlaceName = async (
   lat: number,
-  long: number
+  long: number,
 ): Promise<string> => {
   // Ensure coordinates are valid
   if (isNaN(lat) || isNaN(long)) {
     throw new Error("Invalid coordinates provided");
   }
 
-  const locationIqAPIKey = envVar.LOCATIONIQ_API_KEY;
-  const googleGeoCodingAPI = `https://us1.locationiq.com/v1/reverse.php?key=${locationIqAPIKey}&lat=${lat}&lon=${long}&format=json`;
+  const token = envVar.MAPBOX_ACCESS_TOKEN;
+
+  // ✅ Map box expects: longitude,latitude
+  const map_boxURL = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+    long,
+  )},${encodeURIComponent(lat)}.json?access_token=${encodeURIComponent(
+    token,
+  )}&types=address,place,locality,neighborhood,poi&limit=1`;
 
   try {
-    const response = await axios.get(googleGeoCodingAPI);
+    const response = await axios.get(map_boxURL);
 
     // Check if the API response contains address data
     if (response.data && response.data.address) {
@@ -40,10 +47,10 @@ export const getPlaceName = async (
     if (error.response && error.response.status === 401) {
       console.error(
         "Invalid API key or unauthorized access:",
-        error.response.data
+        error.response.data,
       );
       throw new Error(
-        "Invalid API key or unauthorized access. Check your key."
+        "Invalid API key or unauthorized access. Check your key.",
       );
     } else if (error.response && error.response.status === 404) {
       console.error("No results found for the given coordinates.");

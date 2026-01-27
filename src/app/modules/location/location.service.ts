@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
 import Location from "./location.model";
 import { v4 as uuidv4 } from "uuid";
@@ -6,7 +5,13 @@ import { getPlaceName } from "../../utils/getLocation";
 
 import AppError from "../../errorHelper/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
-import { CategoryEnum, LocationStatus } from "./location.interface";
+import {
+  CategoryEnum,
+  IAnimalClearance,
+  INetworkQuality,
+  IWaterTheaterType,
+  LocationStatus,
+} from "./location.interface";
 import User from "../user/user.model";
 import { StatusCodes } from "http-status-codes";
 import { getAllFcmTokens } from "../../utils/randomFCMToken";
@@ -21,6 +26,9 @@ const submitLocation = async (
   imageUrl: string[],
   categoryName: string,
   description: string,
+  watererType: IWaterTheaterType,
+  animalClearance: IAnimalClearance,
+  networkQuality: INetworkQuality,
 ) => {
   const lat = Number(latitude);
   const lon = Number(longitude);
@@ -29,32 +37,28 @@ const submitLocation = async (
     throw new AppError(400, "Invalid coordinates provided");
   }
 
-  let addressName = "";
-  try {
-    addressName = await getPlaceName(lat, lon);
-  } catch (error: any) {
-    console.error("Error retrieving address:", error);
-    addressName = "Unknown Location";
-  }
+  return getPlaceName(lat, lon)
+    .catch((err) => {
+      console.error("Error getting address:", err);
+      return "Unknown Location";
+    })
+    .then((addressName) => {
+      const newLocation = new Location({
+        userId,
+        name,
+        description,
+        imageUrl: imageUrl,
+        address: addressName,
+        watererType,
+        animalClearance,
+        networkQuality,
+        coordinates: { type: "Point", coordinates: [lon, lat] },
+        category: categoryName || CategoryEnum,
+        status: LocationStatus.PENDING,
+      });
 
-  const newLocation = new Location({
-    userId: userId, // Use 'userId' to match your schema
-    imageUrl: imageUrl,
-    name: name,
-    description: description,
-    address: addressName,
-    coordinates: {
-      type: "Point",
-      coordinates: [lon, lat],
-    },
-    // Use the category passed from form-data or a default
-    category: categoryName || CategoryEnum,
-    status: "PENDING",
-  });
-
-  await newLocation.save();
-
-  return newLocation;
+      return newLocation.save();
+    });
 };
 
 const getAllActivities = async (query: Record<string, string>) => {
