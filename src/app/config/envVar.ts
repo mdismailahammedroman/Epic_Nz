@@ -46,6 +46,7 @@ interface EnvVar {
   BCRYPT_SALT_ROUND: string;
   EXPRESS_SESSION_SECRET: string;
   FRONTEND_URL: string;
+  APP_URL: string;
   CLOUDINARY: CLOUDINARY_TYPE;
   REQUEST_RATE_LIMIT: string;
   REQUEST_RATE_LIMIT_TIME: string;
@@ -61,8 +62,7 @@ interface EnvVar {
   SESSION_SECRET: string;
   OPENWEATHER_API_KEY: string;
   WEATHER_API_URL: string;
-
-  MAPBOX_ACCESS_TOKEN: string;
+  MAP_BOX_ACCESS_TOKEN: string;
   FIREBASE_SERVICE_ACCOUNT_PATH: string;
 }
 
@@ -78,6 +78,7 @@ const loadEnvVariables = (): EnvVar => {
     "BCRYPT_SALT_ROUND",
     "EXPRESS_SESSION_SECRET",
     "FRONTEND_URL",
+    "APP_URL",
     "CLOUDINARY_NAME",
     "CLOUDINARY_SECRET",
     "CLOUDINARY_API_KEY",
@@ -100,8 +101,7 @@ const loadEnvVariables = (): EnvVar => {
     "SESSION_SECRET",
     "OPENWEATHER_API_KEY",
     "WEATHER_API_URL",
-
-    "MAPBOX_ACCESS_TOKEN",
+    "MAP_BOX_ACCESS_TOKEN",
     "STRIPE_SECRET_KEY",
     "STRIPE_PUBLIC_KEY",
     "STRIPE_WEBHOOK_SECRET",
@@ -129,6 +129,7 @@ const loadEnvVariables = (): EnvVar => {
     BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
     EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
     FRONTEND_URL: process.env.FRONTEND_URL as string,
+    APP_URL: process.env.APP_URL as string,
     CLOUDINARY: {
       CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
       CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
@@ -168,7 +169,7 @@ const loadEnvVariables = (): EnvVar => {
     OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY as string,
     WEATHER_API_URL: process.env.WEATHER_API_URL as string,
 
-    MAPBOX_ACCESS_TOKEN: process.env.MAPBOX_ACCESS_TOKEN as string,
+    MAP_BOX_ACCESS_TOKEN: process.env.MAP_BOX_ACCESS_TOKEN as string,
     FIREBASE_SERVICE_ACCOUNT_PATH: process.env
       .FIREBASE_SERVICE_ACCOUNT_PATH as string,
   };
