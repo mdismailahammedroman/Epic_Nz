@@ -11,11 +11,17 @@ export const getPlaceName = async (
     throw new Error("Invalid coordinates provided");
   }
 
-  const locationIqAPIKey = envVar.LOCATIONIQ_API_KEY;
-  const googleGeoCodingAPI = `https://us1.locationiq.com/v1/reverse.php?key=${locationIqAPIKey}&lat=${lat}&lon=${long}&format=json`;
+  const token = envVar.MAPBOX_ACCESS_TOKEN;
+
+  // ✅ Map box expects: longitude,latitude
+  const map_boxURL = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+    long,
+  )},${encodeURIComponent(lat)}.json?access_token=${encodeURIComponent(
+    token,
+  )}&types=address,place,locality,neighborhood,poi&limit=1`;
 
   try {
-    const response = await axios.get(googleGeoCodingAPI);
+    const response = await axios.get(map_boxURL);
 
     // Check if the API response contains address data
     if (response.data && response.data.address) {

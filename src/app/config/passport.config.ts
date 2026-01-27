@@ -8,7 +8,7 @@ import {
 import bcrypt from "bcryptjs";
 import User from "../modules/user/user.model";
 import { envVar } from "./envVar";
-import { Role } from "../modules/user/user.interface";
+import { AuthProviderType, Role } from "../modules/user/user.interface";
 
 // Configure the local strategy
 passport.use(
@@ -49,8 +49,8 @@ passport.use(
       } catch (err) {
         return done(err);
       }
-    }
-  )
+    },
+  ),
 );
 
 // Passport Google Strategy
@@ -65,7 +65,7 @@ passport.use(
       accessToken: string,
       refreshToken: string,
       profile: Profile,
-      done: VerifyCallback
+      done: VerifyCallback,
     ) => {
       try {
         const email = profile.emails?.[0]?.value;
@@ -93,8 +93,8 @@ passport.use(
             is_verified: true,
             auth_providers: [
               {
-                provider: "google",
-                providerId: profile.id,
+                provider: AuthProviderType.GOOGLE,
+                providerID: profile.id,
               },
             ],
           });
@@ -105,8 +105,8 @@ passport.use(
         console.error("Google Strategy Error", error);
         return done(error);
       }
-    }
-  )
+    },
+  ),
 );
 
 // Serialize user into session

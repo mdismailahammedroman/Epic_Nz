@@ -1,7 +1,13 @@
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
 import AppError from "../../errorHelper/AppError";
-import { IUser, IUserPreferences, Role } from "./user.interface";
+import {
+  AuthProviderType,
+  IAuthProvider,
+  IUser,
+  IUserPreferences,
+  Role,
+} from "./user.interface";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -21,6 +27,10 @@ const createUser = async (payload: Partial<IUser>) => {
   if (isUser) {
     throw new AppError(400, "User already exists. Please login!");
   }
+  const authProvider: IAuthProvider = {
+    provider: AuthProviderType.CREDENTIAL,
+    providerID: email,
+  };
 
   const newUser = new User({
     email,
@@ -34,6 +44,7 @@ const createUser = async (payload: Partial<IUser>) => {
       notifications_enabled: true,
       location_access: false,
     },
+    auth_providers: [authProvider],
     fcmTokens: fcmTokens ?? [],
     ...rest,
   });

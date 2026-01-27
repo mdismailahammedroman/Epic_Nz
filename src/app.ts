@@ -49,7 +49,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 /* 🚦 RATE LIMIT (EXCLUDE WEBHOOK) */
 const limiter = rateLimit({
   windowMs: Number(envVar.REQUEST_RATE_LIMIT_TIME) * 1000,

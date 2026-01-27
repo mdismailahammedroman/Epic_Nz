@@ -3,6 +3,7 @@ import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import stream from "stream";
 import { envVar } from "./envVar";
 import AppError from "../errorHelper/AppError";
+import sharp from "sharp";
 
 // Cloudinary config
 cloudinary.config({
@@ -11,51 +12,52 @@ cloudinary.config({
   api_secret: envVar.CLOUDINARY.CLOUDINARY_SECRET,
 });
 
-// Upload buffer to Cloudinary
+// Upload buffer → optimize → Cloudinary
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
-  fileName: string,
+  folder = "locations",
 ): Promise<UploadApiResponse> => {
   try {
-    return new Promise((resolve, reject) => {
-      const public_id = `${fileName}-${Date.now()}`;
+    // Optimize image before upload (HUGE speed + size win)
+    const optimizedBuffer = await sharp(buffer)
+      .resize(1200)
+      .jpeg({ quality: 80 })
+      .toBuffer();
 
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(buffer);
+    return await new Promise((resolve, reject) => {
+      const passThrough = new stream.PassThrough();
+      passThrough.end(optimizedBuffer);
 
-      cloudinary.uploader
-        .upload_stream(
-          {
-            resource_type: "auto",
-            public_id,
-            folder: "locations", // A folder specifically for location images
-          },
-          (error, result) => {
-            if (error)
-              return reject(
-                new AppError(500, "Cloudinary upload failed", error.message),
-              );
-            resolve(result as UploadApiResponse);
-          },
-        )
-        .end(buffer);
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: "image",
+          transformation: [{ fetch_format: "auto", quality: "auto" }],
+        },
+        (error, result) => {
+          if (error)
+            return reject(
+              new AppError(500, "Cloudinary upload failed", error.message),
+            );
+
+          resolve(result as UploadApiResponse);
+        },
+      );
+
+      passThrough.pipe(uploadStream);
     });
   } catch (error: any) {
-    throw new AppError(500, `Error uploading file: ${error.message}`);
+    throw new AppError(500, "Image upload error", error.message);
   }
 };
 
-export const deleteImageFromCLoudinary = async (url: string) => {
+// Delete image using public_id (FAST)
+export const deleteImageFromCloudinary = async (publicId: string) => {
   try {
-    const regex = /\/v\d+\/(.*?)\.(jpg|jpeg|png|gif|webp|avif)$/i;
-    const match = url.match(regex);
-
-    if (match && match[1]) {
-      const public_id = match[1];
-      await cloudinary.uploader.destroy(public_id); // Delete from Cloudinary
-    }
+    await cloudinary.uploader.destroy(publicId);
   } catch (error: any) {
-    throw new AppError(401, "Cloudinary image deletion failed", error.message);
+    throw new AppError(500, "Cloudinary image deletion failed", error.message);
   }
 };
+
 export const cloudinaryUpload = cloudinary;

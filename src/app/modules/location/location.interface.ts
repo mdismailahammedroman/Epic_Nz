@@ -18,18 +18,18 @@ export enum CategoryEnum {
   FREEDOM_CAMPING = "Freedom Camping",
 }
 export enum IWaterTheaterType {
-  CLOUDY = "cloudy",
-  RAINY = "rainy",
-  SUNNY = "sunny",
-  STORMY = "stormy",
-  WINDY = "windy",
-  FOGGY = "foggy",
+  CLOUDY = "Cloudy",
+  RAINY = "Rainy",
+  SUNNY = "Sunny",
+  STORMY = "Stormy",
+  WINDY = "Windy",
+  FOGGY = "Foggy",
 }
 
 // Animal clearance
 export enum IAnimalClearance {
   PET_FRIENDLY = "Pet Friendly",
-  SERVICE_ANIMALS_ONLY = "Service Animals only",
+  SERVICE_ANIMALS_ONLY = "Service Animals Only",
   NOT_PET_FRIENDLY = "Not Pet Friendly",
 }
 
