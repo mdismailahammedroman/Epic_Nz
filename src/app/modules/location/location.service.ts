@@ -17,7 +17,7 @@ import { StatusCodes } from "http-status-codes";
 import { getAllFcmTokens } from "../../utils/randomFCMToken";
 import { sendPushNotification } from "../../utils/notificationUtils";
 import { NotificationService } from "../notification/notification.service";
-import { hasActiveSubscription } from "../../helper/subscription";
+// import { hasActiveSubscription } from "../../helper/subscription";
 import { Role } from "../user/user.interface";
 
 const submitLocation = async (
@@ -32,14 +32,14 @@ const submitLocation = async (
   animalClearance: IAnimalClearance,
   networkQuality: INetworkQuality,
 ) => {
-  const isSubscribed = await hasActiveSubscription(userId);
+  // const isSubscribed = await hasActiveSubscription(userId);
 
-  if (!isSubscribed) {
-    throw new AppError(
-      403,
-      "Active subscription required to submit a location",
-    );
-  }
+  // if (!isSubscribed) {
+  //   throw new AppError(
+  //     403,
+  //     "Active subscription required to submit a location",
+  //   );
+  // }
   const lat = Number(latitude);
   const lon = Number(longitude);
 
@@ -89,18 +89,12 @@ const getAllActivities = async (query: Record<string, string>) => {
 
 const getUserSubmissions = async (userId: string) => {
   const locations = await Location.find({ userId })
-    .select("name imageUrl coordinates address") // Select only relevant fields
-    .exec(); // Execute the query
-
-  if (!locations || locations.length === 0) {
-    throw new AppError(
-      StatusCodes.NOT_FOUND,
-      "No submissions found for this user",
-    );
-  }
+    .select("name imageUrl coordinates address status createdAt ")
+    .exec();
 
   return locations;
 };
+
 const getHikes = async (query: Record<string, string>) => {
   const hikeQuery = new QueryBuilder(Location.find(), {
     ...query, // Merge query params (e.g., { category: 'Hikes' })
@@ -417,27 +411,24 @@ const deleteLocation = async (
   role: string,
 ) => {
   if (!Types.ObjectId.isValid(locationId)) {
-    throw new AppError(400, "Invalid location ID format.");
+    throw new AppError(400, "Invalid location ID format");
   }
 
   const location = await Location.findById(locationId);
-  if (!location || location.isDeleted) {
+  if (!location) {
     throw new AppError(404, "Location not found");
   }
 
   const isAdmin = role === Role.ADMIN;
-  const isOwner = location.userId?.toString() === userId;
+  const isOwner = String(location.userId) === String(userId);
 
   if (!isAdmin && !isOwner) {
     throw new AppError(403, "You can only delete your own location");
   }
 
-  location.isDeleted = true;
-  location.deletedAt = new Date();
-  location.deletedBy = new Types.ObjectId(userId);
+  await Location.findByIdAndDelete(locationId);
 
-  await location.save();
-  return location;
+  return null;
 };
 
 export const locationServices = {

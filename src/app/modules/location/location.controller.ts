@@ -75,7 +75,9 @@ const getUserSubmissions = CatchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "User's submissions fetched successfully",
+    message: submissions.length
+      ? "User's submissions fetched successfully"
+      : "No submissions found",
     data: submissions,
   });
 });
