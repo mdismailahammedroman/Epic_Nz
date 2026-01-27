@@ -11,7 +11,7 @@ export const getPlaceName = async (
     throw new Error("Invalid coordinates provided");
   }
 
-  const token = envVar.MAPBOX_ACCESS_TOKEN;
+  const token = envVar.MAP_BOX_ACCESS_TOKEN;
 
   // ✅ Map box expects: longitude,latitude
   const map_boxURL = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
