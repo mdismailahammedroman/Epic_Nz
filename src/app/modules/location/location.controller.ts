@@ -271,6 +271,24 @@ const getLocationsByStatusWise = CatchAsync(
   },
 );
 
+const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const user = req.user as JwtPayload; // must contain userId + role
+
+  const result = await locationServices.deleteLocation(
+    locationId,
+    user.userId,
+    user.role,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location deleted successfully",
+    data: result,
+  });
+});
+
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -288,4 +306,5 @@ export const locationController = {
   getLocationPins,
   rejectLocation,
   getLocationsByStatusWise,
+  deleteLocation,
 };

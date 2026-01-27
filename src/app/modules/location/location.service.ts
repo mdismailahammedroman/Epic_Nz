@@ -17,6 +17,8 @@ import { StatusCodes } from "http-status-codes";
 import { getAllFcmTokens } from "../../utils/randomFCMToken";
 import { sendPushNotification } from "../../utils/notificationUtils";
 import { NotificationService } from "../notification/notification.service";
+import { hasActiveSubscription } from "../../helper/subscription";
+import { Role } from "../user/user.interface";
 
 const submitLocation = async (
   userId: string,
@@ -30,6 +32,14 @@ const submitLocation = async (
   animalClearance: IAnimalClearance,
   networkQuality: INetworkQuality,
 ) => {
+  const isSubscribed = await hasActiveSubscription(userId);
+
+  if (!isSubscribed) {
+    throw new AppError(
+      403,
+      "Active subscription required to submit a location",
+    );
+  }
   const lat = Number(latitude);
   const lon = Number(longitude);
 
@@ -401,6 +411,35 @@ const getLocationsByStatus = async (
   };
 };
 
+const deleteLocation = async (
+  locationId: string,
+  userId: string,
+  role: string,
+) => {
+  if (!Types.ObjectId.isValid(locationId)) {
+    throw new AppError(400, "Invalid location ID format.");
+  }
+
+  const location = await Location.findById(locationId);
+  if (!location || location.isDeleted) {
+    throw new AppError(404, "Location not found");
+  }
+
+  const isAdmin = role === Role.ADMIN;
+  const isOwner = location.userId?.toString() === userId;
+
+  if (!isAdmin && !isOwner) {
+    throw new AppError(403, "You can only delete your own location");
+  }
+
+  location.isDeleted = true;
+  location.deletedAt = new Date();
+  location.deletedBy = new Types.ObjectId(userId);
+
+  await location.save();
+  return location;
+};
+
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -418,4 +457,5 @@ export const locationServices = {
   rejectLocation,
   getLocationPinsService,
   getLocationsByStatus,
+  deleteLocation,
 };
