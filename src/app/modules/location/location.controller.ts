@@ -262,6 +262,18 @@ const rejectLocation = CatchAsync(async (req: Request, res: Response) => {
 
   const location = await locationServices.rejectLocation(locationId, adminId);
 
+  await logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "SUBMISSION_REJECTED",
+    entityType: "Location",
+    entityId: locationId,
+    message: "Submission Rejected",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { targetName: location?.name ?? locationId },
+  }).catch(console.error);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -307,6 +319,16 @@ const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
     user.userId,
     user.role,
   );
+  logActivity({
+    actorId: user.userId,
+    actorRole: user.role,
+    action: "LOCATION_DELETED",
+    entityType: "Location",
+    entityId: locationId,
+    message: "Location deleted",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
 
   sendResponse(res, {
     success: true,

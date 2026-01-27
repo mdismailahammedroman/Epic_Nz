@@ -145,6 +145,15 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
   const { oldPassword, newPassword } = req.body;
   const userId = req.user as string;
   await authService.changePassword(userId, oldPassword, newPassword);
+  logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "PASSWORD_CHANGED",
+    entityType: "Auth",
+    message: "Password changed",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
 
   sendResponse(res, {
     success: true,
@@ -158,6 +167,15 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
 const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
   await authService.forgetPassword(email);
+  logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "Forget_Password",
+    entityType: "Auth",
+    message: "Forget Password",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
 
   sendResponse(res, {
     success: true,
@@ -171,6 +189,16 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
 const resetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   await authService.resetUserPassword(email, newPassword);
+  logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "Reset Password",
+    entityType: "Auth",
+    message: "Reset changed",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -197,6 +225,16 @@ const setPassword = CatchAsync(
 
     // Call the service to set the password
     await authService.setPassword(email, newPassword);
+
+    logActivity({
+      actorId: (req.user as JwtPayload).userId,
+      actorRole: (req.user as JwtPayload).role,
+      action: "Set Password",
+      entityType: "Auth",
+      message: "Set changed",
+      ip: req.ip,
+      userAgent: req.headers["user-agent"] as string,
+    }).catch(console.error);
 
     sendResponse(res, {
       success: true,
