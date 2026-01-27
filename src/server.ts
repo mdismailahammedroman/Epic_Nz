@@ -1,5 +1,4 @@
-import http from "http";
-import { Server as SocketIOServer } from "socket.io";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import app from "./app";
@@ -11,34 +10,13 @@ dotenv.config();
 const PORT = envVar.PORT || 3000;
 const MONGO_URL = envVar.MONGO_URI;
 
-// Create HTTP server
-const server = http.createServer(app);
-
-// Create Socket.IO server
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    credentials: true,
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-
-  socket.on("geolocation", (data) => {
-    console.log("Received geolocation:", data);
-    socket.broadcast.emit("geolocation", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
+let server: any;
 
 const startServer = async () => {
   try {
     await mongoose.connect(MONGO_URL);
-    server.listen(PORT, () => {
+
+    server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (error) {

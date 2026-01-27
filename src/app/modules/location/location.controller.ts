@@ -6,7 +6,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
 import { LocationStatus } from "./location.interface";
-import { logActivity } from "../activityLog/activityLog.controller";
+import { logActivity } from "../../utils/logActivity.utils";
 
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   // Check if files are uploaded and handle the image paths
@@ -262,7 +262,7 @@ const rejectLocation = CatchAsync(async (req: Request, res: Response) => {
 
   const location = await locationServices.rejectLocation(locationId, adminId);
 
-  await logActivity({
+  logActivity({
     actorId: (req.user as JwtPayload).userId,
     actorRole: (req.user as JwtPayload).role,
     action: "SUBMISSION_REJECTED",
@@ -319,6 +319,7 @@ const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
     user.userId,
     user.role,
   );
+
   logActivity({
     actorId: user.userId,
     actorRole: user.role,

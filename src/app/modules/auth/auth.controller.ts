@@ -13,10 +13,9 @@ import { sendResponse } from "../../utils/SendResponse";
 import { setAuthCookie } from "../../utils/SetCookies";
 import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
-import { IUser } from "../user/user.interface";
+import { IUser, Role } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
-import { redisClient } from "../../config/redisConfig";
-import { logActivity } from "../activityLog/activityLog.controller";
+import { logActivity } from "../../utils/logActivity.utils";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -73,17 +72,17 @@ const googleCallbackController = CatchAsync(
     const tokenInfo = createUserTokens(user);
     setAuthCookie(res, tokenInfo);
 
-    // ✅ Activity Log for Google Login
-    await logActivity({
-      actorId: user._id.toString(),
-      actorRole: user.role,
-      action: "USER_LOGIN",
-      entityType: "Auth",
-      message: "User Login via Google",
-      ip: req.ip,
-      userAgent: req.headers["user-agent"] as string,
-      meta: { provider: "google" },
-    });
+    // // ✅ Activity Log for Google Login
+    // await logActivity({
+    //   actorId: user._id.toString(),
+    //   actorRole: user.role,
+    //   action: "USER_LOGIN",
+    //   entityType: "Auth",
+    //   message: "User Login via Google",
+    //   ip: req.ip,
+    //   userAgent: req.headers["user-agent"] as string,
+    //   meta: { provider: "google" },
+    // });
 
     const redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
     return res.redirect(redirectUrl);
@@ -145,9 +144,10 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
   const { oldPassword, newPassword } = req.body;
   const userId = req.user as string;
   await authService.changePassword(userId, oldPassword, newPassword);
+
   logActivity({
-    actorId: (req.user as JwtPayload).userId,
-    actorRole: (req.user as JwtPayload).role,
+    actorId: userId,
+    actorRole: "USER",
     action: "PASSWORD_CHANGED",
     entityType: "Auth",
     message: "Password changed",
@@ -168,13 +168,14 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
   await authService.forgetPassword(email);
   logActivity({
-    actorId: (req.user as JwtPayload).userId,
-    actorRole: (req.user as JwtPayload).role,
-    action: "Forget_Password",
+    actorId: "000000000000000000000000", // system/guest placeholder (better: allow actorId optional)
+    actorRole: "GUEST",
+    action: "PASSWORD_RESET_REQUESTED",
     entityType: "Auth",
-    message: "Forget Password",
+    message: "Forget password requested",
     ip: req.ip,
     userAgent: req.headers["user-agent"] as string,
+    meta: { email },
   }).catch(console.error);
 
   sendResponse(res, {
@@ -192,9 +193,9 @@ const resetPassword = CatchAsync(async (req: Request, res: Response) => {
   logActivity({
     actorId: (req.user as JwtPayload).userId,
     actorRole: (req.user as JwtPayload).role,
-    action: "Reset Password",
+    action: "PASSWORD_RESET_COMPLETED",
     entityType: "Auth",
-    message: "Reset changed",
+    message: "Password reset",
     ip: req.ip,
     userAgent: req.headers["user-agent"] as string,
   }).catch(console.error);
@@ -229,9 +230,9 @@ const setPassword = CatchAsync(
     logActivity({
       actorId: (req.user as JwtPayload).userId,
       actorRole: (req.user as JwtPayload).role,
-      action: "Set Password",
+      action: "PASSWORD_SET",
       entityType: "Auth",
-      message: "Set changed",
+      message: "Password set",
       ip: req.ip,
       userAgent: req.headers["user-agent"] as string,
     }).catch(console.error);
