@@ -1,3 +1,8 @@
+import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { CatchAsync } from "../../utils/catchAsync";
+import { sendResponse } from "../../utils/SendResponse";
+import { getActivityLogs } from "./activityLog.service";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
 import { ActivityLog } from "./activityLog.model";
@@ -34,4 +39,18 @@ export const logActivity = async (p: {
     before: p.before,
     after: p.after,
   });
+};
+
+export const activityLogController = {
+  list: CatchAsync(async (req: Request, res: Response) => {
+    const result = await getActivityLogs(req.query);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Activity logs fetched",
+      meta: result.meta,
+      data: result.data,
+    });
+  }),
 };

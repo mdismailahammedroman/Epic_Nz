@@ -6,6 +6,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
 import { LocationStatus } from "./location.interface";
+import { logActivity } from "../activityLog/activityLog.controller";
 
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   // Check if files are uploaded and handle the image paths
@@ -44,7 +45,20 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
     animalClearance,
     networkQuality,
   );
-  console.log("Received category:", selectedCategory);
+  await logActivity({
+    actorId: userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "LOCATION_SUBMITTED",
+    entityType: "Location",
+    entityId: newLocation._id.toString(),
+    message: "Location submitted",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: {
+      targetName: newLocation.name,
+      category: newLocation.category,
+    },
+  });
 
   sendResponse(res, {
     success: true,
@@ -210,6 +224,17 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
 const approveLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const result = await locationServices.approveLocation(locationId);
+  await logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "SUBMISSION_APPROVED",
+    entityType: "Location",
+    entityId: locationId,
+    message: "Submission Approved",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { targetName: result?.name ?? locationId },
+  });
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
