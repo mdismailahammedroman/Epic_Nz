@@ -47,7 +47,7 @@ export interface IUserPreferences {
 
 // User interface
 export interface IUser {
-  _id?: Types.ObjectId;
+  _id: Types.ObjectId;
   email: string;
   full_name: string;
   password?: string;
