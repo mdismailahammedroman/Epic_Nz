@@ -61,8 +61,7 @@ interface EnvVar {
   SESSION_SECRET: string;
   OPENWEATHER_API_KEY: string;
   WEATHER_API_URL: string;
-  LOCATIONIQ_API_KEY: string;
-  GOOGLE_MAPS_API_KEY: string;
+
   MAPBOX_ACCESS_TOKEN: string;
   FIREBASE_SERVICE_ACCOUNT_PATH: string;
 }
@@ -101,8 +100,7 @@ const loadEnvVariables = (): EnvVar => {
     "SESSION_SECRET",
     "OPENWEATHER_API_KEY",
     "WEATHER_API_URL",
-    "LOCATIONIQ_API_KEY",
-    "GOOGLE_MAPS_API_KEY",
+
     "MAPBOX_ACCESS_TOKEN",
     "STRIPE_SECRET_KEY",
     "STRIPE_PUBLIC_KEY",
@@ -169,8 +167,7 @@ const loadEnvVariables = (): EnvVar => {
     SESSION_SECRET: process.env.SESSION_SECRET as string,
     OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY as string,
     WEATHER_API_URL: process.env.WEATHER_API_URL as string,
-    LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY as string,
-    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY as string,
+
     MAPBOX_ACCESS_TOKEN: process.env.MAPBOX_ACCESS_TOKEN as string,
     FIREBASE_SERVICE_ACCOUNT_PATH: process.env
       .FIREBASE_SERVICE_ACCOUNT_PATH as string,
