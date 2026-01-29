@@ -13,9 +13,9 @@ import { sendResponse } from "../../utils/SendResponse";
 import { setAuthCookie } from "../../utils/SetCookies";
 import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
-import { IUser } from "../user/user.interface";
+import { IUser, Role } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
-import { redisClient } from "../../config/redisConfig";
+import { logActivity } from "../../utils/logActivity.utils";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -26,6 +26,17 @@ const credentialLogin = CatchAsync(
       }
       const userTokens = createUserTokens(user);
       setAuthCookie(res, userTokens);
+
+      await logActivity({
+        actorId: user._id.toString(),
+        actorRole: user.role,
+        action: "USER_LOGIN",
+        entityType: "Auth",
+        message: "User Login",
+        ip: req.ip,
+        userAgent: req.headers["user-agent"] as string,
+        meta: { targetName: "Dashboard" },
+      });
 
       // Send response with the user tokens and location data (placeName)
       sendResponse(res, {
@@ -38,7 +49,7 @@ const credentialLogin = CatchAsync(
         },
       });
     })(req, res, next);
-  }
+  },
 );
 
 // Add googleCallback handler
@@ -54,33 +65,31 @@ const googleCallbackController = CatchAsync(
     }
 
     const user = req.user as IUser | undefined;
-
     if (!user) {
       return next(new AppError(StatusCodes.NOT_FOUND, "User not found"));
     }
 
     const tokenInfo = createUserTokens(user);
-
     setAuthCookie(res, tokenInfo);
 
-    const redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
-    // const platform = req.query.platform; // Default to 'web' if not provided
-    // let redirectUrl;
+    // // ✅ Activity Log for Google Login
+    // await logActivity({
+    //   actorId: user._id.toString(),
+    //   actorRole: user.role,
+    //   action: "USER_LOGIN",
+    //   entityType: "Auth",
+    //   message: "User Login via Google",
+    //   ip: req.ip,
+    //   userAgent: req.headers["user-agent"] as string,
+    //   meta: { provider: "google" },
+    // });
 
-    // if (platform === "mobile") {
-    //   // For mobile: Redirect using custom deep linking URL (mobile app)
-    //   redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
-    // } else {
-    //   // For web: Redirect to frontend URL
-    //   redirectUrl = redirectTo
-    //     ? `${envVar.FRONTEND_URL}/${encodeURI(redirectTo)}`
-    //     : envVar.FRONTEND_URL;
-    // // }
+    const redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
     return res.redirect(redirectUrl);
-  }
+  },
 );
 
-const logout = (req: Request, res: Response) => {
+const logout = CatchAsync(async (req: Request, res: Response) => {
   const isProduction = envVar.NODE_ENV === "production";
 
   res.clearCookie("accessToken", {
@@ -97,11 +106,22 @@ const logout = (req: Request, res: Response) => {
     path: "/",
   });
 
-  return res.status(200).json({
+  await logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "USER_LOGOUT",
+    entityType: "Auth",
+    message: "User Logout",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  });
+
+  sendResponse(res, {
     success: true,
+    statusCode: StatusCodes.OK,
     message: "Logged out successfully",
   });
-};
+});
 
 // Refresh Token
 const refreshToken = CatchAsync(async (req: Request, res: Response) => {
@@ -109,9 +129,8 @@ const refreshToken = CatchAsync(async (req: Request, res: Response) => {
   if (!refreshToken)
     throw new AppError(StatusCodes.UNAUTHORIZED, "Refresh token not provided");
 
-  const newAccessToken = await createNewAccessTokenWithRefreshToken(
-    refreshToken
-  );
+  const newAccessToken =
+    await createNewAccessTokenWithRefreshToken(refreshToken);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -126,6 +145,16 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
   const userId = req.user as string;
   await authService.changePassword(userId, oldPassword, newPassword);
 
+  logActivity({
+    actorId: userId,
+    actorRole: "USER",
+    action: "PASSWORD_CHANGED",
+    entityType: "Auth",
+    message: "Password changed",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -138,6 +167,16 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
 const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
   await authService.forgetPassword(email);
+  logActivity({
+    actorId: "000000000000000000000000", // system/guest placeholder (better: allow actorId optional)
+    actorRole: "GUEST",
+    action: "PASSWORD_RESET_REQUESTED",
+    entityType: "Auth",
+    message: "Forget password requested",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { email },
+  }).catch(console.error);
 
   sendResponse(res, {
     success: true,
@@ -151,6 +190,16 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
 const resetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   await authService.resetUserPassword(email, newPassword);
+  logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "PASSWORD_RESET_COMPLETED",
+    entityType: "Auth",
+    message: "Password reset",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -166,7 +215,7 @@ const setPassword = CatchAsync(
     if (!email || !newPassword || !confirmPassword) {
       throw new AppError(
         400,
-        "Email, password, and confirm password are required"
+        "Email, password, and confirm password are required",
       );
     }
 
@@ -178,12 +227,22 @@ const setPassword = CatchAsync(
     // Call the service to set the password
     await authService.setPassword(email, newPassword);
 
+    logActivity({
+      actorId: (req.user as JwtPayload).userId,
+      actorRole: (req.user as JwtPayload).role,
+      action: "PASSWORD_SET",
+      entityType: "Auth",
+      message: "Password set",
+      ip: req.ip,
+      userAgent: req.headers["user-agent"] as string,
+    }).catch(console.error);
+
     sendResponse(res, {
       success: true,
       statusCode: 200,
       message: "Password set successfully.",
     });
-  }
+  },
 );
 
 export const authController = {

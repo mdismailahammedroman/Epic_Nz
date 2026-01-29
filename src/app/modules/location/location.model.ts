@@ -78,6 +78,10 @@ const locationSchema = new Schema(
     weatherInfo: {
       type: Object, // Store weather information
     },
+
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     createdAt: {
       type: Date,
       default: Date.now,

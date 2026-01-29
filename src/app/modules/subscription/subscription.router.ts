@@ -33,10 +33,4 @@ router.get(
   subscriptionController.getAllSubscriptions,
 );
 
-// GET /users/me/subscription → Subscription info
-
-// POST /users/me/subscription/cancel → Cancel subscription
-
-// POST /users/me/subscription/restore → Restore purchase
-
 export const SubscriptionRoute = router;

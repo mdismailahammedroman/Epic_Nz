@@ -63,6 +63,9 @@ export interface ILocation {
   AI_Predictions?: string;
   weatherInfo?: string;
   approvedByAdmin?: Types.ObjectId;
+  isDeleted: boolean;
+  deletedAt?: Date;
+  deletedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -9,6 +9,7 @@ import { JwtPayload } from "jsonwebtoken";
 import Stripe from "stripe";
 import { envVar } from "../../config/envVar";
 import { stripe } from "../../helper/stripe";
+import { logActivity } from "../../utils/logActivity.utils";
 
 const createCheckoutSession = CatchAsync(
   async (req: Request, res: Response) => {
@@ -21,6 +22,17 @@ const createCheckoutSession = CatchAsync(
       userId,
       plan_type: plan,
     });
+
+    logActivity({
+      actorId: userId,
+      actorRole: (req.user as JwtPayload).role,
+      action: "CHECKOUT_SESSION_CREATED",
+      entityType: "Subscription",
+      message: "Checkout session created",
+      ip: req.ip,
+      userAgent: req.headers["user-agent"] as string,
+      meta: { plan },
+    }).catch(console.error);
 
     sendResponse(res, {
       success: true,
@@ -69,6 +81,17 @@ const turnOffAutoRenew = CatchAsync(async (req: Request, res: Response) => {
 
   const result = await subscriptionService.turnOffAutoRenew(userId);
 
+  logActivity({
+    actorId: userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "turn Off Auto Renew",
+    entityType: "Subscription",
+    message: "turn Off Auto Renew",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { result },
+  }).catch(console.error);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -99,6 +122,16 @@ const cancelSubscription = CatchAsync(async (req: Request, res: Response) => {
 
   const result = await subscriptionService.turnOffAutoRenew(userId);
 
+  logActivity({
+    actorId: userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "SUBSCRIPTION_CANCELLED",
+    entityType: "Subscription",
+    message: "Subscription cancelled",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -112,6 +145,16 @@ const restoreSubscription = CatchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as JwtPayload).userId;
 
   const result = await subscriptionService.restoreSubscription(userId);
+
+  logActivity({
+    actorId: userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "SUBSCRIPTION_RESTORED",
+    entityType: "Subscription",
+    message: "Subscription restored",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
 
   sendResponse(res, {
     success: true,

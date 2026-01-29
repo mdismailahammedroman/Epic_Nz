@@ -26,8 +26,8 @@ const createCheckoutSession = async ({
     mode: "subscription",
     customer_email: user.email,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${envVar.FRONTEND_URL}/subscription-success`,
-    cancel_url: `${envVar.FRONTEND_URL}/subscription-cancel`,
+    success_url: `${envVar.APP_URL}/subscription-success`,
+    cancel_url: `${envVar.APP_URL}/subscription-cancel`,
     metadata: { userId, plan_type },
   });
 

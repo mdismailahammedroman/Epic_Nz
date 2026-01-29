@@ -6,6 +6,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
 import { LocationStatus } from "./location.interface";
+import { logActivity } from "../../utils/logActivity.utils";
 
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   // Check if files are uploaded and handle the image paths
@@ -44,7 +45,20 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
     animalClearance,
     networkQuality,
   );
-  console.log("Received category:", selectedCategory);
+  await logActivity({
+    actorId: userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "LOCATION_SUBMITTED",
+    entityType: "Location",
+    entityId: newLocation._id.toString(),
+    message: "Location submitted",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: {
+      targetName: newLocation.name,
+      category: newLocation.category,
+    },
+  });
 
   sendResponse(res, {
     success: true,
@@ -75,7 +89,9 @@ const getUserSubmissions = CatchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "User's submissions fetched successfully",
+    message: submissions.length
+      ? "User's submissions fetched successfully"
+      : "No submissions found",
     data: submissions,
   });
 });
@@ -208,6 +224,17 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
 const approveLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const result = await locationServices.approveLocation(locationId);
+  await logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "SUBMISSION_APPROVED",
+    entityType: "Location",
+    entityId: locationId,
+    message: "Submission Approved",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { targetName: result?.name ?? locationId },
+  });
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -234,6 +261,18 @@ const rejectLocation = CatchAsync(async (req: Request, res: Response) => {
   const adminId = (req.user as JwtPayload).userId; // Get admin ID from JWT token
 
   const location = await locationServices.rejectLocation(locationId, adminId);
+
+  logActivity({
+    actorId: (req.user as JwtPayload).userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "SUBMISSION_REJECTED",
+    entityType: "Location",
+    entityId: locationId,
+    message: "Submission Rejected",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { targetName: location?.name ?? locationId },
+  }).catch(console.error);
 
   sendResponse(res, {
     success: true,
@@ -271,6 +310,35 @@ const getLocationsByStatusWise = CatchAsync(
   },
 );
 
+const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
+  const { locationId } = req.params;
+  const user = req.user as JwtPayload; // must contain userId + role
+
+  const result = await locationServices.deleteLocation(
+    locationId,
+    user.userId,
+    user.role,
+  );
+
+  logActivity({
+    actorId: user.userId,
+    actorRole: user.role,
+    action: "LOCATION_DELETED",
+    entityType: "Location",
+    entityId: locationId,
+    message: "Location deleted",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location deleted successfully",
+    data: result,
+  });
+});
+
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -288,4 +356,5 @@ export const locationController = {
   getLocationPins,
   rejectLocation,
   getLocationsByStatusWise,
+  deleteLocation,
 };

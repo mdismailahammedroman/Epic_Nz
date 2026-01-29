@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";
 import { envVar } from "../../config/envVar";
 import Location from "../location/location.model";
+import tz_lookup from "tz-lookup";
 
 // Fetch weather data from OpenWeather API
 const weatherInfo = async (latitude: number, longitude: number) => {
@@ -12,9 +13,10 @@ const weatherInfo = async (latitude: number, longitude: number) => {
     if (isNaN(latitude) || isNaN(longitude)) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
-        "Invalid latitude or longitude"
+        "Invalid latitude or longitude",
       );
     }
+    const timeZone = tz_lookup(latitude, longitude);
 
     const responseData = await axios.get(envVar.WEATHER_API_URL, {
       params: {
@@ -26,6 +28,26 @@ const weatherInfo = async (latitude: number, longitude: number) => {
     });
 
     const weatherData = responseData.data;
+
+    const sunriseLocal = new Date(
+      weatherData.sys.sunrise * 1000,
+    ).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone,
+    });
+
+    const sunsetLocal = new Date(
+      weatherData.sys.sunset * 1000,
+    ).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone,
+    });
     return {
       location: weatherData.name,
       country: weatherData.sys.country,
@@ -33,6 +55,10 @@ const weatherInfo = async (latitude: number, longitude: number) => {
       description: weatherData.weather[0].description,
       humidity: weatherData.main.humidity,
       windSpeed: weatherData.wind.speed,
+      sunrise: weatherData.sys.sunrise,
+      sunset: weatherData.sys.sunset,
+      sunriseLocal,
+      sunsetLocal,
       precipitation: weatherData.rain?.["1h"],
       icon: weatherData.weather[0].icon,
     };
@@ -41,7 +67,7 @@ const weatherInfo = async (latitude: number, longitude: number) => {
 
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to fetch weather data"
+      "Failed to fetch weather data",
     );
   }
 };
@@ -79,11 +105,11 @@ const weatherInfoByLocationId = async (locationId: string) => {
   } catch (error: any) {
     console.error(
       "Error fetching weather data:",
-      error.response ? error.response.data : error.message
+      error.response ? error.response.data : error.message,
     );
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to fetch weather data"
+      "Failed to fetch weather data",
     );
   }
 };
@@ -140,7 +166,7 @@ const weatherSunriseAndSunset = async (locationId: string) => {
 
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to fetch sunrise and sunset times"
+      "Failed to fetch sunrise and sunset times",
     );
   }
 };

@@ -99,4 +99,10 @@ router.get(
   locationController.getLocationsByStatusWise,
 );
 
+router.delete(
+  "/:locationId",
+  checkAuth(Role.USER, Role.ADMIN),
+  locationController.deleteLocation,
+);
+
 export const locationRouter = router;
