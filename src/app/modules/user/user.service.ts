@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
 import AppError from "../../errorHelper/AppError";
@@ -17,8 +18,7 @@ import { OTPService } from "../otp/otp.service";
 import { CategoryEnum } from "../location/location.interface";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, profile_picture, preferences, fcmTokens, ...rest } =
-    payload;
+  const { email, password, profile_picture, preferences, ...rest } = payload;
 
   if (!email) throw new AppError(400, "Email is required");
   if (!rest.full_name) throw new AppError(400, "Full name is required");
@@ -45,7 +45,6 @@ const createUser = async (payload: Partial<IUser>) => {
       location_access: false,
     },
     auth_providers: [authProvider],
-    fcmTokens: fcmTokens ?? [],
     ...rest,
   });
 
@@ -262,28 +261,52 @@ const getUserPreferencesService = async (userId: string) => {
 
 const updateUserPreferences = async (
   userId: string,
-  payload: Partial<IUserPreferences>,
+  prefs: Partial<IUserPreferences>,
+  fcmToken?: string,
 ) => {
-  const updatedUser = await User.findByIdAndUpdate(
-    userId,
-    { $set: payload },
-    { new: true, runValidators: true },
-  ).select("preferences");
+  const updates: any = {};
+  const setOps: any = {};
 
-  if (!updatedUser) {
-    throw new AppError(404, "User not found");
+  // ✅ preferences
+  if (prefs.language !== undefined)
+    setOps["preferences.language"] = prefs.language;
+
+  if (prefs.app_notifications !== undefined)
+    setOps["preferences.app_notifications"] = prefs.app_notifications;
+
+  if (prefs.notifications_enabled !== undefined)
+    setOps["preferences.notifications_enabled"] = prefs.notifications_enabled;
+
+  if (prefs.location_access !== undefined)
+    setOps["preferences.location_access"] = prefs.location_access;
+
+  if (Object.keys(setOps).length) {
+    updates.$set = setOps;
   }
 
-  return updatedUser.preferences;
-};
+  // ✅ FCM token handling
+  if (prefs.notifications_enabled === true && fcmToken) {
+    updates.$addToSet = { fcmTokens: fcmToken };
+  }
 
-const getAdminForUser = async () => {
-  const admin = await User.findOne({
-    role: { $in: [Role.ADMIN, Role.SUPER_ADMIN] },
-  }).select("_id name email");
+  if (prefs.notifications_enabled === false) {
+    updates.$set = {
+      ...(updates.$set ?? {}),
+      fcmTokens: [],
+    };
+  }
 
-  if (!admin) throw new Error("No admin found");
-  return admin;
+  const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+    new: true,
+    runValidators: true,
+  }).select("preferences fcmTokens");
+
+  if (!updatedUser) throw new AppError(404, "User not found");
+
+  return {
+    preferences: updatedUser.preferences,
+    fcmTokens: updatedUser.fcmTokens,
+  };
 };
 
 export const userServices = {
@@ -295,5 +318,4 @@ export const userServices = {
   userDeleteService,
   getUserPreferencesService,
   updateUserPreferences,
-  getAdminForUser,
 };

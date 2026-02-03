@@ -4,11 +4,13 @@ import { Router } from "express";
 import { ChatController } from "./chat.controller";
 import { checkAuth } from "../../middleware/checkAuth.middleware";
 import { Role } from "../user/user.interface";
+import { multerUpload } from "../../config/multer.config";
 
 const router = Router();
 
 router.post(
-  "/send_message",
+  "/send_message/:receiverId",
+  multerUpload.array("image", 5),
   checkAuth(...Object.values(Role)),
   ChatController.sendMessage,
 );
@@ -18,16 +20,10 @@ router.get(
   checkAuth(...Object.values(Role)),
   ChatController.getConversations,
 );
-
 router.get(
-  "/:chatId/messages",
+  "/messages/:otherUserId",
   checkAuth(...Object.values(Role)),
   ChatController.getMessages,
 );
 
-router.patch(
-  "/:chatId/mark-read",
-  checkAuth(...Object.values(Role)),
-  ChatController.markMessagesAsRead,
-);
 export const chatRoutes = router;

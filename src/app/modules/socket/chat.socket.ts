@@ -6,24 +6,24 @@ export const chatSocket = (io: Server) => {
     console.log("💬 [Chat] client connected:", socket.id);
 
     // Join chat room
-    socket.on("join-chat", (chatId: string) => {
-      socket.join(chatId);
-      console.log(`👥 ${socket.id} joined chat ${chatId}`);
+    socket.on("join-chat", (userId: string) => {
+      socket.join(userId);
+      console.log(`👥 ${socket.id} joined chat ${userId}`);
     });
 
     // Leave chat room
-    socket.on("leave-chat", (chatId: string) => {
-      socket.leave(chatId);
-      console.log(`🚪 ${socket.id} left chat ${chatId}`);
+    socket.on("leave-chat", (userId: string) => {
+      socket.leave(userId);
+      console.log(`🚪 ${socket.id} left chat ${userId}`);
     });
 
     // Typing indicators
-    socket.on("typing", (chatId: string) => {
-      socket.to(chatId).emit("typing", { user: socket.id });
+    socket.on("typing", (userId: string) => {
+      socket.to(userId).emit("typing", { user: socket.id });
     });
 
-    socket.on("stop-typing", (chatId: string) => {
-      socket.to(chatId).emit("stop-typing", { user: socket.id });
+    socket.on("stop-typing", (userId: string) => {
+      socket.to(userId).emit("stop-typing", { user: socket.id });
     });
 
     socket.on("disconnect", () => {

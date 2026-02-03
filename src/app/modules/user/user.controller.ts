@@ -153,27 +153,27 @@ const updateUserPreferences = CatchAsync(
       app_notifications,
       notifications_enabled,
       location_access,
-      category,
+
+      // ✅ accept both
+      fcmTokens,
     } = req.body;
 
-    const preferences = {
-      language,
-      app_notifications,
-      notifications_enabled,
-      location_access,
-      category,
-    };
-
-    const updatedPreferences = await userServices.updateUserPreferences(
+    const result = await userServices.updateUserPreferences(
       userId,
-      preferences,
+      {
+        language,
+        app_notifications,
+        notifications_enabled,
+        location_access,
+      },
+      fcmTokens?.[0],
     );
 
     sendResponse(res, {
       success: true,
       statusCode: 200,
       message: "User preferences updated successfully!",
-      data: updatedPreferences,
+      data: result,
     });
   },
 );
