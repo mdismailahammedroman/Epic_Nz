@@ -5,6 +5,7 @@ import { locationRouter } from "../modules/location/location.routes";
 import { weatherRouter } from "../modules/weather/weather.router";
 import { SubscriptionRoute } from "../modules/subscription/subscription.router";
 import { otpRouter } from "../modules/otp/otp.route";
+import { testRouter } from "../utils/test/test";
 
 export const router = Router();
 
@@ -37,6 +38,10 @@ const moduleRoutes = [
   //   path: "/notification",
   //   route: notifyRoute,
   // },
+  {
+    path: "/chat",
+    route: testRouter,
+  },
 ];
 
 moduleRoutes.forEach((r) => {
