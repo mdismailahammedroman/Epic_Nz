@@ -5,13 +5,12 @@ export const notificationSocket = (io: Server) => {
     console.log("🔔 [Notification] client connected:", socket.id);
 
     socket.on("join-notification", (userId: string) => {
-      const room = `notification_${userId}`;
-      socket.join(room);
-      console.log(`🔔 ${socket.id} joined ${room}`);
+      socket.join(`notification_${userId}`);
+      console.log(`🔔 ${socket.id} joined notification_${userId}`);
     });
 
     socket.on("disconnect", () => {
-      console.log("❌ [Notification] client disconnected:", socket.id);
+      console.log("❌ [Notification] disconnected:", socket.id);
     });
   });
 };

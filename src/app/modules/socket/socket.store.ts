@@ -7,8 +7,6 @@ export const setIo = (server: Server) => {
 };
 
 export const getIo = (): Server => {
-  if (!io) {
-    throw new Error("❌ Socket.io not initialized. Call setIo() first.");
-  }
+  if (!io) throw new Error("❌ Socket.io not initialized");
   return io;
 };

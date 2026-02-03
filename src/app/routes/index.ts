@@ -5,7 +5,7 @@ import { locationRouter } from "../modules/location/location.routes";
 import { weatherRouter } from "../modules/weather/weather.router";
 import { SubscriptionRoute } from "../modules/subscription/subscription.router";
 import { otpRouter } from "../modules/otp/otp.route";
-import { testRouter } from "../utils/test/test";
+import { chatRoutes } from "../modules/chat/chat.route";
 
 export const router = Router();
 
@@ -40,7 +40,7 @@ const moduleRoutes = [
   // },
   {
     path: "/chat",
-    route: testRouter,
+    route: chatRoutes,
   },
 ];
 

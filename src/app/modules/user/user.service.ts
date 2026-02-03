@@ -277,6 +277,15 @@ const updateUserPreferences = async (
   return updatedUser.preferences;
 };
 
+const getAdminForUser = async () => {
+  const admin = await User.findOne({
+    role: { $in: [Role.ADMIN, Role.SUPER_ADMIN] },
+  }).select("_id name email");
+
+  if (!admin) throw new Error("No admin found");
+  return admin;
+};
+
 export const userServices = {
   createUser,
   getMeService,
@@ -286,4 +295,5 @@ export const userServices = {
   userDeleteService,
   getUserPreferencesService,
   updateUserPreferences,
+  getAdminForUser,
 };
