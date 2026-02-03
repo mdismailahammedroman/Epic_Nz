@@ -153,9 +153,7 @@ const updateUserPreferences = CatchAsync(
       app_notifications,
       notifications_enabled,
       location_access,
-
-      // ✅ accept both
-      fcmTokens,
+      fcmTokens, // array
     } = req.body;
 
     const result = await userServices.updateUserPreferences(
@@ -166,7 +164,7 @@ const updateUserPreferences = CatchAsync(
         notifications_enabled,
         location_access,
       },
-      fcmTokens?.[0],
+      fcmTokens, // pass array
     );
 
     sendResponse(res, {

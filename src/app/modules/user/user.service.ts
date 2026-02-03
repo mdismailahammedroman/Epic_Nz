@@ -262,12 +262,14 @@ const getUserPreferencesService = async (userId: string) => {
 const updateUserPreferences = async (
   userId: string,
   prefs: Partial<IUserPreferences>,
-  fcmToken?: string,
+  fcmTokens?: string[],
 ) => {
   const updates: any = {};
   const setOps: any = {};
 
-  // ✅ preferences
+  // ===============================
+  // Preferences update
+  // ===============================
   if (prefs.language !== undefined)
     setOps["preferences.language"] = prefs.language;
 
@@ -284,11 +286,18 @@ const updateUserPreferences = async (
     updates.$set = setOps;
   }
 
-  // ✅ FCM token handling
-  if (prefs.notifications_enabled === true && fcmToken) {
-    updates.$addToSet = { fcmTokens: fcmToken };
+  // ===============================
+  // FCM token logic (SAFE)
+  // ===============================
+
+  // ✅ Add tokens if provided
+  if (fcmTokens && fcmTokens.length > 0) {
+    updates.$addToSet = {
+      fcmTokens: { $each: fcmTokens }, // no duplicates
+    };
   }
 
+  // ✅ Clear tokens only if notifications turned OFF
   if (prefs.notifications_enabled === false) {
     updates.$set = {
       ...(updates.$set ?? {}),
@@ -296,12 +305,17 @@ const updateUserPreferences = async (
     };
   }
 
+  // ===============================
+  // DB update
+  // ===============================
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
     runValidators: true,
   }).select("preferences fcmTokens");
 
-  if (!updatedUser) throw new AppError(404, "User not found");
+  if (!updatedUser) {
+    throw new AppError(404, "User not found");
+  }
 
   return {
     preferences: updatedUser.preferences,
