@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { sendResponse } from "../utils/SendResponse";
-import { fcmMessaging } from "../config/firebase.config";
+import { sendResponse } from "../SendResponse";
+import { fcmMessaging } from "../../config/firebase.config";
 
 const router = Router();
 

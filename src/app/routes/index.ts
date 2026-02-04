@@ -6,7 +6,8 @@ import { weatherRouter } from "../modules/weather/weather.router";
 import { SubscriptionRoute } from "../modules/subscription/subscription.router";
 import { otpRouter } from "../modules/otp/otp.route";
 import { chatRoutes } from "../modules/chat/chat.route";
-import { testRouter } from "../modules/test";
+import { notificationRoutes } from "../modules/notification/notification.router";
+import { feedbackRoutes } from "../modules/feedback/feedback.route";
 
 export const router = Router();
 
@@ -35,17 +36,17 @@ const moduleRoutes = [
     path: "/otp",
     route: otpRouter,
   },
-  // {
-  //   path: "/notification",
-  //   route: notificationRoutes,
-  // },
+  {
+    path: "/notification",
+    route: notificationRoutes,
+  },
   {
     path: "/chat",
     route: chatRoutes,
   },
   {
-    path: "/test",
-    route: testRouter,
+    path: "/feedback",
+    route: feedbackRoutes,
   },
 ];
 
