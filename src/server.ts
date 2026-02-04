@@ -20,7 +20,7 @@ const server = http.createServer(app);
 
 const io = new SocketIoServer(server, {
   cors: {
-    origin: envVar.FRONTEND_URL,
+    origin: "*",
     credentials: true,
   },
 });

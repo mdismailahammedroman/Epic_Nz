@@ -7,6 +7,7 @@ import { locationServices } from "./location.service";
 import AppError from "../../errorHelper/AppError";
 import { LocationStatus } from "./location.interface";
 import { logActivity } from "../../utils/logActivity.utils";
+import { NotificationService } from "../notification/notification.service";
 
 const submitLocation = CatchAsync(async (req: Request, res: Response) => {
   // Check if files are uploaded and handle the image paths
@@ -59,6 +60,7 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
       category: newLocation.category,
     },
   });
+  await NotificationService.notifyAdminsLocationSubmitted(newLocation);
 
   sendResponse(res, {
     success: true,
@@ -223,7 +225,15 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
 
 const approveLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
+
   const result = await locationServices.approveLocation(locationId);
+
+  const creatorNotify =
+    await NotificationService.notifyCreatorLocationApproved(result);
+
+  const othersNotify =
+    await NotificationService.notifyUsersNewApprovedLocation(result);
+
   await logActivity({
     actorId: (req.user as JwtPayload).userId,
     actorRole: (req.user as JwtPayload).role,
@@ -235,11 +245,18 @@ const approveLocation = CatchAsync(async (req: Request, res: Response) => {
     userAgent: req.headers["user-agent"] as string,
     meta: { targetName: result?.name ?? locationId },
   });
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: "Location approved successfully",
-    data: result,
+    data: {
+      location: result,
+      notified: {
+        creator: creatorNotify,
+        others: othersNotify,
+      },
+    },
   });
 });
 

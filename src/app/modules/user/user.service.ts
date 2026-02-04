@@ -16,9 +16,18 @@ import User from "./user.model";
 import { getPlaceName } from "../../utils/getLocation";
 import { OTPService } from "../otp/otp.service";
 import { CategoryEnum } from "../location/location.interface";
+import { normalizeTokens } from "../../utils/normalizeTokens";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, profile_picture, preferences, ...rest } = payload;
+  const {
+    email,
+    password,
+    profile_picture,
+    preferences,
+    fcmToken,
+    fcmTokens,
+    ...rest
+  } = payload;
 
   if (!email) throw new AppError(400, "Email is required");
   if (!rest.full_name) throw new AppError(400, "Full name is required");
@@ -27,10 +36,14 @@ const createUser = async (payload: Partial<IUser>) => {
   if (isUser) {
     throw new AppError(400, "User already exists. Please login!");
   }
+
   const authProvider: IAuthProvider = {
     provider: AuthProviderType.CREDENTIAL,
     providerID: email,
   };
+
+  // ✅ HERE is the fix
+  const normalizedFcmTokens = normalizeTokens(fcmTokens ?? fcmToken);
 
   const newUser = new User({
     email,
@@ -45,11 +58,14 @@ const createUser = async (payload: Partial<IUser>) => {
       location_access: false,
     },
     auth_providers: [authProvider],
+
+    // ✅ token saved at registration
+    fcmTokens: normalizedFcmTokens,
+
     ...rest,
   });
 
   await newUser.save();
-
   await OTPService.sendOTP(email);
 
   return newUser;

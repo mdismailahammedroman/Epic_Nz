@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JwtPayload } from "jsonwebtoken";
 
 import { Message } from "./message.model";
@@ -5,6 +6,7 @@ import AppError from "../../errorHelper/AppError";
 import { getIo } from "../socket/socket.store";
 import User from "../user/user.model";
 import { IMessage } from "./chat.interface";
+import { NotificationService } from "../notification/notification.service";
 
 const sendMessageService = async (
   user: JwtPayload,
@@ -30,6 +32,11 @@ const sendMessageService = async (
   const io = getIo();
 
   io.to(receiverId).emit("message", sendMessage);
+  await NotificationService.notifyChatMessage(
+    receiverId,
+    senderId,
+    sendMessage,
+  );
 
   return sendMessage;
 };

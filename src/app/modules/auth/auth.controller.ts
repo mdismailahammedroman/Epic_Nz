@@ -16,6 +16,8 @@ import { envVar } from "../../config/envVar";
 import { IUser, Role } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
 import { logActivity } from "../../utils/logActivity.utils";
+import { normalizeTokens } from "../../utils/normalizeTokens";
+import User from "../user/user.model";
 
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -23,6 +25,18 @@ const credentialLogin = CatchAsync(
       if (err) return next(err);
       if (!user) {
         return next(new AppError(StatusCodes.FORBIDDEN, info.message));
+      }
+
+      const { fcmToken, fcmTokens } = req.body;
+      const tokens = normalizeTokens(fcmTokens ?? fcmToken);
+
+      // ✅ store token(s) on login (no duplicates)
+      if (tokens.length > 0) {
+        await User.findByIdAndUpdate(
+          user._id,
+          { $addToSet: { fcmTokens: { $each: tokens } } },
+          { new: false },
+        );
       }
       const userTokens = createUserTokens(user);
       setAuthCookie(res, userTokens);

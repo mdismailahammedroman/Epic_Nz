@@ -2,45 +2,30 @@
 import { Types } from "mongoose";
 
 export enum NotificationType {
-  EPIC_SPOT = "EPIC_SPOT",
-  WEATHER_ALERT = "WEATHER_ALERT",
-  USER_SUBMISSION = "USER_SUBMISSION",
-  PREMIUM_FEATURE = "PREMIUM_FEATURE",
-  SUBSCRIPTION_REMINDER = "SUBSCRIPTION_REMINDER",
+  LOCATION_SUBMITTED = "LOCATION_SUBMITTED", // user -> admin
+  LOCATION_APPROVED = "LOCATION_APPROVED", // admin -> creator
+  NEW_LOCATION_APPROVED = "NEW_LOCATION_APPROVED", // approved location -> other users
+  CHAT_MESSAGE = "CHAT_MESSAGE",
   SYSTEM = "SYSTEM",
 }
 
-export interface IChannel {
-  push: boolean;
-  email: boolean;
-  inApp: boolean;
+export interface INotificationData {
+  locationId?: string;
+  chatId?: string;
+  senderId?: string;
+  receiverId?: string;
+  deepLink?: string;
+  [key: string]: any;
 }
 
 export interface INotification {
   _id?: Types.ObjectId;
-  user?: Types.ObjectId;
-  eventId?: Types.ObjectId;
-  chatId?: Types.ObjectId;
-  receiverIds?: Types.ObjectId[];
+  user: Types.ObjectId; // receiver user id
   type: NotificationType;
   title: string;
-  description?: string;
-  data?: Record<string, any>;
-  isRead?: boolean;
-}
-
-export interface INotifyPreference {
-  _id?: Types.ObjectId;
-  user: Types.ObjectId;
-  channel: IChannel;
-  direct_sms: boolean;
-  app: {
-    product_updates: boolean;
-    special_offers: boolean;
-  };
-  locationItem: {
-    nearbyAlerts: boolean; // Notify when an epic spot is nearby
-    weatherAlerts: boolean; // Notify about weather changes at a location
-    newSpotRecommendations: boolean; // Notify when new spots are added to a category the user follows
-  };
+  body: string;
+  data?: INotificationData;
+  isRead: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

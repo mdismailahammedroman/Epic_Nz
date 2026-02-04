@@ -33,3 +33,18 @@ export const passwordZodSchema = z.object({
         "Password must be at least 1 uppercase character, 1 special character, 1 number!",
     }),
 });
+
+export const updateUserPreferencesSchema = z.object({
+  body: z.object({
+    preferences: z
+      .object({
+        language: z.string().optional(),
+        app_notifications: z.boolean().optional(),
+        notifications_enabled: z.boolean().optional(),
+        location_access: z.boolean().optional(),
+      })
+      .optional(),
+
+    fcmTokens: z.array(z.string()).optional(),
+  }),
+});
