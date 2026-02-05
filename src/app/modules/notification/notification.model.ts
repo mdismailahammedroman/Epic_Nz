@@ -1,59 +1,31 @@
-import { model, Schema } from "mongoose";
-import {
-  INotification,
-  INotifyPreference,
-  NotificationType,
-} from "./notification.interface";
+import { Schema, model } from "mongoose";
+import { INotification, NotificationType } from "./notification.interface";
 
 const notificationSchema = new Schema<INotification>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "user" },
-
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     type: {
       type: String,
+      enum: Object.values(NotificationType),
       required: true,
-      enum: [...Object.values(NotificationType)],
+      index: true,
     },
     title: { type: String, required: true },
-    description: { type: String },
-    data: { type: Object },
-    isRead: { type: Boolean, default: false },
+    body: { type: String, required: true },
+    data: { type: Schema.Types.Mixed },
+    isRead: { type: Boolean, default: false, index: true },
   },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
+  { timestamps: true },
 );
 
-const notifyPreferenceSchema = new Schema<INotifyPreference>(
-  {
-    user: { type: Schema.Types.ObjectId, ref: "user", required: true },
-    channel: {
-      push: { type: Boolean, default: false },
-      email: { type: Boolean, default: true },
-      inApp: { type: Boolean, default: true },
-    },
-    direct_sms: { type: Boolean, default: true },
-    app: {
-      product_updates: { type: Boolean, default: true },
-      special_offers: { type: Boolean, default: true },
-    },
-    locationItem: {},
-  },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
-);
-
-// Indexing for faster loading
 notificationSchema.index({ user: 1, createdAt: -1 });
 
 export const Notification = model<INotification>(
   "Notification",
-  notificationSchema
-);
-export const NotificationPreference = model<INotifyPreference>(
-  "NotificationPreference",
-  notifyPreferenceSchema
+  notificationSchema,
 );

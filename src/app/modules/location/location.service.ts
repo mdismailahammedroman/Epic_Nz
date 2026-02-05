@@ -14,10 +14,8 @@ import {
 } from "./location.interface";
 import User from "../user/user.model";
 import { StatusCodes } from "http-status-codes";
-import { getAllFcmTokens } from "../../utils/randomFCMToken";
 import { sendPushNotification } from "../../utils/notificationUtils";
-import { NotificationService } from "../notification/notification.service";
-// import { hasActiveSubscription } from "../../helper/subscription";
+
 import { Role } from "../user/user.interface";
 
 const submitLocation = async (
@@ -32,14 +30,6 @@ const submitLocation = async (
   animalClearance: IAnimalClearance,
   networkQuality: INetworkQuality,
 ) => {
-  // const isSubscribed = await hasActiveSubscription(userId);
-
-  // if (!isSubscribed) {
-  //   throw new AppError(
-  //     403,
-  //     "Active subscription required to submit a location",
-  //   );
-  // }
   const lat = Number(latitude);
   const lon = Number(longitude);
 
@@ -315,18 +305,8 @@ const approveLocation = async (locationId: string) => {
   await location.save(); // Save the updated location
 
   // 🔔 Notify nearby users
-  await NotificationService.notifyNearbyUsers(location); // Send notification to nearby users
 
   // Optionally, you can also send a push notification to all users (based on your logic)
-  const title = "New Location Approved!";
-  const body = `The location "${location.name}" has been approved and is now visible to everyone.`;
-  const data = { locationId: location._id.toString() };
-
-  // Fetch all FCM tokens (or filtered tokens as needed) and send notifications
-  const allTokens = await getAllFcmTokens(); // This can be a function that fetches all user tokens
-  if (allTokens.length > 0) {
-    sendPushNotification(allTokens, title, body, data);
-  }
 
   return location; // Return the updated location
 };

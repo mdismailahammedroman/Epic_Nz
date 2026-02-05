@@ -40,7 +40,7 @@ const subscriptionSchema = new Schema<ISubscription>(
     total_spent: { type: Number, default: 0 },
     auto_renew: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default model<ISubscription>("Subscription", subscriptionSchema);

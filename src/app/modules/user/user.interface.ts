@@ -39,7 +39,7 @@ export interface ICoord {
 
 // User preferences interface
 export interface IUserPreferences {
-  language: string;
+  language?: string;
   app_notifications?: boolean;
   notifications_enabled?: boolean;
   location_access?: boolean;
@@ -54,8 +54,11 @@ export interface IUser {
   profile_picture?: string;
   coverPicture?: string;
   auth_providers: IAuthProvider[];
+  fcmToken?: string;
   fcmTokens?: string[];
   location?: ICoord;
+  stripeCustomerId?: string;
+
   notifications_enabled: boolean;
   preferences?: IUserPreferences;
   notification: Notification;

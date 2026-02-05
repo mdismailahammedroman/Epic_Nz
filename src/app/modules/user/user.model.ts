@@ -26,39 +26,49 @@ const userSchema = new Schema<IUser>(
     profile_picture: { type: String },
     coverPicture: { type: String },
     auth_providers: [authProviderSchema],
+
+    // ✅ GeoJSON location
     location: {
       type: { type: String, default: "Point" },
-      coordinates: { type: [Number], default: [0, 0] },
+      coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
       placeName: { type: String },
     },
+
     preferences: {
       language: { type: String, default: "en" },
       app_notifications: { type: Boolean, default: true },
       notifications_enabled: { type: Boolean, default: true },
       location_access: { type: Boolean, default: false },
     },
+stripeCustomerId: { type: String },
+
     role: { type: String, enum: Object.values(Role), default: Role.USER },
     status: {
       type: String,
       enum: Object.values(UserStatus),
       default: UserStatus.ACTIVE,
     },
+
     fcmTokens: {
       type: [String],
       default: [],
     },
+
     is_verified: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     savedLocations: [{ type: Schema.Types.ObjectId, ref: "Location" }],
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
 
-    notification: { type: Schema.Types.ObjectId, ref: "Notification" }, // Link to the Notification model
-    offline_maps: { type: Boolean, default: false }, // Flag for offline map access
-    help_support: { type: Boolean, default: false }, // Flag for helpl & support access
+    notification: { type: Schema.Types.ObjectId, ref: "Notification" },
+    offline_maps: { type: Boolean, default: false },
+    help_support: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
+
+// ✅ MUST: 2dsphere index for $near
+userSchema.index({ location: "2dsphere" });
 
 const User = model<IUser>("User", userSchema);
 export default User;
