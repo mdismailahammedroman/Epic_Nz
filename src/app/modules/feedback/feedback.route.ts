@@ -18,15 +18,11 @@ router.post(
 // USER: my feedbacks
 router.get(
   "/me",
-  checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
+  checkAuth(Role.USER, Role.ADMIN),
   feedbackController.getMyFeedbacks,
 );
 
 // ADMIN: list all feedbacks
-router.get(
-  "/",
-  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
-  feedbackController.getAllFeedbacks,
-);
+router.get("/", checkAuth(Role.ADMIN), feedbackController.getAllFeedbacks);
 
 export const feedbackRoutes = router;

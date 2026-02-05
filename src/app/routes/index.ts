@@ -8,6 +8,7 @@ import { otpRouter } from "../modules/otp/otp.route";
 import { chatRoutes } from "../modules/chat/chat.route";
 import { notificationRoutes } from "../modules/notification/notification.router";
 import { feedbackRoutes } from "../modules/feedback/feedback.route";
+import { activityLogRoute } from "../modules/activityLog/activitylog.route";
 
 export const router = Router();
 
@@ -47,6 +48,10 @@ const moduleRoutes = [
   {
     path: "/feedback",
     route: feedbackRoutes,
+  },
+  {
+    path: "/activity-logs",
+    route: activityLogRoute,
   },
 ];
 

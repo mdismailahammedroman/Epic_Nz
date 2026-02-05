@@ -4,16 +4,17 @@ import { CatchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/SendResponse";
 import { getActivityLogs } from "./activityLog.service";
 
-export const activityLogController = {
-  list: CatchAsync(async (req: Request, res: Response) => {
-    const result = await getActivityLogs(req.query);
+const getActivityLogList = CatchAsync(async (req: Request, res: Response) => {
+  const result = await getActivityLogs(req.query);
 
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Activity logs fetched",
-      meta: result.meta,
-      data: result.data,
-    });
-  }),
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Activity logs fetched",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+export const activityLogController = {
+  getActivityLogList,
 };

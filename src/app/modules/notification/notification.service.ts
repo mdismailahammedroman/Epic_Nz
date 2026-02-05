@@ -240,6 +240,19 @@ const markAsRead = async (userId: string, notificationId: string) => {
   return null;
 };
 
+const markAllRead = async (userId: string) => {
+  // ✅ update all notifications for this user to isRead = true
+  const result = await Notification.updateMany(
+    { user: userId, isRead: false },
+    { $set: { isRead: true } },
+  );
+
+  return {
+    matchedCount: result.matchedCount,
+    modifiedCount: result.modifiedCount,
+  };
+};
+
 export const NotificationService = {
   notifyAdminsLocationSubmitted,
   notifyCreatorLocationApproved,
@@ -247,4 +260,5 @@ export const NotificationService = {
   notifyChatMessage,
   getMyNotifications,
   markAsRead,
+  markAllRead,
 };

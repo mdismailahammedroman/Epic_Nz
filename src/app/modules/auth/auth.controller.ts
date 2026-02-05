@@ -60,6 +60,7 @@ const credentialLogin = CatchAsync(
         data: {
           accessToken: userTokens.accessToken,
           refreshToken: userTokens.refreshToken,
+          token: fcmToken,
         },
       });
     })(req, res, next);
