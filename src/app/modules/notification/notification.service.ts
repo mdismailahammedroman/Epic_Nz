@@ -240,6 +240,14 @@ const markAsRead = async (userId: string, notificationId: string) => {
   return null;
 };
 
+const deleteNotification = async (notificationId: string) => {
+  const result = await Notification.deleteOne({
+    notificationId,
+  });
+
+  return result;
+};
+
 const markAllRead = async (userId: string) => {
   // ✅ update all notifications for this user to isRead = true
   const result = await Notification.updateMany(
@@ -261,4 +269,5 @@ export const NotificationService = {
   getMyNotifications,
   markAsRead,
   markAllRead,
+  deleteNotification,
 };

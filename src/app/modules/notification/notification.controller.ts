@@ -49,8 +49,24 @@ const markAllRead = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteNotificationController = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { notificationId } = req.params;
+
+    await NotificationService.deleteNotification(notificationId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Notification deleted successfully",
+      data: null,
+    });
+  },
+);
+
 export const NotificationController = {
   myNotifications,
   markRead,
   markAllRead,
+  deleteNotificationController,
 };

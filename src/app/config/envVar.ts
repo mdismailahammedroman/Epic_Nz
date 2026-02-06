@@ -51,7 +51,7 @@ interface EnvVar {
   REQUEST_RATE_LIMIT: string;
   REQUEST_RATE_LIMIT_TIME: string;
   STRIPE_SECRET_KEY: string;
-  STRIPE_PUBLIC_KEY: string;
+  STRIPE_PUBLISHABLE_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   PRICE_YEARLY: string;
   PRICE_MONTHLY: string;
@@ -103,7 +103,7 @@ const loadEnvVariables = (): EnvVar => {
     "WEATHER_API_URL",
     "MAP_BOX_ACCESS_TOKEN",
     "STRIPE_SECRET_KEY",
-    "STRIPE_PUBLIC_KEY",
+    "STRIPE_PUBLISHABLE_KEY",
     "STRIPE_WEBHOOK_SECRET",
     "PRICE_YEARLY",
     "PRICE_MONTHLY",
@@ -138,7 +138,7 @@ const loadEnvVariables = (): EnvVar => {
     REQUEST_RATE_LIMIT: process.env.REQUEST_RATE_LIMIT as string,
     REQUEST_RATE_LIMIT_TIME: process.env.REQUEST_RATE_LIMIT_TIME as string,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
-    STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY as string,
+    STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY as string,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
     PRICE_YEARLY: process.env.PRICE_YEARLY as string,
     PRICE_MONTHLY: process.env.PRICE_MONTHLY as string,
