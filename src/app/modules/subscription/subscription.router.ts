@@ -33,4 +33,10 @@ router.get(
   subscriptionController.getAllSubscriptions,
 );
 
+router.post(
+  "/intent",
+  checkAuth(Role.USER),
+  subscriptionController.createPaymentIntent,
+);
+
 export const SubscriptionRoute = router;

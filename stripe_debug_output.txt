@@ -1,0 +1,46 @@
+Checking Stripe Configuration...
+Using Secret Key starting with: sk_test_...
+
+✅ Found 8 active prices:
+
+Product: epic-nz-PRICE_YEARLY
+  Price ID: price_1SxmXJQ8mnNbf7sKjIJFvRX6
+  Amount: 199 USD
+  Interval: year
+
+Product: epic-nz-monthly
+  Price ID: price_1SxmVrQ8mnNbf7sKiHYaSnwv
+  Amount: 20 USD
+  Interval: month
+
+Product: myproduct
+  Price ID: price_1SdNjhQ8mnNbf7sKBY2k2ch8
+  Amount: 15 USD
+  Interval: undefined
+
+Product: myproduct
+  Price ID: price_1SdNFXQ8mnNbf7sKDIxsJiak
+  Amount: 15 USD
+  Interval: undefined
+
+Product: myproduct
+  Price ID: price_1Sd5V0Q8mnNbf7sKYXMIkeEg
+  Amount: 15 USD
+  Interval: undefined
+
+Product: myproduct
+  Price ID: price_1Sd5RzQ8mnNbf7sKBuagdrBl
+  Amount: 15 USD
+  Interval: undefined
+
+Product: myproduct
+  Price ID: price_1SUoieQ8mnNbf7sKnfXwkTcX
+  Amount: 15 USD
+  Interval: undefined
+
+Product: myproduct
+  Price ID: price_1SUoXeQ8mnNbf7sKJkHKs9pQ
+  Amount: 15 USD
+  Interval: undefined
+
+👉 Please copy one of the 'Price ID' values above into your .env file as PRICE_MONTHLY or PRICE_YEARLY.

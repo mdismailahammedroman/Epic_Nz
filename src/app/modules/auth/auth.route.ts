@@ -3,7 +3,7 @@ import { authController } from "./auth.controller";
 import { checkAuth } from "../../middleware/checkAuth.middleware";
 import { Role } from "../user/user.interface";
 import passport from "passport";
-import { NextFunction, Request, Response, Router } from "express";
+import { Router } from "express";
 import { envVar } from "../../config/envVar";
 
 const router = Router();
@@ -11,24 +11,20 @@ const router = Router();
 // Login & Logout
 router.post("/login", authController.credentialLogin);
 
-// Google OAuth
+// Google OAuth start
 router.get(
   "/google",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const redirect = req.query.redirect || "/";
-    passport.authenticate("google", {
-      scope: ["profile", "email"],
-      state: redirect as string,
-    })(req, res, next);
-  }
+  authController.googleStart, // builds safe state + calls passport.authenticate
 );
 
+// Google callback (NO double authenticate)
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: `${envVar.FRONTEND_URL}/login?error=There is some issues with your account. Please contact with out support team!`,
+    session: false,
+    failureRedirect: `${envVar.FRONTEND_URL}/login?error=google_auth_failed`,
   }),
-  authController.googleCallbackController
+  authController.googleCallback,
 );
 
 // Logout
@@ -41,7 +37,7 @@ router.post("/refresh", createNewAccessTokenWithRefreshToken);
 router.post(
   "/change-password",
   checkAuth(...Object.values(Role)),
-  authController.changePassword
+  authController.changePassword,
 );
 
 // Forget Password (send OTP or reset link)
@@ -51,13 +47,13 @@ router.post("/forget-password", authController.forgetPassword);
 router.post(
   "/reset-password",
 
-  authController.resetPassword
+  authController.resetPassword,
 );
 // set Password using email + OTP
 router.post(
   "/set-password",
   checkAuth(...Object.values(Role)),
-  authController.setPassword
+  authController.setPassword,
 );
 
 export const AuthRouter = router;

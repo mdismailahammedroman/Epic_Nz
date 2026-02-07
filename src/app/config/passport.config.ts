@@ -10,42 +10,41 @@ import User from "../modules/user/user.model";
 import { envVar } from "./envVar";
 import { AuthProviderType, Role } from "../modules/user/user.interface";
 
-// Configure the local strategy
+// ✅ Local strategy (BLOCK oauth accounts)
 passport.use(
   new LocalStrategy(
     { usernameField: "email", passwordField: "password" },
-
     async (email, password, done) => {
       try {
         const user = await User.findOne({ email }).select("+password");
+        if (!user)
+          return done(null, false, { message: "Incorrect email or password" });
 
-        if (!user) {
-          return done(null, false, { message: "Incorrect email" });
-        }
+        if (!user.is_verified)
+          return done(null, false, { message: "User is not verified" });
+        if (user.isDeleted)
+          return done(null, false, { message: "User is deleted" });
 
-        // Check if the user is authenticated via OAuth (Google, Apple, etc.)
         const isOAuthUser =
           user.auth_providers && user.auth_providers.length > 0;
-
-        // If it's an OAuth user, skip the password check
         if (isOAuthUser) {
-          return done(null, user); // OAuth users don't need a password check
-        }
-
-        // For non-OAuth users, check if the password is set
-        if (!user.password || typeof user.password !== "string") {
+          // ✅ critical security fix
           return done(null, false, {
-            message: "Password not set for user. Please set your password.",
+            message:
+              "This account uses Google login. Please continue with Google.",
           });
         }
 
-        // Compare the provided password with the stored hash
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-          return done(null, false, { message: "Incorrect password" });
-        }
+        if (!user.password)
+          return done(null, false, {
+            message: "Password not set. Please set your password.",
+          });
 
-        return done(null, user); // success
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch)
+          return done(null, false, { message: "Incorrect email or password" });
+
+        return done(null, user);
       } catch (err) {
         return done(err);
       }
@@ -53,7 +52,7 @@ passport.use(
   ),
 );
 
-// Passport Google Strategy
+// ✅ Google strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -62,27 +61,22 @@ passport.use(
       callbackURL: envVar.GOOGLE_AUTH.GOOGLE_CALLBACK_URL,
     },
     async (
-      accessToken: string,
-      refreshToken: string,
+      _accessToken: string,
+      _refreshToken: string,
       profile: Profile,
       done: VerifyCallback,
     ) => {
       try {
         const email = profile.emails?.[0]?.value;
-
-        if (!email) {
-          return done(null, false, { message: "No email found" });
-        }
+        if (!email)
+          return done(null, false, { message: "No email found from Google" });
 
         let user = await User.findOne({ email });
 
-        if (user && !user.is_verified) {
+        if (user && !user.is_verified)
           return done(null, false, { message: "User is not verified" });
-        }
-
-        if (user && user.isDeleted) {
+        if (user && user.isDeleted)
           return done(null, false, { message: "User is deleted" });
-        }
 
         if (!user) {
           user = await User.create({
@@ -92,36 +86,35 @@ passport.use(
             role: Role.USER,
             is_verified: true,
             auth_providers: [
-              {
-                provider: AuthProviderType.GOOGLE,
-                providerID: profile.id,
-              },
+              { provider: AuthProviderType.GOOGLE, providerID: profile.id },
             ],
           });
+        } else {
+          // optional: keep provider list updated
+          const hasGoogle = user.auth_providers?.some(
+            (p: any) => p.provider === AuthProviderType.GOOGLE,
+          );
+          if (!hasGoogle) {
+            await User.updateOne(
+              { _id: user._id },
+              {
+                $addToSet: {
+                  auth_providers: {
+                    provider: AuthProviderType.GOOGLE,
+                    providerID: profile.id,
+                  },
+                },
+              },
+            );
+          }
         }
 
         return done(null, user);
       } catch (error) {
-        console.error("Google Strategy Error", error);
         return done(error);
       }
     },
   ),
 );
-
-// Serialize user into session
-passport.serializeUser((user: any, done) => {
-  done(null, user._id);
-});
-
-// Deserialize user from session
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-});
 
 export default passport;

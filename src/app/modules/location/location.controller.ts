@@ -71,9 +71,10 @@ const submitLocation = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllActivities = CatchAsync(async (req: Request, res: Response) => {
-  const QueryBuilder = req.query as Record<string, string>;
+  const query = req.query as Record<string, string>;
 
-  const locationsData = await locationServices.getAllActivities(QueryBuilder);
+  const locationsData = await locationServices.getAllActivities(query);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

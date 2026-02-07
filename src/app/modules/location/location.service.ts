@@ -62,11 +62,22 @@ const submitLocation = async (
 };
 
 const getAllActivities = async (query: Record<string, string>) => {
-  const locationQuery = new QueryBuilder(Location.find(), query)
+  const dbQuery = Location.find({ isDeleted: false }); // only non-deleted
+
+  // ✅ Filter by status if provided
+  if (query.status) {
+    const status = query.status.toUpperCase();
+    if (Object.values(LocationStatus).includes(status as LocationStatus)) {
+      dbQuery.where("status").equals(status);
+    }
+  }
+
+  // Apply other filters, categories, sort, and pagination
+  const locationQuery = new QueryBuilder(dbQuery, query)
     .filter()
     .category()
     .sort()
-    .paginate(); // Apply skip and limit here
+    .paginate();
 
   const result = await locationQuery.build();
   const meta = await locationQuery.getMeta();
