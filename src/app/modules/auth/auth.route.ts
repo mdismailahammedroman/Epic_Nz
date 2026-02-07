@@ -27,6 +27,22 @@ router.get(
   authController.googleCallback,
 );
 
+// Apple OAuth start
+router.get(
+  "/apple",
+  authController.appleStart, // builds state + calls passport.authenticate
+);
+
+// Apple OAuth callback
+router.post(
+  "/apple/callback",
+  passport.authenticate("apple", {
+    session: false,
+    failureRedirect: `${envVar.FRONTEND_URL}/login?error=apple_auth_failed`,
+  }),
+  authController.appleCallback,
+);
+
 // Logout
 router.post("/logout", authController.logout);
 

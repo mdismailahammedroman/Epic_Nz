@@ -29,10 +29,12 @@ interface GOOGLE_TYPE {
   GOOGLE_CALLBACK_URL: string;
 }
 
-interface FACEBOOK_TYPE {
-  FACEBOOK_APP_ID: string;
-  FACEBOOK_APP_SECRET: string;
-  FACEBOOK_APP_CALLBACK_URL: string;
+interface APPLE_AUTH_TYPE {
+  APPLE_CLIENT_ID: string;
+  APPLE_TEAM_ID: string;
+  APPLE_KEY_ID: string;
+  APPLE_PRIVATE_KEY_PATH: string;
+  APPLE_CALLBACK_URL: string;
 }
 
 interface EnvVar {
@@ -58,7 +60,7 @@ interface EnvVar {
   REDIS: REDIS_TYPE;
   SMTP: SMTP_TYPE;
   GOOGLE_AUTH: GOOGLE_TYPE;
-  FACEBOOK_AUTH: FACEBOOK_TYPE;
+  APPLE_AUTH: APPLE_AUTH_TYPE;
   SESSION_SECRET: string;
   OPENWEATHER_API_KEY: string;
   WEATHER_API_URL: string;
@@ -95,9 +97,6 @@ const loadEnvVariables = (): EnvVar => {
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_CALLBACK_URL",
-    "FACEBOOK_APP_ID",
-    "FACEBOOK_APP_SECRET",
-    "FACEBOOK_APP_CALLBACK_URL",
     "SESSION_SECRET",
     "OPENWEATHER_API_KEY",
     "WEATHER_API_URL",
@@ -108,6 +107,11 @@ const loadEnvVariables = (): EnvVar => {
     "PRICE_YEARLY",
     "PRICE_MONTHLY",
     "FIREBASE_SERVICE_ACCOUNT_PATH",
+    "APPLE_CLIENT_ID",
+    "APPLE_TEAM_ID",
+    "APPLE_KEY_ID",
+    "APPLE_PRIVATE_KEY_PATH",
+    "APPLE_CALLBACK_URL",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -159,11 +163,12 @@ const loadEnvVariables = (): EnvVar => {
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
       GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
     },
-    FACEBOOK_AUTH: {
-      FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID as string,
-      FACEBOOK_APP_SECRET: process.env.FACEBOOK_APP_SECRET as string,
-      FACEBOOK_APP_CALLBACK_URL: process.env
-        .FACEBOOK_APP_CALLBACK_URL as string,
+    APPLE_AUTH: {
+      APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID as string,
+      APPLE_TEAM_ID: process.env.APPLE_TEAM_ID as string,
+      APPLE_KEY_ID: process.env.APPLE_KEY_ID as string,
+      APPLE_PRIVATE_KEY_PATH: process.env.APPLE_PRIVATE_KEY_PATH as string,
+      APPLE_CALLBACK_URL: process.env.APPLE_CALLBACK_URL as string,
     },
     SESSION_SECRET: process.env.SESSION_SECRET as string,
     OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY as string,

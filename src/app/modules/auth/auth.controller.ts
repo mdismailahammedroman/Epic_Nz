@@ -125,6 +125,31 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
   res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
 });
 
+// apple login controller
+
+const appleStart = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const redirect = sanitizeRedirect(req.query.redirect);
+    passport.authenticate("apple", {
+      session: false,
+      scope: ["name", "email"],
+      state: redirect, // comes back as req.query.state
+    })(req, res, next);
+  },
+);
+
+const appleCallback = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  if (!user?._id)
+    throw new AppError(StatusCodes.FORBIDDEN, "Apple login failed");
+
+  const tokens = createUserTokens(user);
+  setAuthCookie(res, tokens);
+
+  const redirect = sanitizeRedirect(req.query.state);
+  res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+});
+
 const logout = CatchAsync(async (req: Request, res: Response) => {
   const isProduction = envVar.NODE_ENV === "production";
 
@@ -285,6 +310,8 @@ export const authController = {
   credentialLogin,
   googleStart,
   googleCallback,
+  appleStart,
+  appleCallback,
   logout,
   refreshToken,
   changePassword,
