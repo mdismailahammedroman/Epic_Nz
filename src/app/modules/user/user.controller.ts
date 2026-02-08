@@ -176,6 +176,34 @@ const updateUserPreferences = CatchAsync(
   },
 );
 
+// fcm token part
+const getMyFcmToken = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
+
+  const result = await userServices.getMyFcmTokens(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "FCM token fetched",
+    data: result,
+  });
+});
+
+const updateFcmToken = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
+  const { fcmToken, fcmTokens } = req.body;
+
+  await userServices.fcmTokenUpdate(userId, fcmToken, fcmTokens);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "FCM token updated successfully",
+    data: null,
+  });
+});
+
 export const userController = {
   userRegister,
   getMe,
@@ -185,4 +213,6 @@ export const userController = {
   userDelete,
   getUserPreferences,
   updateUserPreferences,
+  getMyFcmToken,
+  updateFcmToken,
 };

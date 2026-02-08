@@ -12,7 +12,8 @@ export const checkAuth =
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // const authHeader = req.headers.authorization; // Get the Authorization header
-      const authHeader = req.cookies.accessToken;
+      const authHeader =
+        req.cookies.accessToken || req.headers.authorization?.split("")[1];
 
       // Check if the token exists and starts with 'Bearer '
       if (!authHeader || !authHeader.startsWith("")) {

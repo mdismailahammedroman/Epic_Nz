@@ -133,6 +133,7 @@ const getMeService = async (userId: string) => {
         offline_maps: 1, // Include offline_maps
         interest: 1,
         role: 1,
+        fcmTokens: 1,
         savedLocationDetails: {
           _id: 1,
           name: 1,
@@ -339,6 +340,49 @@ const updateUserPreferences = async (
   };
 };
 
+const getMyFcmTokens = async (userId: string) => {
+  const user = await User.findById(userId).select("fcmTokens");
+
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  return {
+    fcmTokens: user.fcmTokens || [],
+    latestFcmToken:
+      user.fcmTokens && user.fcmTokens.length > 0
+        ? user.fcmTokens[user.fcmTokens.length - 1]
+        : null,
+  };
+};
+
+const fcmTokenUpdate = async (
+  userId: string,
+  fcmToken?: string,
+  fcmTokens?: string[],
+) => {
+  const tokens: string[] = [];
+
+  if (fcmToken) tokens.push(fcmToken);
+  if (Array.isArray(fcmTokens)) tokens.push(...fcmTokens);
+
+  if (tokens.length === 0) {
+    return null;
+  }
+
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      $addToSet: {
+        fcmTokens: { $each: tokens }, // ✅ no duplicates
+      },
+    },
+    { new: false },
+  );
+
+  return { fcmTokens: tokens };
+};
+
 export const userServices = {
   createUser,
   getMeService,
@@ -348,4 +392,6 @@ export const userServices = {
   userDeleteService,
   getUserPreferencesService,
   updateUserPreferences,
+  getMyFcmTokens,
+  fcmTokenUpdate,
 };

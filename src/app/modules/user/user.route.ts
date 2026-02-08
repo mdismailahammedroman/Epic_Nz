@@ -16,14 +16,10 @@ router.post(
 router.get("/get_me", checkAuth(...Object.keys(Role)), userController.getMe);
 router.get(
   "/profile/:userId",
-  checkAuth(...Object.keys(Role)),
+  checkAuth(Role.ADMIN),
   userController.getProfile,
 );
-router.get(
-  "/",
-  checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.USER),
-  userController.getAllUser,
-);
+router.get("/", checkAuth(Role.ADMIN), userController.getAllUser);
 router.patch(
   "/update-user",
   // multerUpload.single("coverPicture"),
@@ -32,7 +28,7 @@ router.patch(
     { name: "coverPicture", maxCount: 1 },
     { name: "profile_picture", maxCount: 1 },
   ]),
-  checkAuth(Role.USER),
+  checkAuth(Role.USER, Role.ADMIN),
   userController.userUpdate,
 );
 router.delete(
@@ -52,6 +48,18 @@ router.patch(
   "/preferences",
   checkAuth(Role.USER),
   userController.updateUserPreferences,
+);
+
+router.get(
+  "/fcm-token",
+  checkAuth(...Object.values(Role)),
+  userController.getMyFcmToken,
+);
+
+router.patch(
+  "/fcm-token",
+  checkAuth(...Object.values(Role)),
+  userController.updateFcmToken,
 );
 
 export const userRouter = router;

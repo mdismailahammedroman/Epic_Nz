@@ -81,13 +81,13 @@ router.post(
 
 // Approve location (ADMIN only)
 router.patch(
-  "/:locationId/approve",
+  "/approve/:locationId",
   checkAuth(Role.ADMIN),
   locationController.approveLocation,
 );
 
 router.patch(
-  "/:locationId/reject",
+  "/reject/:locationId",
   checkAuth(Role.ADMIN),
   locationController.rejectLocation,
 );
@@ -100,7 +100,7 @@ router.get(
 );
 
 router.delete(
-  "/:locationId",
+  "/delete/:locationId",
   checkAuth(Role.USER, Role.ADMIN),
   locationController.deleteLocation,
 );

@@ -16,4 +16,15 @@ router.patch(
   NotificationController.markRead,
 );
 
+router.patch(
+  "/read-all",
+  checkAuth(...Object.values(Role)),
+  NotificationController.markAllRead,
+);
+router.delete(
+  "/delete/:id",
+  checkAuth(...Object.values(Role)),
+  NotificationController.deleteNotificationController,
+);
+
 export const notificationRoutes = router;

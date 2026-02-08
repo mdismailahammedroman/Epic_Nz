@@ -6,6 +6,7 @@ export enum NotificationType {
   LOCATION_APPROVED = "LOCATION_APPROVED", // admin -> creator
   NEW_LOCATION_APPROVED = "NEW_LOCATION_APPROVED", // approved location -> other users
   CHAT_MESSAGE = "CHAT_MESSAGE",
+  FEEDBACK_SUBMITTED = "FEEDBACK_SUBMITTED",
   SYSTEM = "SYSTEM",
 }
 

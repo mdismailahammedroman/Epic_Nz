@@ -19,89 +19,136 @@ import { logActivity } from "../../utils/logActivity.utils";
 import { normalizeTokens } from "../../utils/normalizeTokens";
 import User from "../user/user.model";
 
+function sanitizeRedirect(input: unknown) {
+  if (typeof input !== "string") return "/";
+  if (!input.startsWith("/")) return "/";
+  if (input.startsWith("//")) return "/";
+  return input;
+}
+
+function encodeState(payload: any) {
+  const json = JSON.stringify(payload);
+  return Buffer.from(json, "utf8").toString("base64url");
+}
+function decodeState(state?: string) {
+  if (!state) return null;
+  try {
+    const json = Buffer.from(state, "base64url").toString("utf8");
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+// ✅ Local login
 const credentialLogin = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("local", async (err: any, user: any, info: any) => {
-      if (err) return next(err);
-      if (!user) {
-        return next(new AppError(StatusCodes.FORBIDDEN, info.message));
-      }
+    passport.authenticate(
+      "local",
+      { session: false },
+      async (err: any, user: any, info: any) => {
+        if (err) return next(err);
+        if (!user)
+          return next(
+            new AppError(
+              StatusCodes.FORBIDDEN,
+              info?.message || "Login failed",
+            ),
+          );
 
-      const { fcmToken, fcmTokens } = req.body;
-      const tokens = normalizeTokens(fcmTokens ?? fcmToken);
+        const userTokens = createUserTokens(user);
+        setAuthCookie(res, userTokens);
 
-      // ✅ store token(s) on login (no duplicates)
-      if (tokens.length > 0) {
-        await User.findByIdAndUpdate(
-          user._id,
-          { $addToSet: { fcmTokens: { $each: tokens } } },
-          { new: false },
-        );
-      }
-      const userTokens = createUserTokens(user);
-      setAuthCookie(res, userTokens);
+        await logActivity({
+          actorId: user._id.toString(),
+          actorRole: user.role,
+          action: "USER_LOGIN",
+          entityType: "Auth",
+          message: "User login via credentials",
+          ip: req.ip,
+          userAgent: req.headers["user-agent"] as string,
+        });
 
-      await logActivity({
-        actorId: user._id.toString(),
-        actorRole: user.role,
-        action: "USER_LOGIN",
-        entityType: "Auth",
-        message: "User Login",
-        ip: req.ip,
-        userAgent: req.headers["user-agent"] as string,
-        meta: { targetName: "Dashboard" },
-      });
+        sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: "Login success",
+          data: {
+            accessToken: userTokens.accessToken,
+            refreshToken: userTokens.refreshToken,
+          },
+        });
+      },
+    )(req, res, next);
+  },
+);
 
-      // Send response with the user tokens and location data (placeName)
-      sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Login success",
-        data: {
-          accessToken: userTokens.accessToken,
-          refreshToken: userTokens.refreshToken,
-        },
-      });
+// ✅ Google start
+const googleStart = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const redirect = sanitizeRedirect(req.query.redirect);
+    const state = encodeState({ redirect });
+
+    passport.authenticate("google", {
+      session: false,
+      scope: ["profile", "email"],
+      state,
     })(req, res, next);
   },
 );
 
-// Add googleCallback handler
-const googleCallbackController = CatchAsync(
+// ✅ Google callback - user already attached by passport.authenticate in route
+const googleCallback = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  if (!user?._id)
+    throw new AppError(StatusCodes.FORBIDDEN, "Google login failed");
+
+  const userTokens = createUserTokens(user);
+  setAuthCookie(res, userTokens);
+
+  await logActivity({
+    actorId: user._id.toString(),
+    actorRole: user.role,
+    action: "USER_LOGIN",
+    entityType: "Auth",
+    message: "User login via Google",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  });
+
+  // Get redirect from state
+  const decoded = decodeState(req.query.state as string);
+  const redirect = sanitizeRedirect(decoded?.redirect);
+
+  // ✅ Web: redirect to FE success page (cookie already set)
+  // You can read /me on frontend.
+  res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+});
+
+// apple login controller
+
+const appleStart = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    let redirectTo = typeof req.query.state === "string" ? req.query.state : "";
-    if (redirectTo.startsWith("/")) {
-      redirectTo = redirectTo.slice(1);
-    }
-
-    if (redirectTo.includes("://") || redirectTo.startsWith("//")) {
-      redirectTo = "";
-    }
-
-    const user = req.user as IUser | undefined;
-    if (!user) {
-      return next(new AppError(StatusCodes.NOT_FOUND, "User not found"));
-    }
-
-    const tokenInfo = createUserTokens(user);
-    setAuthCookie(res, tokenInfo);
-
-    // // ✅ Activity Log for Google Login
-    // await logActivity({
-    //   actorId: user._id.toString(),
-    //   actorRole: user.role,
-    //   action: "USER_LOGIN",
-    //   entityType: "Auth",
-    //   message: "User Login via Google",
-    //   ip: req.ip,
-    //   userAgent: req.headers["user-agent"] as string,
-    //   meta: { provider: "google" },
-    // });
-
-    const redirectUrl = `epicnz://auth?token=${tokenInfo.accessToken}`;
-    return res.redirect(redirectUrl);
+    const redirect = sanitizeRedirect(req.query.redirect);
+    passport.authenticate("apple", {
+      session: false,
+      scope: ["name", "email"],
+      state: redirect, // comes back as req.query.state
+    })(req, res, next);
   },
 );
+
+const appleCallback = CatchAsync(async (req: Request, res: Response) => {
+  const user = req.user as any;
+  if (!user?._id)
+    throw new AppError(StatusCodes.FORBIDDEN, "Apple login failed");
+
+  const tokens = createUserTokens(user);
+  setAuthCookie(res, tokens);
+
+  const redirect = sanitizeRedirect(req.query.state);
+  res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+});
 
 const logout = CatchAsync(async (req: Request, res: Response) => {
   const isProduction = envVar.NODE_ENV === "production";
@@ -261,11 +308,14 @@ const setPassword = CatchAsync(
 
 export const authController = {
   credentialLogin,
+  googleStart,
+  googleCallback,
+  appleStart,
+  appleCallback,
   logout,
   refreshToken,
   changePassword,
   forgetPassword,
   resetPassword,
-  googleCallbackController,
   setPassword,
 };

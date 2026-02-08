@@ -4,6 +4,7 @@ import { IFeedback } from "./feedback.interface";
 import User from "../user/user.model";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";
+import { NotificationService } from "../notification/notification.service";
 
 const createFeedback = async (userId: string, payload: Partial<IFeedback>) => {
   // 1. Verify user exists
@@ -18,7 +19,7 @@ const createFeedback = async (userId: string, payload: Partial<IFeedback>) => {
     title: payload.title,
     message: payload.message,
   });
-
+  await NotificationService.notifyAdminsFeedbackSubmitted(doc);
   return doc;
 };
 

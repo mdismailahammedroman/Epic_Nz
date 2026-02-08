@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { stripe } from "../../helper/stripe";
 import { envVar } from "../../config/envVar";
 import User from "../user/user.model";
@@ -36,39 +37,56 @@ const createCheckoutSession = async ({
 
 // STRIPE WEBHOOK HANDLER
 const stripeWebhookHandler = async (event: Stripe.Event) => {
-  if (event.type !== "checkout.session.completed") return;
+  // if (event.type === "checkout.session.completed") {
+  //   const session = event.data.object as Stripe.Checkout.Session;
+  //   const userId = session.metadata?.userId;
+  //   const plan_type = session.metadata?.plan_type as Plan;
 
-  const session = event.data.object as Stripe.Checkout.Session;
+  //   if (!userId || !plan_type) return;
 
-  const userId = session.metadata?.userId;
-  const plan_type = session.metadata?.plan_type as Plan;
+  //   const stripeSubscriptionId = session.subscription as string;
+  //   const startDate = new Date();
 
-  if (!userId || !plan_type) return;
+  //   const endDate =
+  //     plan_type === Plan.MONTHLY
+  //       ? new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+  //       : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-  const stripeSubscriptionId = session.subscription as string;
-  const startDate = new Date();
+  //   await Subscription.findOneAndUpdate(
+  //     { userId },
+  //     {
+  //       userId,
+  //       stripeSubscriptionId,
+  //       stripeCustomerId: session.customer as string,
+  //       plan_type,
+  //       status: SubscriptionStatus.ACTIVE,
+  //       ai_features_access: true,
+  //       start_date: startDate,
+  //       end_date: endDate,
+  //     },
+  //     { upsert: true, new: true },
+  //   );
 
-  const endDate =
-    plan_type === Plan.MONTHLY
-      ? new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000)
-      : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+  //   console.log(`✔ Subscription stored for user ${userId}`);
+  // } else
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as Stripe.Invoice;
+    const subscriptionId = (invoice as any).subscription as string;
 
-  await Subscription.findOneAndUpdate(
-    { userId }, // ✅ FIXED
-    {
-      userId,
-      stripeSubscriptionId,
-      stripeCustomerId: session.customer as string,
-      plan_type,
-      status: SubscriptionStatus.ACTIVE,
-      ai_features_access: true,
-      start_date: startDate,
-      end_date: endDate,
-    },
-    { upsert: true, new: true },
-  );
+    if (!subscriptionId) return;
 
-  console.log(`✔ Subscription stored for user ${userId}`);
+    const subscription = await Subscription.findOne({
+      stripeSubscriptionId: subscriptionId,
+    });
+    if (subscription) {
+      await Subscription.findByIdAndUpdate(subscription._id, {
+        status: SubscriptionStatus.ACTIVE,
+        ai_features_access: true,
+        ads_free: true,
+      });
+      console.log(`✔ Subscription activated for ${subscription.userId}`);
+    }
+  }
 };
 
 // GET MY SUBSCRIPTIONS
@@ -134,6 +152,88 @@ const restoreSubscription = async (userId: string) => {
 const getAllSubscriptions = async () => {
   return Subscription.find().sort({ createdAt: -1 }); // You can modify the sorting as per your requirement
 };
+
+const createPaymentIntent = async (userId: string, plan: Plan) => {
+  const user = await User.findById(userId);
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+
+  let customerId = user.stripeCustomerId;
+
+  // 1. Create a Stripe Customer if not exists
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      name: user.full_name,
+      metadata: { userId },
+    });
+    customerId = customer.id;
+
+    // Save customer ID to user
+    await User.findByIdAndUpdate(userId, { stripeCustomerId: customerId });
+  }
+
+  const priceId =
+    plan === Plan.MONTHLY ? envVar.PRICE_MONTHLY : envVar.PRICE_YEARLY;
+
+  // 2. Create a Subscription
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [{ price: priceId }],
+    payment_behavior: "default_incomplete",
+    expand: ["latest_invoice.payment_intent"],
+    metadata: { userId, plan_type: plan },
+  });
+
+  let invoice = subscription.latest_invoice as Stripe.Invoice;
+  let paymentIntent = (invoice as any)
+    .payment_intent as Stripe.PaymentIntent | null;
+
+  // If payment_intent is missing, try to retrieve the invoice explicitly
+  if (!paymentIntent) {
+    // console.log("Re-fetching invoice to get payment_intent...");
+    const retrievedInvoice = await stripe.invoices.retrieve(invoice.id, {
+      expand: ["payment_intent"],
+    });
+    invoice = retrievedInvoice;
+    paymentIntent = (invoice as any)
+      .payment_intent as Stripe.PaymentIntent | null;
+  }
+
+  if (!paymentIntent) {
+    console.error(
+      "CRITICAL: Payment Intent missing. Invoice:",
+      JSON.stringify(invoice, null, 2),
+    );
+    throw new AppError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to initialize payment.",
+    );
+  }
+
+  // Save subscription to DB as PENDING
+  const startDate = new Date();
+  const endDate =
+    plan === Plan.MONTHLY
+      ? new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+      : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+  await Subscription.create({
+    userId,
+    stripeSubscriptionId: subscription.id,
+    stripeCustomerId: customerId,
+    plan_type: plan,
+    status: SubscriptionStatus.PENDING,
+    ai_features_access: false,
+    start_date: startDate,
+    end_date: endDate,
+  });
+
+  return {
+    subscriptionId: subscription.id,
+    clientSecret: paymentIntent.client_secret,
+    customerId,
+  };
+};
 export const subscriptionService = {
   createCheckoutSession,
   stripeWebhookHandler,
@@ -141,4 +241,5 @@ export const subscriptionService = {
   turnOffAutoRenew,
   getAllSubscriptions,
   restoreSubscription,
+  createPaymentIntent,
 };

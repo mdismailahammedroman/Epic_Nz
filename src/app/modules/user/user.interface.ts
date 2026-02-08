@@ -19,7 +19,8 @@ export enum UserStatus {
 
 // Auth providers used for user login (e.g., Google, credentials)
 export enum AuthProviderType {
-  GOOGLE = "google",
+  GOOGLE = "GOOGLE",
+  APPLE = "APPLE",
   CREDENTIAL = "credential",
 }
 // Interface for authentication providers linked to the user

@@ -36,4 +36,37 @@ const markRead = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const NotificationController = { myNotifications, markRead };
+const markAllRead = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user as JwtPayload;
+
+  const result = await NotificationService.markAllRead(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "All notifications marked as read",
+    data: result,
+  });
+});
+
+const deleteNotificationController = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { notificationId } = req.params;
+
+    await NotificationService.deleteNotification(notificationId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Notification deleted successfully",
+      data: null,
+    });
+  },
+);
+
+export const NotificationController = {
+  myNotifications,
+  markRead,
+  markAllRead,
+  deleteNotificationController,
+};

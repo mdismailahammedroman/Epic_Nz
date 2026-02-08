@@ -100,7 +100,7 @@ const notifyAdminsLocationSubmitted = async (location: any) => {
 const notifyCreatorLocationApproved = async (location: any) => {
   const creatorId = new Types.ObjectId(location.userId);
 
-  const title = "Location Approved ✅";
+  const title = "Location Approved";
   const body = `Your location "${location.name}" has been approved.`;
 
   const data: INotificationData = {
@@ -139,7 +139,7 @@ const notifyUsersNewApprovedLocation = async (location: any) => {
 
   const userIds = users.map((u: any) => u._id as Types.ObjectId);
 
-  const title = "New Location Added 📍";
+  const title = "New Location Added";
   const body = `"${location.name}" is now available.`;
 
   const data: INotificationData = {
@@ -240,11 +240,73 @@ const markAsRead = async (userId: string, notificationId: string) => {
   return null;
 };
 
+const deleteNotification = async (notificationId: string) => {
+  const result = await Notification.deleteOne({
+    notificationId,
+  });
+
+  return result;
+};
+
+const markAllRead = async (userId: string) => {
+  // ✅ update all notifications for this user to isRead = true
+  const result = await Notification.updateMany(
+    { user: userId, isRead: false },
+    { $set: { isRead: true } },
+  );
+
+  return {
+    matchedCount: result.matchedCount,
+    modifiedCount: result.modifiedCount,
+  };
+};
+// In notification.service.ts
+const notifyAdminsFeedbackSubmitted = async (feedback: any) => {
+  // Get admins
+  const admins = await User.find({
+    role: { $in: [Role.ADMIN, Role.SUPER_ADMIN] },
+  }).select("_id fcmTokens");
+
+  const adminIds = admins.map((a: any) => a._id as Types.ObjectId);
+
+  if (!adminIds.length)
+    return { inAppCount: 0, successCount: 0, failureCount: 0 };
+
+  const title = "New Feedback Submitted";
+  const body = `"${feedback.title}" has been submitted by a user.`;
+
+  const data: INotificationData = {
+    feedbackId: String(feedback._id),
+    deepLink: `/feedback/${feedback._id}`,
+  };
+
+  const saved = await createInApp(
+    adminIds,
+    NotificationType.FEEDBACK_SUBMITTED,
+    title,
+    body,
+    data,
+  );
+  const pushed = await pushToUserIds(adminIds, title, body, data);
+
+  emitNotification(adminIds, {
+    type: NotificationType.FEEDBACK_SUBMITTED,
+    title,
+    body,
+    data,
+  });
+
+  return { inAppCount: saved.length, ...pushed };
+};
+
 export const NotificationService = {
   notifyAdminsLocationSubmitted,
   notifyCreatorLocationApproved,
   notifyUsersNewApprovedLocation,
+  notifyAdminsFeedbackSubmitted,
   notifyChatMessage,
   getMyNotifications,
   markAsRead,
+  markAllRead,
+  deleteNotification,
 };

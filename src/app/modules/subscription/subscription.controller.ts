@@ -175,6 +175,22 @@ const getAllSubscriptions = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
+  const { plan } = req.body;
+  const userId = (req.user as JwtPayload).userId;
+
+  if (!plan) throw new AppError(StatusCodes.BAD_REQUEST, "Plan is required");
+
+  const result = await subscriptionService.createPaymentIntent(userId, plan);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Payment intent created successfully",
+    data: result,
+  });
+});
+
 export const subscriptionController = {
   createCheckoutSession,
   stripeWebhook,
@@ -184,4 +200,5 @@ export const subscriptionController = {
   cancelSubscription,
   restoreSubscription,
   getAllSubscriptions,
+  createPaymentIntent,
 };
