@@ -13,7 +13,7 @@ const sendMessage = CatchAsync(
 
     const result = await chatService.sendMessageService(
       user,
-      receiverId,
+      receiverId as string,
       req.body,
     );
 
@@ -44,7 +44,10 @@ const getMessages = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as JwtPayload;
   const { otherUserId } = req.params;
 
-  const messages = await chatService.getMessagesService(user, otherUserId);
+  const messages = await chatService.getMessagesService(
+    user,
+    otherUserId as string,
+  );
 
   sendResponse(res, {
     success: true,

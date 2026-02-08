@@ -26,7 +26,7 @@ const markRead = CatchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user as JwtPayload;
   const { notificationId } = req.params;
 
-  await NotificationService.markAsRead(userId, notificationId);
+  await NotificationService.markAsRead(userId, notificationId as string);
 
   sendResponse(res, {
     success: true,
@@ -53,7 +53,7 @@ const deleteNotificationController = CatchAsync(
   async (req: Request, res: Response) => {
     const { notificationId } = req.params;
 
-    await NotificationService.deleteNotification(notificationId);
+    await NotificationService.deleteNotification(notificationId as string);
 
     sendResponse(res, {
       success: true,

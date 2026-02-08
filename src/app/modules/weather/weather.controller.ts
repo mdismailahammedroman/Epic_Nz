@@ -43,8 +43,9 @@ const weatherInfoByLocationId = CatchAsync(
       throw new AppError(StatusCodes.BAD_REQUEST, "Location ID is required");
     }
 
-    const weatherData =
-      await weatherServices.weatherInfoByLocationId(locationId);
+    const weatherData = await weatherServices.weatherInfoByLocationId(
+      locationId as string,
+    );
     sendResponse(res, {
       success: true,
       message: "Weather data fetched successfully",
@@ -60,8 +61,9 @@ const weatherSunriseAndSunset = CatchAsync(
     if (!locationId) {
       throw new AppError(StatusCodes.BAD_REQUEST, "Location ID is required");
     }
-    const weatherData =
-      await weatherServices.weatherSunriseAndSunset(locationId);
+    const weatherData = await weatherServices.weatherSunriseAndSunset(
+      locationId as string,
+    );
 
     sendResponse(res, {
       success: true,

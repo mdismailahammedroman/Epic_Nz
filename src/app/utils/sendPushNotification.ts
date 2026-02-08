@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { fcmMessaging } from "../config/firebase.config";
 
 const toStringMap = (data?: Record<string, any>) => {

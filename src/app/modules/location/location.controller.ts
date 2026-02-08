@@ -152,8 +152,9 @@ const getEpicPhotoSpots = CatchAsync(async (req: Request, res: Response) => {
 });
 const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
-  const locationDetails =
-    await locationServices.locationDetailsById(locationId);
+  const locationDetails = await locationServices.locationDetailsById(
+    locationId as string,
+  );
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -164,7 +165,10 @@ const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
 const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user as JwtPayload;
   const { locationId } = req.params;
-  const result = await locationServices.saveLocationForUser(userId, locationId);
+  const result = await locationServices.saveLocationForUser(
+    userId,
+    locationId as string,
+  );
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -180,7 +184,7 @@ const unsaveLocationForUser = CatchAsync(
 
     const updatedSavedLocations = await locationServices.unsaveLocationForUser(
       userId,
-      locationId,
+      locationId as string,
     );
 
     sendResponse(res, {
@@ -196,7 +200,7 @@ const shareLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const userId = req.user as JwtPayload;
   const deepLink = await locationServices.shareLocation(
-    locationId,
+    locationId as string,
     userId.userId,
   );
   sendResponse(res, {
@@ -212,7 +216,7 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const { rating } = req.body;
   const updatedLocation = await locationServices.locationRating(
-    locationId,
+    locationId as string,
     rating,
     userId.userId,
   );
@@ -227,7 +231,7 @@ const locationRating = CatchAsync(async (req: Request, res: Response) => {
 const approveLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
 
-  const result = await locationServices.approveLocation(locationId);
+  const result = await locationServices.approveLocation(locationId as string);
 
   const creatorNotify =
     await NotificationService.notifyCreatorLocationApproved(result);
@@ -240,7 +244,7 @@ const approveLocation = CatchAsync(async (req: Request, res: Response) => {
     actorRole: (req.user as JwtPayload).role,
     action: "SUBMISSION_APPROVED",
     entityType: "Location",
-    entityId: locationId,
+    entityId: locationId as string,
     message: "Submission Approved",
     ip: req.ip,
     userAgent: req.headers["user-agent"] as string,
@@ -278,14 +282,17 @@ const rejectLocation = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const adminId = (req.user as JwtPayload).userId; // Get admin ID from JWT token
 
-  const location = await locationServices.rejectLocation(locationId, adminId);
+  const location = await locationServices.rejectLocation(
+    locationId as string,
+    adminId,
+  );
 
   logActivity({
     actorId: (req.user as JwtPayload).userId,
     actorRole: (req.user as JwtPayload).role,
     action: "SUBMISSION_REJECTED",
     entityType: "Location",
-    entityId: locationId,
+    entityId: locationId as string,
     message: "Submission Rejected",
     ip: req.ip,
     userAgent: req.headers["user-agent"] as string,
@@ -333,7 +340,7 @@ const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as JwtPayload; // must contain userId + role
 
   const result = await locationServices.deleteLocation(
-    locationId,
+    locationId as string,
     user.userId,
     user.role,
   );
@@ -343,7 +350,7 @@ const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
     actorRole: user.role,
     action: "LOCATION_DELETED",
     entityType: "Location",
-    entityId: locationId,
+    entityId: locationId as string,
     message: "Location deleted",
     ip: req.ip,
     userAgent: req.headers["user-agent"] as string,

@@ -112,7 +112,10 @@ const userDelete = CatchAsync(async (req: Request, res: Response) => {
   const userId = req.params.userId;
   const decodedToken = req.user as JwtPayload;
 
-  const result = await userServices.userDeleteService(userId, decodedToken);
+  const result = await userServices.userDeleteService(
+    userId as string,
+    decodedToken,
+  );
 
   sendResponse(res, {
     success: true,
