@@ -9,7 +9,11 @@ export const getActivityLogs = async (query: any) => {
   const filter: any = {}; // your filters...
 
   const [data, total] = await Promise.all([
-    ActivityLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    ActivityLog.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("actorId", "full_name role"),
     ActivityLog.countDocuments(filter),
   ]);
 

@@ -5,12 +5,6 @@ import { Role } from "../user/user.interface";
 
 const router = express.Router();
 
-router.post(
-  "/create-subscription",
-  checkAuth(Role.USER),
-  subscriptionController.createCheckoutSession,
-);
-
 router.get(
   "/my",
   checkAuth(Role.USER),
@@ -37,6 +31,19 @@ router.post(
   "/intent",
   checkAuth(Role.USER),
   subscriptionController.createPaymentIntent,
+);
+
+router.patch(
+  "/upgrade",
+  checkAuth(Role.USER),
+  subscriptionController.upgradeSubscription,
+);
+
+// Create 30-day trial
+router.post(
+  "/create-trial",
+  checkAuth(Role.USER),
+  subscriptionController.createTrialSubscriptionController,
 );
 
 export const SubscriptionRoute = router;

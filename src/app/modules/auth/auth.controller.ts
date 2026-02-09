@@ -13,11 +13,9 @@ import { sendResponse } from "../../utils/SendResponse";
 import { setAuthCookie } from "../../utils/SetCookies";
 import { authService } from "./auth.service";
 import { envVar } from "../../config/envVar";
-import { IUser, Role } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
 import { logActivity } from "../../utils/logActivity.utils";
-import { normalizeTokens } from "../../utils/normalizeTokens";
-import User from "../user/user.model";
+import { redisClient } from "../../config/redisConfig";
 
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
@@ -56,7 +54,7 @@ const credentialLogin = CatchAsync(
             ),
           );
 
-        const userTokens = createUserTokens(user);
+        const userTokens = await createUserTokens(user);
         setAuthCookie(res, userTokens);
 
         await logActivity({
@@ -103,7 +101,7 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
   if (!user?._id)
     throw new AppError(StatusCodes.FORBIDDEN, "Google login failed");
 
-  const userTokens = createUserTokens(user);
+  const userTokens = await createUserTokens(user);
   setAuthCookie(res, userTokens);
 
   await logActivity({
@@ -143,7 +141,7 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
   if (!user?._id)
     throw new AppError(StatusCodes.FORBIDDEN, "Apple login failed");
 
-  const tokens = createUserTokens(user);
+  const tokens = await createUserTokens(user);
   setAuthCookie(res, tokens);
 
   const redirect = sanitizeRedirect(req.query.state);
@@ -151,6 +149,10 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = CatchAsync(async (req: Request, res: Response) => {
+  const payload = req.user as JwtPayload;
+
+  await redisClient.del(`refresh:${payload.userId}`);
+
   const isProduction = envVar.NODE_ENV === "production";
 
   res.clearCookie("accessToken", {

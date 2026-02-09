@@ -26,7 +26,7 @@ const userRegister = CatchAsync(
 
     const createUser = await userServices.createUser(userData);
 
-    const userTokens = createUserTokens(createUser);
+    const userTokens = await createUserTokens(createUser);
     setAuthCookie(res, userTokens);
     sendResponse(res, {
       success: true,

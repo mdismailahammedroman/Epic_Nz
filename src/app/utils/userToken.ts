@@ -5,8 +5,9 @@ import AppError from "../errorHelper/AppError";
 import { envVar } from "../config/envVar";
 import { IUser, Role, UserStatus } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
+import { redisClient } from "../config/redisConfig";
 
-export const createUserTokens = (user: IUser) => {
+export const createUserTokens = async (user: IUser) => {
   const jwtPayload = {
     userId: user._id,
     email: user.email,
@@ -16,12 +17,19 @@ export const createUserTokens = (user: IUser) => {
   const accessToken = generateToken(
     jwtPayload,
     envVar.JWT_SECRET,
-    envVar.JWT_EXPIRATION
+    envVar.JWT_EXPIRATION,
   );
   const refreshToken = generateToken(
     jwtPayload,
     envVar.JWT_REFRESH_SECRET,
-    envVar.JWT_REFRESH_EXPIRATION
+    envVar.JWT_REFRESH_EXPIRATION,
+  );
+
+  // ✅ STORE refresh token in Redis
+  await redisClient.set(
+    `refresh:${user._id}`,
+    refreshToken,
+    { EX: 60 * 60 * 24 * 14 }, // 14 days
   );
 
   return {
@@ -31,14 +39,26 @@ export const createUserTokens = (user: IUser) => {
 };
 
 export const createNewAccessTokenWithRefreshToken = async (
-  refreshToken: string
+  refreshToken: string,
 ) => {
   const verifiedRefreshToken = verifyToken(
     refreshToken,
-    envVar.JWT_REFRESH_SECRET
+    envVar.JWT_REFRESH_SECRET,
   ) as JwtPayload & {
     email: string;
   };
+
+  // 2️⃣ Check Redis
+  const storedToken = await redisClient.get(
+    `refresh:${verifiedRefreshToken.userId}`,
+  );
+
+  if (!storedToken || storedToken !== refreshToken) {
+    throw new AppError(
+      StatusCodes.UNAUTHORIZED,
+      "Invalid or expired refresh token",
+    );
+  }
 
   const isUserExist = await User.findOne({ email: verifiedRefreshToken.email });
 
@@ -53,7 +73,7 @@ export const createNewAccessTokenWithRefreshToken = async (
   ) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      `User is ${isUserExist.status} and cannot access the system.`
+      `User is ${isUserExist.status} and cannot access the system.`,
     );
   }
 
@@ -74,7 +94,7 @@ export const createNewAccessTokenWithRefreshToken = async (
   const accessToken = generateToken(
     jwtPayload,
     envVar.JWT_SECRET,
-    envVar.JWT_EXPIRATION
+    envVar.JWT_EXPIRATION,
   );
   return accessToken;
 };

@@ -11,34 +11,44 @@ import { envVar } from "../../config/envVar";
 import { stripe } from "../../helper/stripe";
 import { logActivity } from "../../utils/logActivity.utils";
 
-const createCheckoutSession = CatchAsync(
-  async (req: Request, res: Response) => {
-    const { plan } = req.body;
-    if (!plan) throw new AppError(StatusCodes.BAD_REQUEST, "Plan required");
+const createPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
+  const { plan } = req.body;
+  const userId = (req.user as JwtPayload).userId;
 
+  if (!plan) throw new AppError(StatusCodes.BAD_REQUEST, "Plan is required");
+
+  const session = await subscriptionService.createPaymentIntent(userId, plan);
+
+  logActivity({
+    actorId: userId,
+    actorRole: (req.user as JwtPayload).role,
+    action: "CHECKOUT_SESSION_CREATED",
+    entityType: "Subscription",
+    message: "Checkout session created",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+    meta: { plan },
+  }).catch(console.error);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Checkout session created",
+    data: session,
+  });
+});
+
+const createTrialSubscriptionController = CatchAsync(
+  async (req: Request, res: Response) => {
     const userId = (req.user as JwtPayload).userId;
 
-    const session = await subscriptionService.createCheckoutSession({
-      userId,
-      plan_type: plan,
-    });
-
-    logActivity({
-      actorId: userId,
-      actorRole: (req.user as JwtPayload).role,
-      action: "CHECKOUT_SESSION_CREATED",
-      entityType: "Subscription",
-      message: "Checkout session created",
-      ip: req.ip,
-      userAgent: req.headers["user-agent"] as string,
-      meta: { plan },
-    }).catch(console.error);
+    const trialSub = await subscriptionService.createTrialSubscription(userId);
 
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
-      message: "Checkout session created",
-      data: session,
+      message: "Trial subscription created successfully",
+      data: trialSub,
     });
   },
 );
@@ -62,6 +72,25 @@ const stripeWebhook = async (req: Request, res: Response) => {
   await subscriptionService.stripeWebhookHandler(event);
   res.json({ received: true });
 };
+
+const upgradeSubscription = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).userId;
+  const { plan } = req.body;
+
+  if (!plan) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "New plan required");
+  }
+
+  // Use the correct service function name
+  const result = await subscriptionService.upgradeSubscription(userId, plan);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Subscription upgraded successfully",
+    data: result,
+  });
+});
 
 const getMySubscriptions = CatchAsync(async (req: Request, res: Response) => {
   const subs = await subscriptionService.getMySubscriptions(
@@ -175,24 +204,8 @@ const getAllSubscriptions = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const createPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
-  const { plan } = req.body;
-  const userId = (req.user as JwtPayload).userId;
-
-  if (!plan) throw new AppError(StatusCodes.BAD_REQUEST, "Plan is required");
-
-  const result = await subscriptionService.createPaymentIntent(userId, plan);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Payment intent created successfully",
-    data: result,
-  });
-});
-
 export const subscriptionController = {
-  createCheckoutSession,
+  createTrialSubscriptionController,
   stripeWebhook,
   getMySubscriptions,
   turnOffAutoRenew,
@@ -201,4 +214,5 @@ export const subscriptionController = {
   restoreSubscription,
   getAllSubscriptions,
   createPaymentIntent,
+  upgradeSubscription,
 };

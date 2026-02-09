@@ -62,7 +62,10 @@ const submitLocation = async (
 };
 
 const getAllActivities = async (query: Record<string, string>) => {
-  const dbQuery = Location.find({ isDeleted: false }); // only non-deleted
+  const dbQuery = Location.find({ isDeleted: false }).populate(
+    "userId",
+    "full_name email profile_picture",
+  ); // only non-deleted
 
   // ✅ Filter by status if provided
   if (query.status) {
