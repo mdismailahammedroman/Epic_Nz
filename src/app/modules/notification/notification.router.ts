@@ -27,4 +27,10 @@ router.delete(
   NotificationController.deleteNotificationController,
 );
 
+router.get(
+  "/all",
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN), // only admin roles
+  NotificationController.getAllNotifications,
+);
+
 export const notificationRoutes = router;

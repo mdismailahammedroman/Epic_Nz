@@ -299,6 +299,31 @@ const notifyAdminsFeedbackSubmitted = async (feedback: any) => {
   return { inAppCount: saved.length, ...pushed };
 };
 
+const getAllNotifications = async ({
+  page = 1,
+  limit = 20,
+}: {
+  page?: number;
+  limit?: number;
+}) => {
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    Notification.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Notification.countDocuments(),
+  ]);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data,
+  };
+};
+
 export const NotificationService = {
   notifyAdminsLocationSubmitted,
   notifyCreatorLocationApproved,
@@ -309,4 +334,5 @@ export const NotificationService = {
   markAsRead,
   markAllRead,
   deleteNotification,
+  getAllNotifications,
 };

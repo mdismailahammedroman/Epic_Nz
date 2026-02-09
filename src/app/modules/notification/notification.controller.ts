@@ -64,9 +64,27 @@ const deleteNotificationController = CatchAsync(
   },
 );
 
+const getAllNotifications = CatchAsync(async (req: Request, res: Response) => {
+  const { page = "1", limit = "20" } = req.query;
+
+  const result = await NotificationService.getAllNotifications({
+    page: Number(page),
+    limit: Number(limit),
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "All notifications fetched",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
 export const NotificationController = {
   myNotifications,
   markRead,
   markAllRead,
   deleteNotificationController,
+  getAllNotifications,
 };
