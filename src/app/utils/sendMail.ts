@@ -39,7 +39,11 @@ export const sendEmail = async ({
 }: SendEmailOptions) => {
   try {
     // Construct the path to the EJS template
-    const templatePath = path.join(__dirname, `templates/${templateName}.ejs`);
+    const templatePath = path.join(
+      process.cwd(),
+      "src/app/utils/templates",
+      `${templateName}.ejs`,
+    );
 
     // Render the template with provided data
     const html = await ejs.renderFile(templatePath, templateData);
