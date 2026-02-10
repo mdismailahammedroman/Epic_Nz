@@ -5,20 +5,15 @@ import ejs from "ejs";
 import { envVar } from "../config/envVar";
 import AppError from "../errorHelper/AppError";
 
-// Parse SMTP port safely with fallback
-const port = envVar.SMTP.SMTP_PORT ? parseInt(envVar.SMTP.SMTP_PORT, 10) : 465;
-
 // Create the transporter
 const transporter = nodemailer.createTransport({
-  host: envVar.SMTP.SMTP_HOST,
-  port, // SMTP port
-  secure: port === 465, // true for SSL, false for TLS
+  secure: true, // Use true for SSL/TLS
   auth: {
-    user: envVar.SMTP.SMTP_USER,
-    pass: envVar.SMTP.SMTP_PASSWORD,
+    user: envVar.SMTP.SMTP_USER, // Email account username
+    pass: envVar.SMTP.SMTP_PASSWORD, // Email account password or App password
   },
-  tls: { rejectUnauthorized: false },
-  connectionTimeout: 10000, // 10 seconds
+  port: Number(envVar.SMTP.SMTP_PORT), // SMTP port (use 465 for SSL, 587 for TLS)
+  host: envVar.SMTP.SMTP_HOST, // SMTP host (e.g., smtp.gmail.com for Gmail)
 });
 
 // Interface for email options
@@ -51,20 +46,20 @@ export const sendEmail = async ({
 
     // Send the email using the transporter
     await transporter.sendMail({
-      from: envVar.SMTP.SMTP_USER,
-      to,
-      subject,
-      html,
+      from: envVar.SMTP.SMTP_USER, // Sender's email address
+      to: to, // Recipient's email address
+      subject: subject, // Subject of the email
+      html: html, // HTML content rendered from the EJS template
       attachments: attachments?.map((attachment) => ({
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: attachment.contentType,
+        filename: attachment.filename, // Name of the attachment
+        content: attachment.content, // Content of the attachment
+        contentType: attachment.contentType, // MIME type of the attachment
       })),
     });
 
     return true;
   } catch (error: any) {
-    console.error("Error sending email:", error.message);
+    console.error("Error sending email:", error.message); // Log the error message
     throw new AppError(400, `Email error: ${error.message}`);
   }
 };
