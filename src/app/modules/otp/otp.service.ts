@@ -3,11 +3,12 @@ import { redisClient } from "../../config/redisConfig";
 import AppError from "../../errorHelper/AppError";
 import { sendEmail } from "../../utils/sendMail";
 import { randomOTP } from "../../utils/randomOpt";
+import { UserStatus } from "../user/user.interface";
 
 const OTP_EXPIRATION = 2 * 60; // 2 minutes
 
 // Send verification OTP
-export const sendOTP = async (email: string) => {
+const sendOTP = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(404, "User not found");
   if (user.is_verified) throw new AppError(400, "User already verified");
@@ -28,7 +29,7 @@ export const sendOTP = async (email: string) => {
 };
 
 // Verify verification OTP
-export const verifyOTP = async (email: string, otp: string) => {
+const verifyOTP = async (email: string, otp: string) => {
   const redisKey = `otp:${email}`;
   const savedOtp = await redisClient.get(redisKey);
 
@@ -36,7 +37,10 @@ export const verifyOTP = async (email: string, otp: string) => {
     throw new AppError(401, "Invalid or expired OTP");
   }
 
-  await User.updateOne({ email }, { $set: { is_verified: true } });
+  await User.updateOne(
+    { email },
+    { $set: { is_verified: true, status: UserStatus.ACTIVE } },
+  );
   await redisClient.del(redisKey);
   return true;
 };

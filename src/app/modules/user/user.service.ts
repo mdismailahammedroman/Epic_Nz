@@ -8,6 +8,7 @@ import {
   IUser,
   IUserPreferences,
   Role,
+  UserStatus,
 } from "./user.interface";
 import { v4 as uuidv4 } from "uuid";
 
@@ -55,6 +56,7 @@ const createUser = async (payload: Partial<IUser>) => {
     email,
     password: password ? await bcrypt.hash(password, 10) : undefined,
     profile_picture,
+    status: UserStatus.PENDING,
     preferences: preferences ?? {
       language: "en",
       theme: "light",
@@ -90,7 +92,7 @@ const createUser = async (payload: Partial<IUser>) => {
   });
 
   // OTP stays the same
-  await OTPService.sendOTP(email);
+  OTPService.sendOTP(email).catch((err) => console.error("OTP error:", err));
 
   return newUser;
 };
