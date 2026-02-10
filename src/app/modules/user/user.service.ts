@@ -9,6 +9,8 @@ import {
   IUserPreferences,
   Role,
 } from "./user.interface";
+import { v4 as uuidv4 } from "uuid";
+
 import Subscription from "../../modules/subscription/Subscription.model";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
@@ -76,8 +78,8 @@ const createUser = async (payload: Partial<IUser>) => {
   await Subscription.create({
     userId: newUser._id,
     plan_type: Plan.TRIAL,
-    stripeSubscriptionId: "TRIAL",
-    stripeCustomerId: "TRIAL",
+    stripeSubscriptionId: `TRIAL-${uuidv4()}`, // unique for every trial
+    stripeCustomerId: `TRIAL-${uuidv4()}`, // also unique
     start_date: startDate,
     end_date: endDate,
     status: SubscriptionStatus.ACTIVE,
