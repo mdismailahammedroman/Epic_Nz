@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import http from "http";
 import mongoose from "mongoose";
 import { Server as SocketIoServer } from "socket.io";
-
+import "./app/utils/jobs/index";
 import app from "./app";
 import { envVar } from "./app/config/envVar";
 import { connectRedis } from "./app/config/redisConfig";

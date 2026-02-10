@@ -5,7 +5,7 @@ import {
 import Subscription from "../../modules/subscription/Subscription.model";
 
 export const expireTrialSubscriptions = async () => {
-  await Subscription.updateMany(
+  const result = await Subscription.updateMany(
     {
       plan_type: Plan.TRIAL,
       status: SubscriptionStatus.ACTIVE,
@@ -14,7 +14,9 @@ export const expireTrialSubscriptions = async () => {
     {
       status: SubscriptionStatus.EXPIRED,
       ai_features_access: false,
+      ads_free: false,
     },
   );
-  console.log("✅ Expired trial subscriptions updated");
+
+  console.log(`✅ Trial expiry job ran. Modified: ${result.modifiedCount}`);
 };

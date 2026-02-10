@@ -1,0 +1,52 @@
+networks:
+  epic-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  redis-data:
+
+services:
+  app:
+    build: .
+    container_name: epic-nz-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - epic-network
+    volumes:
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+      - ./keys:/app/keys:ro
+
+  mongo:
+    image: mongo:7.0
+    container_name: epic-nz-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+      MONGO_INITDB_DATABASE: Epic_NZ
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - epic-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: epic-nz-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "euS08Loiq8FU7nzO5UiumUVx9jbC81sI"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - epic-network

@@ -125,32 +125,43 @@ const createTrialSubscription = async (userId: string) => {
 
 // Upgrade Subscription Logic
 const upgradeSubscription = async (userId: string, newPlan: Plan) => {
-  // 1️⃣ Fetch current active subscription
+  // ✅ Only allow MONTHLY → YEARLY
+  if (newPlan !== Plan.YEARLY) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Only yearly upgrade is allowed",
+    );
+  }
+
+  // 1️⃣ Get active subscription
   const subscription = await Subscription.findOne({
     userId,
     status: SubscriptionStatus.ACTIVE,
+    plan_type: Plan.MONTHLY,
   });
 
   if (!subscription) {
-    throw new AppError(StatusCodes.NOT_FOUND, "No active subscription found");
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Active monthly subscription required",
+    );
   }
 
   const user = await User.findById(userId);
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-  let customerId = subscription.stripeCustomerId;
-
-  // 2️⃣ Create Stripe customer if missing or TRIAL
-  if (!customerId || customerId === "TRIAL") {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      name: user.full_name,
-      metadata: { userId },
-    });
-    customerId = customer.id;
-    subscription.stripeCustomerId = customerId;
-    await subscription.save();
+  // 2️⃣ Stripe customer must exist
+  if (
+    !subscription.stripeCustomerId ||
+    subscription.stripeCustomerId === "TRIAL"
+  ) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Stripe customer not found. Please add payment method first",
+    );
   }
+
+  const customerId = subscription.stripeCustomerId;
 
   // 3️⃣ Check default payment method
   const stripeCustomer = await stripe.customers.retrieve(customerId);
@@ -160,116 +171,63 @@ const upgradeSubscription = async (userId: string, newPlan: Plan) => {
   if (!defaultPaymentMethod) {
     return {
       status: "requires_payment_method",
-      message:
-        "No payment method attached. Please attach a card to upgrade subscription.",
+      message: "Please attach a card to upgrade subscription",
       customerId,
     };
   }
 
-  const priceId =
-    newPlan === Plan.MONTHLY ? envVar.PRICE_MONTHLY : envVar.PRICE_YEARLY;
-
-  // 4️⃣ Trial → Paid upgrade
-  if (subscription.plan_type === Plan.TRIAL) {
-    const stripeSub = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: priceId }],
-      payment_behavior: "default_incomplete",
-      expand: ["latest_invoice.payment_intent"],
-      metadata: { userId, plan_type: newPlan },
-      default_payment_method: defaultPaymentMethod,
-    });
-
-    const invoice = stripeSub.latest_invoice as Stripe.Invoice;
-    const paymentIntent = (invoice as any)
-      .payment_intent as Stripe.PaymentIntent;
-
-    subscription.plan_type = newPlan;
-    subscription.stripeSubscriptionId = stripeSub.id;
-    subscription.status = SubscriptionStatus.PENDING;
-    subscription.start_date = new Date();
-    subscription.end_date =
-      newPlan === Plan.MONTHLY
-        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-
-    await subscription.save();
-
-    return {
-      stripeSubscriptionId: stripeSub.id,
-      clientSecret: paymentIntent.client_secret,
-      plan: newPlan,
-      end_date: subscription.end_date,
-      status: subscription.status,
-      message:
-        "Trial upgraded to paid subscription. Complete payment to activate.",
-    };
-  }
-
-  // 5️⃣ Monthly → Yearly upgrade
-  if (subscription.plan_type === Plan.MONTHLY && newPlan === Plan.YEARLY) {
-    // Retrieve current subscription from Stripe
-    const stripeSub = await stripe.subscriptions.retrieve(
-      subscription.stripeSubscriptionId,
-    );
-
-    // Update subscription with new price
-    const updatedSub = await stripe.subscriptions.update(
-      subscription.stripeSubscriptionId,
-      {
-        items: [{ id: stripeSub.items.data[0].id, price: priceId }],
-        proration_behavior: "create_prorations",
-        expand: ["latest_invoice.payment_intent"],
-        metadata: { userId, plan_type: newPlan },
-        default_payment_method: defaultPaymentMethod,
-      },
-    );
-
-    const invoice = updatedSub.latest_invoice as Stripe.Invoice;
-    const paymentIntent = (invoice as any)
-      .payment_intent as Stripe.PaymentIntent;
-
-    // Update DB immediately as PENDING
-    subscription.plan_type = newPlan;
-    subscription.stripeSubscriptionId = updatedSub.id;
-    subscription.start_date = new Date();
-    subscription.end_date = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-    subscription.status =
-      paymentIntent.status === "succeeded"
-        ? SubscriptionStatus.ACTIVE
-        : SubscriptionStatus.PENDING;
-
-    await subscription.save();
-
-    return {
-      stripeSubscriptionId: updatedSub.id,
-      clientSecret: paymentIntent.client_secret,
-      plan: newPlan,
-      end_date: subscription.end_date,
-      status: subscription.status,
-      message:
-        paymentIntent.status === "succeeded"
-          ? "Monthly subscription upgraded to yearly successfully!"
-          : "Payment required to complete yearly upgrade",
-    };
-  }
-
-  // 6️⃣ Already on requested plan
-  if (subscription.plan_type === newPlan) {
-    return {
-      stripeSubscriptionId: subscription.stripeSubscriptionId,
-      plan: subscription.plan_type,
-      end_date: subscription.end_date,
-      status: subscription.status,
-      message: `Already on ${newPlan} plan`,
-    };
-  }
-
-  // 7️⃣ Invalid downgrade
-  throw new AppError(
-    StatusCodes.BAD_REQUEST,
-    "Invalid subscription upgrade request",
+  // 4️⃣ Retrieve Stripe subscription
+  const stripeSub = await stripe.subscriptions.retrieve(
+    subscription.stripeSubscriptionId,
   );
+
+  // 5️⃣ Update Stripe subscription → YEARLY
+  const updatedSub = await stripe.subscriptions.update(
+    subscription.stripeSubscriptionId,
+    {
+      items: [
+        {
+          id: stripeSub.items.data[0].id,
+          price: envVar.PRICE_YEARLY,
+        },
+      ],
+      proration_behavior: "create_prorations",
+      expand: ["latest_invoice.payment_intent"],
+      default_payment_method: defaultPaymentMethod,
+      metadata: {
+        userId,
+        plan_type: Plan.YEARLY,
+      },
+    },
+  );
+
+  const invoice = updatedSub.latest_invoice as Stripe.Invoice;
+  const paymentIntent = (invoice as any)
+    .payment_intent as Stripe.PaymentIntent | null;
+
+  // 6️⃣ Update DB → PENDING until webhook confirms
+  subscription.plan_type = Plan.YEARLY;
+  subscription.status =
+    paymentIntent?.status === "succeeded"
+      ? SubscriptionStatus.ACTIVE
+      : SubscriptionStatus.PENDING;
+
+  subscription.start_date = new Date();
+  subscription.end_date = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
+  await subscription.save();
+
+  return {
+    stripeSubscriptionId: updatedSub.id,
+    clientSecret: paymentIntent?.client_secret,
+    plan: Plan.YEARLY,
+    end_date: subscription.end_date,
+    status: subscription.status,
+    message:
+      paymentIntent?.status === "succeeded"
+        ? "Subscription upgraded to yearly successfully"
+        : "Payment required to complete yearly upgrade",
+  };
 };
 
 // ================= Stripe Webhook Handler =================
