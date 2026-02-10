@@ -92,7 +92,9 @@ const createUser = async (payload: Partial<IUser>) => {
   });
 
   // OTP stays the same
-  OTPService.sendOTP(email).catch((err) => console.error("OTP error:", err));
+  OTPService.sendOTP(email).catch((err) => {
+    console.error("OTP error:", err.message);
+  });
 
   return newUser;
 };
