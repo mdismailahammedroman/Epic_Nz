@@ -8,11 +8,7 @@ import {
   IUser,
   IUserPreferences,
   Role,
-  UserStatus,
 } from "./user.interface";
-import { v4 as uuidv4 } from "uuid";
-
-import Subscription from "../../modules/subscription/Subscription.model";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -21,10 +17,6 @@ import { getPlaceName } from "../../utils/getLocation";
 import { OTPService } from "../otp/otp.service";
 import { CategoryEnum } from "../location/location.interface";
 import { normalizeTokens } from "../../utils/normalizeTokens";
-import {
-  Plan,
-  SubscriptionStatus,
-} from "../subscription/subscription.interface";
 
 const createUser = async (payload: Partial<IUser>) => {
   const {
@@ -50,13 +42,13 @@ const createUser = async (payload: Partial<IUser>) => {
     providerID: email,
   };
 
+  // ✅ HERE is the fix
   const normalizedFcmTokens = normalizeTokens(fcmTokens ?? fcmToken);
 
   const newUser = new User({
     email,
     password: password ? await bcrypt.hash(password, 10) : undefined,
     profile_picture,
-    status: UserStatus.PENDING,
     preferences: preferences ?? {
       language: "en",
       theme: "light",
@@ -66,35 +58,15 @@ const createUser = async (payload: Partial<IUser>) => {
       location_access: false,
     },
     auth_providers: [authProvider],
+
+    // ✅ token saved at registration
     fcmTokens: normalizedFcmTokens,
+
     ...rest,
   });
 
-  // ✅ Save user first
   await newUser.save();
-
-  // ✅ AUTO-CREATE 30-DAY TRIAL
-  const startDate = new Date();
-  const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-  await Subscription.create({
-    userId: newUser._id,
-    plan_type: Plan.TRIAL,
-    stripeSubscriptionId: `TRIAL-${uuidv4()}`, // unique for every trial
-    stripeCustomerId: `TRIAL-${uuidv4()}`, // also unique
-    start_date: startDate,
-    end_date: endDate,
-    status: SubscriptionStatus.ACTIVE,
-    ai_features_access: true,
-    ads_free: false,
-    auto_renew: false,
-    total_spent: 0,
-  });
-
-  // OTP stays the same
-  OTPService.sendOTP(email).catch((err) => {
-    console.error("OTP error:", err.message);
-  });
+  await OTPService.sendOTP(email);
 
   return newUser;
 };
