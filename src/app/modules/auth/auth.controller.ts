@@ -121,6 +121,16 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
   // ✅ Web: redirect to FE success page (cookie already set)
   // You can read /me on frontend.
   res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+
+  //   res.send(`
+  //   <script>
+  //     window.opener.postMessage(
+  //       { type: "OAUTH_SUCCESS" },
+  //       "${envVar.FRONTEND_URL}"
+  //     );
+  //     window.close();
+  //   </script>
+  // `);
 });
 
 // apple login controller
@@ -146,6 +156,16 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
 
   const redirect = sanitizeRedirect(req.query.state);
   res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+
+  //   res.send(`
+  //   <script>
+  //     window.opener.postMessage(
+  //       { type: "OAUTH_SUCCESS" },
+  //       "${envVar.FRONTEND_URL}"
+  //     );
+  //     window.close();
+  //   </script>
+  // `);
 });
 
 const logout = CatchAsync(async (req: Request, res: Response) => {

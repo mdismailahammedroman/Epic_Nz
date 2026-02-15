@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/mdismailahammedroman/Epic_Nz#readme",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/ejs": "^3.1.5",

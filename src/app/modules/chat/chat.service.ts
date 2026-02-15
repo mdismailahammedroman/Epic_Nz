@@ -5,8 +5,9 @@ import { Message } from "./message.model";
 import AppError from "../../errorHelper/AppError";
 import { getIo } from "../socket/socket.store";
 import User from "../user/user.model";
-import { IMessage } from "./chat.interface";
+import { IMessage, MessageStatus } from "./chat.interface";
 import { NotificationService } from "../notification/notification.service";
+import { Types } from "mongoose";
 
 const sendMessageService = async (
   user: JwtPayload,
@@ -14,27 +15,42 @@ const sendMessageService = async (
   payload: Partial<IMessage>,
 ) => {
   const senderId = user.userId;
-  const isReceiverExist = await User.findById(receiverId);
+
+  // ✅ prevent self message -> self notification confusion
+  if (String(senderId) === String(receiverId)) {
+    throw new AppError(400, "receiverId cannot be same as senderId");
+  }
+
+  const isReceiverExist = await User.findById(receiverId).select("_id");
   if (!isReceiverExist) {
     throw new AppError(404, "Receiver not found");
   }
 
+  // ✅ default status if not provided
+  const status = payload.status || MessageStatus.SENT;
+
   const sendMessage = await Message.create({
-    sender: senderId,
-    receiver: receiverId,
+    sender: new Types.ObjectId(senderId),
+    receiver: new Types.ObjectId(receiverId),
     message: {
-      text: payload.message?.text,
-      image: payload.message?.image,
+      text: payload.message?.text || "",
+      image: payload.message?.image || "",
     },
-    status: payload.status,
+    status,
+    replyTo: payload.replyTo,
   });
 
+  // ✅ realtime message event to receiver chat room
   const io = getIo();
-
   io.to(receiverId).emit("message", sendMessage);
+
+  // ✅ IMPORTANT: pass sender user object (so full_name works)
+  const senderUser = await User.findById(senderId).select("_id full_name");
+
+  // ✅ notify receiver only (NotificationService already targets receiver room)
   await NotificationService.notifyChatMessage(
     receiverId,
-    senderId,
+    senderUser,
     sendMessage,
   );
 

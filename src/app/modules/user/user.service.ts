@@ -14,7 +14,7 @@ import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import User from "./user.model";
 import { getPlaceName } from "../../utils/getLocation";
-
+import { OTPService } from "../otp/otp.service";
 import { CategoryEnum } from "../location/location.interface";
 import { normalizeTokens } from "../../utils/normalizeTokens";
 
@@ -67,11 +67,11 @@ const createUser = async (payload: Partial<IUser>) => {
 
   await newUser.save();
 
-  // // ✅ Send OTP/email in background, do NOT block response
-  // OTPService.sendOTP(email).catch((err) => {
-  //   console.error("Failed to send OTP/email:", err);
-  //   // optionally log to monitoring service (Sentry, LogRocket, etc.)
-  // });
+  // ✅ Send OTP/email in background, do NOT block response
+  OTPService.sendOTP(email).catch((err) => {
+    console.error("Failed to send OTP/email:", err);
+    // optionally log to monitoring service (Sentry, LogRocket, etc.)
+  });
 
   // Return user immediately
   return newUser;

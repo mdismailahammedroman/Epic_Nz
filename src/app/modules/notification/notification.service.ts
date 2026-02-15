@@ -241,11 +241,7 @@ const markAsRead = async (userId: string, notificationId: string) => {
 };
 
 const deleteNotification = async (notificationId: string) => {
-  const result = await Notification.deleteOne({
-    notificationId,
-  });
-
-  return result;
+  return Notification.deleteOne({ _id: notificationId });
 };
 
 const markAllRead = async (userId: string) => {

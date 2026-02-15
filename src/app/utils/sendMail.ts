@@ -7,12 +7,12 @@ import AppError from "../errorHelper/AppError";
 
 // Create the transporter
 const transporter = nodemailer.createTransport({
-  secure: true, // Use true for SSL/TLS
   auth: {
     user: envVar.SMTP.SMTP_USER, // Email account username
     pass: envVar.SMTP.SMTP_PASSWORD, // Email account password or App password
   },
-  port: Number(envVar.SMTP.SMTP_PORT), // SMTP port (use 465 for SSL, 587 for TLS)
+  port: Number(envVar.SMTP.SMTP_PORT),
+  secure: Number(envVar.SMTP.SMTP_PORT) === 465, // SMTP port (use 465 for SSL, 587 for TLS)
   host: envVar.SMTP.SMTP_HOST, // SMTP host (e.g., smtp.gmail.com for Gmail)
 });
 

@@ -51,9 +51,8 @@ const markAllRead = CatchAsync(async (req: Request, res: Response) => {
 
 const deleteNotificationController = CatchAsync(
   async (req: Request, res: Response) => {
-    const { notificationId } = req.params;
-
-    await NotificationService.deleteNotification(notificationId as string);
+    const { id } = req.params;
+    await NotificationService.deleteNotification(id as string);
 
     sendResponse(res, {
       success: true,
