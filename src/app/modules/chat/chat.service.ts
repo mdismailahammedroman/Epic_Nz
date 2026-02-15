@@ -16,45 +16,43 @@ const sendMessageService = async (
 ) => {
   const senderId = user.userId;
 
-  // ✅ prevent self message -> self notification confusion
+  // Block sending message to self
   if (String(senderId) === String(receiverId)) {
-    throw new AppError(400, "receiverId cannot be same as senderId");
+    throw new AppError(400, "Cannot send message to yourself");
   }
 
-  const isReceiverExist = await User.findById(receiverId).select("_id");
-  if (!isReceiverExist) {
+  const receiverExists = await User.findById(receiverId).select("_id");
+  if (!receiverExists) {
     throw new AppError(404, "Receiver not found");
   }
 
-  // ✅ default status if not provided
-  const status = payload.status || MessageStatus.SENT;
-
-  const sendMessage = await Message.create({
+  // Create message document
+  const messageDoc = await Message.create({
     sender: new Types.ObjectId(senderId),
     receiver: new Types.ObjectId(receiverId),
     message: {
       text: payload.message?.text || "",
       image: payload.message?.image || "",
     },
-    status,
+    status: payload.status || MessageStatus.SENT,
     replyTo: payload.replyTo,
   });
 
-  // ✅ realtime message event to receiver chat room
   const io = getIo();
-  io.to(receiverId).emit("message", sendMessage);
 
-  // ✅ IMPORTANT: pass sender user object (so full_name works)
+  // Emit only to receiver room
+  io.to(String(receiverId)).emit("message", messageDoc);
+
   const senderUser = await User.findById(senderId).select("_id full_name");
 
-  // ✅ notify receiver only (NotificationService already targets receiver room)
+  // Notify receiver only
   await NotificationService.notifyChatMessage(
     receiverId,
     senderUser,
-    sendMessage,
+    messageDoc,
   );
 
-  return sendMessage;
+  return messageDoc;
 };
 
 const getConversationsService = async (user: JwtPayload) => {

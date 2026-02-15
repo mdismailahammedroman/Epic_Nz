@@ -173,18 +173,26 @@ const notifyChatMessage = async (
   sender: any,
   messageDoc: any,
 ) => {
+  const senderId = String(sender?._id ?? sender);
+
+  // Prevent self-notification
+  if (String(receiverId) === senderId) {
+    return { inAppCount: 0, successCount: 0, failureCount: 0 };
+  }
+
   const receiverObjectId = new Types.ObjectId(receiverId);
 
-  const title = "New Message";
+  const title = "New message received";
   const body = `${sender?.full_name || "Someone"} sent you a message`;
 
   const data: INotificationData = {
-    senderId: String(sender?._id),
+    senderId,
     receiverId,
     chatId: String(messageDoc?._id),
-    deepLink: `/chat/${sender?._id}`,
+    deepLink: `/chat/${senderId}`,
   };
 
+  // Save in-app notification
   const saved = await createInApp(
     [receiverObjectId],
     NotificationType.CHAT_MESSAGE,
@@ -193,9 +201,13 @@ const notifyChatMessage = async (
     data,
   );
 
+  // Push notification
   const pushed = await pushToUserIds([receiverObjectId], title, body, data);
 
-  emitNotification([receiverObjectId], {
+  // Emit via socket to receiver notification room
+
+  const io = getIo();
+  io.to(`notification_${receiverId}`).emit("notification", {
     type: NotificationType.CHAT_MESSAGE,
     title,
     body,
@@ -213,12 +225,14 @@ const getMyNotifications = async (
   const limit = Math.min(Math.max(Number(query.limit || 20), 1), 100);
   const skip = (page - 1) * limit;
 
+  const userObjectId = new Types.ObjectId(userId); // ✅ convert to ObjectId
+
   const [data, total] = await Promise.all([
-    Notification.find({ user: userId })
+    Notification.find({ user: userObjectId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    Notification.countDocuments({ user: userId }),
+    Notification.countDocuments({ user: userObjectId }),
   ]);
 
   return {
@@ -226,7 +240,7 @@ const getMyNotifications = async (
       page,
       limit,
       total,
-      totalPage: Math.ceil(total / limit), // ✅ FIXED KEY
+      totalPage: Math.ceil(total / limit),
     },
     data,
   };
