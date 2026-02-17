@@ -206,8 +206,6 @@ const getProfileService = async (userId: string) => {
 const getAllUserService = async (query: Record<string, string>) => {
   const queryBuilder = new QueryBuilder(User.find(), query);
 
-  console.log("Built Query:", queryBuilder.queryModel.getQuery());
-
   const users = await queryBuilder
     .filter()
     .textSearch()

@@ -44,7 +44,7 @@ router.post(
 );
 
 // Logout
-router.post("/logout", authController.logout);
+router.post("/logout", checkAuth(), authController.logout);
 
 // Refresh Access Token
 router.post("/refresh", createNewAccessTokenWithRefreshToken);

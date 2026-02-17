@@ -26,13 +26,22 @@ passport.use(
         if (user.isDeleted)
           return done(null, false, { message: "User is deleted" });
 
-        const isOAuthUser =
-          user.auth_providers && user.auth_providers.length > 0;
-        if (isOAuthUser) {
+        const isGoogleUser = user.auth_providers.some(b => b.provider === AuthProviderType.GOOGLE);
+        const isAppleUser = user.auth_providers.some(b => b.provider === AuthProviderType.APPLE);
+
+
+        if (isGoogleUser) {
           // ✅ critical security fix
           return done(null, false, {
             message:
               "This account uses Google login. Please continue with Google.",
+          });
+        }
+        if (isAppleUser) {
+          // ✅ critical security fix
+          return done(null, false, {
+            message:
+              "This account uses Apple login. Please continue with Apple.",
           });
         }
 
