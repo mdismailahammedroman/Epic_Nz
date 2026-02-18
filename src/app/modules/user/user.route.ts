@@ -16,10 +16,14 @@ router.post(
 router.get("/get_me", checkAuth(...Object.keys(Role)), userController.getMe);
 router.get(
   "/profile/:userId",
-  checkAuth(Role.ADMIN),
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
   userController.getProfile,
 );
-router.get("/", checkAuth(Role.ADMIN), userController.getAllUser);
+router.get(
+  "/",
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+  userController.getAllUser,
+);
 router.patch(
   "/update-user",
   // multerUpload.single("coverPicture"),
@@ -28,7 +32,7 @@ router.patch(
     { name: "coverPicture", maxCount: 1 },
     { name: "profile_picture", maxCount: 1 },
   ]),
-  checkAuth(Role.USER, Role.ADMIN),
+  checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
   userController.userUpdate,
 );
 router.delete(

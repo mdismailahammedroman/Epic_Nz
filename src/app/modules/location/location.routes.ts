@@ -82,26 +82,26 @@ router.post(
 // Approve location (ADMIN only)
 router.patch(
   "/approve/:locationId",
-  checkAuth(Role.ADMIN),
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
   locationController.approveLocation,
 );
 
 router.patch(
   "/reject/:locationId",
-  checkAuth(Role.ADMIN),
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
   locationController.rejectLocation,
 );
 
 router.get("/pins", locationController.getLocationPins);
 router.get(
   "/",
-  checkAuth(Role.ADMIN),
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
   locationController.getLocationsByStatusWise,
 );
 
 router.delete(
   "/delete/:locationId",
-  checkAuth(Role.USER, Role.ADMIN),
+  checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
   locationController.deleteLocation,
 );
 

@@ -8,6 +8,7 @@ import { envVar } from "./app/config/envVar";
 import { connectRedis } from "./app/config/redisConfig";
 import { setIo } from "./app/modules/socket/socket.store";
 import { initSockets } from "./app/modules/socket/socket";
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ const startServer = async () => {
 (async () => {
   await startServer();
   await connectRedis();
+  await seedSuperAdmin();
 })();
 
 // ---------------- Graceful Shutdown ----------------

@@ -26,8 +26,8 @@ export const updateUserZodSchema = z.object({
 });
 export const passwordZodSchema = z.object({
   newPassword: z
-    .string({ error: "Password shuld be string type!" })
-    .min(6, "Password length shuld be at least 6!")
+    .string({ error: "Password should be string type!" })
+    .min(6, "Password length should be at least 6!")
     .regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/, {
       message:
         "Password must be at least 1 uppercase character, 1 special character, 1 number!",
