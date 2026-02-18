@@ -18,16 +18,20 @@ export const seedSuperAdmin = async () => {
       return;
     }
 
+    const superAdminPassword = envVar.SUPER_ADMIN_PASSWORD;
+    if (!superAdminPassword) {
+      throw new Error("SUPER_ADMIN_PASSWORD environment variable is not set");
+    }
+
     const hashedPassword = await bcrypt.hash(
-      envVar.SUPER_ADMIN_PASSWROD,
+      superAdminPassword,
       Number(envVar.BCRYPT_SALT_ROUND) || 10,
     );
-
     const admin = await User.create({
       email: "dev.epic.nz@gmail.com",
       full_name: "Super Admin",
       password: hashedPassword,
-      role: Role.SUPER_ADMIN,
+      role: Role.ADMIN,
       status: UserStatus.ACTIVE,
       is_verified: true,
       auth_providers: [
@@ -49,5 +53,6 @@ export const seedSuperAdmin = async () => {
     console.log("Email:", admin.email);
   } catch (error) {
     console.error("❌ Admin seeding failed:", error);
+    throw error;
   }
 };
