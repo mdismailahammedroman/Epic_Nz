@@ -72,4 +72,6 @@ router.post(
   authController.setPassword,
 );
 
+
+
 export const AuthRouter = router;

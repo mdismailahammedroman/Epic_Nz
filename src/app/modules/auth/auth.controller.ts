@@ -16,6 +16,7 @@ import { envVar } from "../../config/envVar";
 import { JwtPayload } from "jsonwebtoken";
 import { logActivity } from "../../utils/logActivity.utils";
 import { redisClient } from "../../config/redisConfig";
+import os from "os";
 
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
@@ -120,9 +121,10 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
 
   // ✅ Web: redirect to FE success page (cookie already set)
   // You can read /me on frontend.
-  res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+  res.redirect(
+    `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`,
+  );
 });
-
 
 // apple login controller
 
