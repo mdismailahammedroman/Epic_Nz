@@ -16,10 +16,14 @@ import { envVar } from "../../config/envVar";
 import { JwtPayload } from "jsonwebtoken";
 import { logActivity } from "../../utils/logActivity.utils";
 import { redisClient } from "../../config/redisConfig";
-import os from "os";
 
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
+
+  // ✅ allow only your app scheme
+  if (input.startsWith("epicnz://callback")) return input;
+
+  // ✅ allow only relative paths for web
   if (!input.startsWith("/")) return "/";
   if (input.startsWith("//")) return "/";
   return input;
@@ -82,7 +86,7 @@ const credentialLogin = CatchAsync(
   },
 );
 
-// ✅ Google start
+// ----------------- Google Login Start -----------------
 const googleStart = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const redirect = sanitizeRedirect(req.query.redirect);
@@ -96,7 +100,7 @@ const googleStart = CatchAsync(
   },
 );
 
-// ✅ Google callback - user already attached by passport.authenticate in route
+// ----------------- Google Callback -----------------
 const googleCallback = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
   if (!user?._id)
@@ -115,15 +119,26 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
     userAgent: req.headers["user-agent"] as string,
   });
 
-  // Get redirect from state
-  const decoded = decodeState(req.query.state as string);
-  const redirect = sanitizeRedirect(decoded?.redirect);
+  // handle state safely (Google returns state in query)
+  const rawState = req.query.state;
+  const stateString =
+    typeof rawState === "string"
+      ? rawState
+      : Array.isArray(rawState) && typeof rawState[0] === "string"
+        ? rawState[0]
+        : undefined;
 
-  // ✅ Web: redirect to FE success page (cookie already set)
-  // You can read /me on frontend.
-  res.redirect(
-    `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`,
-  );
+  const decoded = decodeState(stateString);
+
+  let redirect = decoded?.redirect;
+
+  if (!redirect || !redirect.startsWith("epicnz://")) {
+    redirect = "epicnz://callback";
+  }
+
+  const redirectUri = `${redirect}?token=${userTokens.accessToken}&userId=${user._id}`;
+
+  res.redirect(redirectUri);
 });
 
 // apple login controller
@@ -131,10 +146,11 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
 const appleStart = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const redirect = sanitizeRedirect(req.query.redirect);
+    const state = encodeState({ redirect });
     passport.authenticate("apple", {
       session: false,
       scope: ["name", "email"],
-      state: redirect, // comes back as req.query.state
+      state, // comes back in req.body (form_post) or req.query
     })(req, res, next);
   },
 );
@@ -147,18 +163,26 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
   const tokens = await createUserTokens(user);
   setAuthCookie(res, tokens);
 
-  const redirect = sanitizeRedirect(req.query.state);
-  res.redirect(`${envVar.FRONTEND_URL}${redirect}`);
+  // Apple uses response_mode=form_post - state comes in req.body, not req.query
+  const rawState = req.body?.state ?? req.query?.state;
+  const stateString =
+    typeof rawState === "string"
+      ? rawState
+      : Array.isArray(rawState) && typeof rawState[0] === "string"
+        ? rawState[0]
+        : undefined;
 
-  //   res.send(`
-  //   <script>
-  //     window.opener.postMessage(
-  //       { type: "OAUTH_SUCCESS" },
-  //       "${envVar.FRONTEND_URL}"
-  //     );
-  //     window.close();
-  //   </script>
-  // `);
+  const decoded = decodeState(stateString);
+
+  let redirect = decoded?.redirect;
+
+  if (!redirect || !redirect.startsWith("epicnz://")) {
+    redirect = "epicnz://callback";
+  }
+
+  const redirectUri = `${redirect}?token=${tokens.accessToken}&userId=${user._id}`;
+
+  res.redirect(redirectUri);
 });
 
 const logout = CatchAsync(async (req: Request, res: Response) => {

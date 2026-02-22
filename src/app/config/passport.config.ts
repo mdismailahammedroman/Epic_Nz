@@ -26,9 +26,12 @@ passport.use(
         if (user.isDeleted)
           return done(null, false, { message: "User is deleted" });
 
-        const isGoogleUser = user.auth_providers.some(b => b.provider === AuthProviderType.GOOGLE);
-        const isAppleUser = user.auth_providers.some(b => b.provider === AuthProviderType.APPLE);
-
+        const isGoogleUser = user.auth_providers.some(
+          (b) => b.provider === AuthProviderType.GOOGLE,
+        );
+        const isAppleUser = user.auth_providers.some(
+          (b) => b.provider === AuthProviderType.APPLE,
+        );
 
         if (isGoogleUser) {
           // ✅ critical security fix
