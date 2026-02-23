@@ -17,6 +17,7 @@ import { getPlaceName } from "../../utils/getLocation";
 import { OTPService } from "../otp/otp.service";
 import { CategoryEnum } from "../location/location.interface";
 import { normalizeTokens } from "../../utils/normalizeTokens";
+import { subscriptionService } from "../subscription/subscription.service";
 
 const createUser = async (payload: Partial<IUser>) => {
   const {
@@ -66,7 +67,9 @@ const createUser = async (payload: Partial<IUser>) => {
   });
 
   await newUser.save();
-
+  subscriptionService
+    .createTrialSubscription(newUser._id.toString())
+    .catch(console.error);
   // ✅ Send OTP/email in background, do NOT block response
   OTPService.sendOTP(email).catch((err) => {
     console.error("Failed to send OTP/email:", err);

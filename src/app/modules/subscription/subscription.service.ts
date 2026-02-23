@@ -93,32 +93,36 @@ const createPaymentIntent = async (userId: string, plan: Plan) => {
 
 // createTrialSubscription
 
-const createTrialSubscription = async (userId: string) => {
+const createTrialSubscription =async (userId: string) => {
+  // if already ACTIVE subscription exists, don't create again
   const existing = await Subscription.findOne({
     userId,
     status: SubscriptionStatus.ACTIVE,
   });
 
-  if (existing) {
-    throw new AppError(400, "Already have an active subscription");
-  }
+  if (existing) return existing;
 
   const startDate = new Date();
   const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  const trial = await Subscription.create({
-    userId,
-    plan_type: Plan.TRIAL,
-    stripeSubscriptionId: "TRIAL",
-    stripeCustomerId: "TRIAL",
-    start_date: startDate,
-    end_date: endDate,
-    status: SubscriptionStatus.ACTIVE,
-    ai_features_access: true,
-    ads_free: false,
-    auto_renew: false,
-    total_spent: 0,
-  });
+  // ✅ upsert by userId (1 user = 1 subscription doc)
+  const trial = await Subscription.findOneAndUpdate(
+    { userId },
+    {
+      userId,
+      plan_type: Plan.TRIAL,
+      stripeSubscriptionId: `TRIAL_${userId}`,  // ✅ unique safe
+      stripeCustomerId: `TRIAL_${userId}`,
+      start_date: startDate,
+      end_date: endDate,
+      status: SubscriptionStatus.ACTIVE,
+      ai_features_access: true,
+      ads_free: false,
+      auto_renew: false,
+      total_spent: 0,
+    },
+    { upsert: true, new: true }
+  );
 
   return trial;
 };

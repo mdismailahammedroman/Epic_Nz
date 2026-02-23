@@ -68,6 +68,9 @@ interface EnvVar {
   FIREBASE_SERVICE_ACCOUNT_PATH: string;
   SUPER_ADMIN_EMAIL: string;
   SUPER_ADMIN_PASSWORD: string;
+  FIREBASE_PROJECT_ID: string;
+  FIREBASE_CLIENT_EMAIL: string;
+  FIREBASE_PRIVATE_KEY: string;
 }
 
 const loadEnvVariables = (): EnvVar => {
@@ -116,6 +119,9 @@ const loadEnvVariables = (): EnvVar => {
     "APPLE_CALLBACK_URL",
     "SUPER_ADMIN_EMAIL",
     "SUPER_ADMIN_PASSWORD",
+    "FIREBASE_PROJECT_ID",
+    "FIREBASE_CLIENT_EMAIL",
+    "FIREBASE_PRIVATE_KEY",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -181,6 +187,9 @@ const loadEnvVariables = (): EnvVar => {
     MAP_BOX_ACCESS_TOKEN: process.env.MAP_BOX_ACCESS_TOKEN as string,
     FIREBASE_SERVICE_ACCOUNT_PATH: process.env
       .FIREBASE_SERVICE_ACCOUNT_PATH as string,
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID as string,
+    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL as string,
+    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY as string,
     SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL as string,
     SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD as string,
   };
