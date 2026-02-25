@@ -19,6 +19,8 @@ const storage = new CloudinaryStorage({
       folder: "uploads",
       public_id: uniqueFileName,
       resource_type: "image",
+      type: "upload",          // ✅ CRITICAL FIX
+      access_mode: "public",   // ✅ CRITICAL FIX
       format: "webp",
       transformation: [{ quality: "auto" }],
     };

@@ -25,5 +25,6 @@ router.get(
   checkAuth(...Object.values(Role)),
   ChatController.getMessages,
 );
+router.get("/admin-messages", checkAuth(), ChatController.getAdmin);
 
 export const chatRoutes = router;

@@ -16,6 +16,8 @@ import { envVar } from "../../config/envVar";
 import { JwtPayload } from "jsonwebtoken";
 import { logActivity } from "../../utils/logActivity.utils";
 import { redisClient } from "../../config/redisConfig";
+import { normalizeTokens } from "../../utils/normalizeTokens";
+import { userServices } from "../user/user.service";
 
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
@@ -58,6 +60,16 @@ const credentialLogin = CatchAsync(
               info?.message || "Login failed",
             ),
           );
+
+        const { fcmToken, fcmTokens } = req.body ?? req.query;
+        const tokensToAdd = normalizeTokens(fcmTokens ?? fcmToken);
+        if (tokensToAdd.length > 0) {
+          await userServices.fcmTokenUpdate(
+            user._id.toString(),
+            undefined,
+            tokensToAdd,
+          );
+        }
 
         const userTokens = await createUserTokens(user);
         setAuthCookie(res, userTokens);
@@ -105,6 +117,16 @@ const googleCallback = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
   if (!user?._id)
     throw new AppError(StatusCodes.FORBIDDEN, "Google login failed");
+
+  const { fcmToken, fcmTokens } = req.query; // app can send via query
+  const tokensToAdd = normalizeTokens(fcmTokens ?? fcmToken);
+  if (tokensToAdd.length > 0) {
+    await userServices.fcmTokenUpdate(
+      user._id.toString(),
+      undefined,
+      tokensToAdd,
+    );
+  }
 
   const userTokens = await createUserTokens(user);
   setAuthCookie(res, userTokens);
@@ -159,6 +181,16 @@ const appleCallback = CatchAsync(async (req: Request, res: Response) => {
   const user = req.user as any;
   if (!user?._id)
     throw new AppError(StatusCodes.FORBIDDEN, "Apple login failed");
+
+  const { fcmToken, fcmTokens } = req.query; // app can send via query
+  const tokensToAdd = normalizeTokens(fcmTokens ?? fcmToken);
+  if (tokensToAdd.length > 0) {
+    await userServices.fcmTokenUpdate(
+      user._id.toString(),
+      undefined,
+      tokensToAdd,
+    );
+  }
 
   const tokens = await createUserTokens(user);
   setAuthCookie(res, tokens);

@@ -32,7 +32,10 @@ export const uploadBufferToCloudinary = async (
         {
           folder,
           resource_type: "image",
-          transformation: [{ fetch_format: "auto", quality: "auto" }],
+          type: "upload",          // ✅ VERY IMPORTANT
+          access_mode: "public",   // ✅ ENSURE PUBLIC
+          format: "webp",
+          transformation: [{ quality: "auto" }],
         },
         (error, result) => {
           if (error)

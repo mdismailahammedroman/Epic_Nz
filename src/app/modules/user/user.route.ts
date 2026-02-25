@@ -54,16 +54,8 @@ router.patch(
   userController.updateUserPreferences,
 );
 
-router.get(
-  "/fcm-token",
-  checkAuth(...Object.values(Role)),
-  userController.getMyFcmToken,
-);
+router.get("/fcm-token", checkAuth(), userController.getMyFcmToken);
 
-router.patch(
-  "/fcm-token",
-  checkAuth(...Object.values(Role)),
-  userController.updateFcmToken,
-);
+router.patch("/fcm-token", checkAuth(), userController.updateFcmToken);
 
 export const userRouter = router;

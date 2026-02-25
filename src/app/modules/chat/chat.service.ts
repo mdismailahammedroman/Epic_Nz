@@ -21,9 +21,25 @@ const sendMessageService = async (
     throw new AppError(400, "Cannot send message to yourself");
   }
 
-  const receiverExists = await User.findById(receiverId).select("_id");
-  if (!receiverExists) {
-    throw new AppError(404, "Receiver not found");
+  // Load sender + receiver roles
+  const [senderUser, receiverUser] = await Promise.all([
+    User.findById(senderId).select("_id full_name role"),
+    User.findById(receiverId).select("_id full_name role"),
+  ]);
+
+  if (!senderUser) throw new AppError(401, "Invalid sender");
+  if (!receiverUser) throw new AppError(404, "Receiver not found");
+
+  const senderRole = String((senderUser as any).role || "USER");
+  const receiverRole = String((receiverUser as any).role || "USER");
+
+  /**
+   * ✅ Core rule:
+   * - USER can message only ADMIN
+   * - ADMIN can message anyone
+   */
+  if (senderRole !== "ADMIN" && receiverRole !== "ADMIN") {
+    throw new AppError(403, "Users can only message admin");
   }
 
   // Create message document
@@ -43,9 +59,7 @@ const sendMessageService = async (
   // Emit only to receiver room
   io.to(String(receiverId)).emit("message", messageDoc);
 
-  const senderUser = await User.findById(senderId).select("_id full_name");
-
-  // Notify receiver only
+  // Notify receiver
   await NotificationService.notifyChatMessage(
     receiverId,
     senderUser,
@@ -54,6 +68,9 @@ const sendMessageService = async (
 
   return messageDoc;
 };
+
+
+
 
 const getConversationsService = async (user: JwtPayload) => {
   const userId = user.userId;
