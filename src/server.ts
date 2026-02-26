@@ -64,10 +64,17 @@ process.on("unhandledRejection", (err) => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-function shutdown(exitCode = 0) {
+function shutdown(exitCodeOrSignal: number | string = 0) {
   console.log("🧩 Shutting down...");
+
   server.close(() => {
     console.log("✅ Server closed");
-    process.exit(exitCode);
+
+    // Convert string signals to code 0
+    if (typeof exitCodeOrSignal === "string") {
+      process.exit(0);
+    } else {
+      process.exit(exitCodeOrSignal);
+    }
   });
 }
