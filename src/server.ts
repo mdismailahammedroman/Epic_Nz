@@ -51,6 +51,9 @@ const startServer = async () => {
 })();
 
 // ---------------- Graceful Shutdown ----------------
+process.on("SIGINT", () => shutdown(0));
+process.on("SIGTERM", () => shutdown(0));
+
 process.on("uncaughtException", (err) => {
   console.error("💥 Uncaught Exception!", err);
   shutdown(1);
@@ -61,20 +64,13 @@ process.on("unhandledRejection", (err) => {
   shutdown(1);
 });
 
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
-
-function shutdown(exitCodeOrSignal: number | string = 0) {
+function shutdown(exitCode: number) {
   console.log("🧩 Shutting down...");
 
   server.close(() => {
     console.log("✅ Server closed");
-
-    // Convert string signals to code 0
-    if (typeof exitCodeOrSignal === "string") {
-      process.exit(0);
-    } else {
-      process.exit(exitCodeOrSignal);
-    }
+    process.exit(exitCode); // MUST be number
   });
 }
+
+  
