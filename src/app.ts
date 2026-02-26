@@ -33,7 +33,7 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://elflike-snoopy-ernie.ngrok-free.dev",
+  "http://142.248.180.28:5000",
 ];
 
 app.use(
