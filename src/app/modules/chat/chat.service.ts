@@ -69,9 +69,6 @@ const sendMessageService = async (
   return messageDoc;
 };
 
-
-
-
 const getConversationsService = async (user: JwtPayload) => {
   const userId = user.userId;
 
