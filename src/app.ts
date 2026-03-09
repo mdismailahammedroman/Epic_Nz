@@ -31,8 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
+  "https://epic-nz-dashboard.vercel.app",
   "http://142.248.180.28:5000",
 ];
 

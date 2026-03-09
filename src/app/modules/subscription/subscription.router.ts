@@ -33,11 +33,7 @@ router.post(
   subscriptionController.createPaymentIntent,
 );
 
-router.patch(
-  "/upgrade",
-  checkAuth(Role.USER),
-  subscriptionController.upgradeSubscription,
-);
+
 
 // Create 30-day trial
 router.post(

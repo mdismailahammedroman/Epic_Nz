@@ -73,24 +73,6 @@ const stripeWebhook = async (req: Request, res: Response) => {
   res.json({ received: true });
 };
 
-const upgradeSubscription = CatchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as JwtPayload).userId;
-  const { plan } = req.body;
-
-  if (!plan) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "New plan required");
-  }
-
-  // Use the correct service function name
-  const result = await subscriptionService.upgradeSubscription(userId, plan);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Subscription upgraded successfully",
-    data: result,
-  });
-});
 
 const getMySubscriptions = CatchAsync(async (req: Request, res: Response) => {
   const subs = await subscriptionService.getMySubscriptions(
@@ -214,5 +196,5 @@ export const subscriptionController = {
   restoreSubscription,
   getAllSubscriptions,
   createPaymentIntent,
-  upgradeSubscription,
+
 };
