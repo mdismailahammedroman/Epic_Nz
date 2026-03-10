@@ -17,20 +17,20 @@ export const createUserTokens = async (user: IUser) => {
   const accessToken = generateToken(
     jwtPayload,
     envVar.JWT_SECRET,
-    envVar.JWT_EXPIRATION,
+    envVar.JWT_EXPIRATION
   );
+
   const refreshToken = generateToken(
     jwtPayload,
     envVar.JWT_REFRESH_SECRET,
-    envVar.JWT_REFRESH_EXPIRATION,
+    envVar.JWT_REFRESH_EXPIRATION
   );
 
-  // ✅ STORE refresh token in Redis
-  await redisClient.set(
-    `refresh:${user._id}`,
-    refreshToken,
-    { EX: 60 * 60 * 24 * 14 }, // 14 days
-  );
+  const REFRESH_EXPIRE = 60 * 60 * 24 * 7;
+
+  await redisClient.set(`refresh:${user._id}`, refreshToken, {
+    EX: REFRESH_EXPIRE,
+  });
 
   return {
     accessToken,
@@ -60,7 +60,7 @@ export const createNewAccessTokenWithRefreshToken = async (
     );
   }
 
-  const isUserExist = await User.findOne({ email: verifiedRefreshToken.email });
+  const isUserExist = await User.findById(verifiedRefreshToken.userId);
 
   if (!isUserExist) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");

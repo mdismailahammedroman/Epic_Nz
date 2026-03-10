@@ -274,11 +274,17 @@ const refreshToken = CatchAsync(async (req: Request, res: Response) => {
 // Change Password (protected)
 const changePassword = CatchAsync(async (req: Request, res: Response) => {
   const { oldPassword, newPassword } = req.body;
-  const userId = req.user as string;
-  await authService.changePassword(userId, oldPassword, newPassword);
 
-  logActivity({
-    actorId: userId,
+  const payload = req.user as JwtPayload | undefined;
+
+  if (!payload?.userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "User not authenticated");
+  }
+
+  await authService.changePassword(payload.userId, oldPassword, newPassword);
+
+  await logActivity({
+    actorId: payload.userId,
     actorRole: "USER",
     action: "PASSWORD_CHANGED",
     entityType: "Auth",
@@ -294,13 +300,12 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
     data: null,
   });
 });
-
 // Forget Password (send OTP/email)
 const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
   await authService.forgetPassword(email);
   logActivity({
-    actorId: "000000000000000000000000", // system/guest placeholder (better: allow actorId optional)
+    actorId: "SYSTEM", // system/guest placeholder (better: allow actorId optional)
     actorRole: "GUEST",
     action: "PASSWORD_RESET_REQUESTED",
     entityType: "Auth",
@@ -323,8 +328,8 @@ const resetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   await authService.resetUserPassword(email, newPassword);
   logActivity({
-    actorId: (req.user as JwtPayload).userId,
-    actorRole: (req.user as JwtPayload).role,
+    actorId: "SYSTEM",
+    actorRole: "GUEST",
     action: "PASSWORD_RESET_COMPLETED",
     entityType: "Auth",
     message: "Password reset",
@@ -351,7 +356,6 @@ const setPassword = CatchAsync(
       );
     }
 
-    // Check if the passwords match
     if (newPassword !== confirmPassword) {
       throw new AppError(400, "Password and confirm password do not match");
     }
@@ -359,9 +363,11 @@ const setPassword = CatchAsync(
     // Call the service to set the password
     await authService.setPassword(email, newPassword);
 
-    logActivity({
-      actorId: (req.user as JwtPayload).userId,
-      actorRole: (req.user as JwtPayload).role,
+    const payload = req.user as JwtPayload | undefined;
+
+    await logActivity({
+      actorId: payload?.userId ?? "SYSTEM", // fallback to SYSTEM if not logged in
+      actorRole: payload?.role ?? "GUEST",
       action: "PASSWORD_SET",
       entityType: "Auth",
       message: "Password set",

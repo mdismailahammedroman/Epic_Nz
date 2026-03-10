@@ -5,7 +5,7 @@ import { Server as SocketIoServer } from "socket.io";
 import "./app/utils/jobs/index";
 import app from "./app";
 import { envVar } from "./app/config/envVar";
-import { connectRedis } from "./app/config/redisConfig";
+import { connectRedis, redisClient } from "./app/config/redisConfig";
 import { setIo } from "./app/modules/socket/socket.store";
 import { initSockets } from "./app/modules/socket/socket";
 import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
@@ -20,7 +20,7 @@ const server = http.createServer(app);
 
 const io = new SocketIoServer(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: envVar.FRONTEND_URL,
     credentials: true,
   },
 });
@@ -45,8 +45,8 @@ const startServer = async () => {
 };
 
 (async () => {
-  await startServer();
   await connectRedis();
+  await startServer();
   await seedSuperAdmin();
 })();
 
@@ -66,7 +66,7 @@ process.on("unhandledRejection", (err) => {
 
 function shutdown(exitCode: number) {
   console.log("🧩 Shutting down...");
-
+   redisClient.quit();
   server.close(() => {
     console.log("✅ Server closed");
     process.exit(exitCode); // MUST be number

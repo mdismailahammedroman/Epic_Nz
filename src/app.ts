@@ -18,14 +18,14 @@ dotenv.config();
 
 const app: Application = express();
 
-/* 🔐 STRIPE WEBHOOK (MUST BE FIRST) */
+// 1️⃣ Stripe webhook FIRST
 app.post(
   "/api/v1/subscription/webhook",
   express.raw({ type: "application/json" }),
-  subscriptionController.stripeWebhook,
+  subscriptionController.stripeWebhook
 );
 
-/* 🌐 STANDARD MIDDLEWARE */
+// 2️⃣ Normal middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -61,18 +61,18 @@ app.use(
   }),
 );
 
+// 6️⃣ Passport
 app.use(passport.initialize());
 app.use(passport.session());
-/* 🚦 RATE LIMIT (EXCLUDE WEBHOOK) */
+
 const limiter = rateLimit({
   windowMs: Number(envVar.REQUEST_RATE_LIMIT_TIME) * 1000,
   max: Number(envVar.REQUEST_RATE_LIMIT),
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-app.use((req, res, next) => {
-  if (req.originalUrl === "/api/v1/subscription/webhook") return next();
-  limiter(req, res, next);
-});
+app.use(limiter);
 
 /* 🧭 ROUTES */
 app.get("/", (_req, res) => res.send("API Working..."));
