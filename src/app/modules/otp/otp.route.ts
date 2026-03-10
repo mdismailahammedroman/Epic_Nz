@@ -10,5 +10,6 @@ router.post(
   "/forgot-password-verify-otp",
   otpController.verifyForgotOtpHandler
 );
+router.post("/resend-otp", otpController.resendOtpHandler);
 
 export const otpRouter = router;

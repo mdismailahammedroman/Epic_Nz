@@ -107,8 +107,8 @@ router.delete(
 
 router.patch(
   "/update/:locationId",
-  validateRequest(LocationValidation.updateLocationValidationSchema),
   checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
+  validateRequest(LocationValidation.updateLocationValidationSchema),
   locationController.updateLocation,
 );
 

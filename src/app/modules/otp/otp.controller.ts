@@ -52,9 +52,22 @@ const verifyForgotOtpHandler = CatchAsync(
   }
 );
 
+const resendOtpHandler = CatchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  await OTPService.sendOTP(email);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "OTP resent successfully!",
+  });
+});
+
 export const otpController = {
   sendVerificationOtpHandler,
   verifyOtpHandler,
   sendForgotOtpHandler,
+  resendOtpHandler,
   verifyForgotOtpHandler,
 };

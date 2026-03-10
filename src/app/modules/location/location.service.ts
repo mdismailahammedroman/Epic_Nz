@@ -466,12 +466,12 @@ const updateLocation = async (
     throw new AppError(StatusCodes.FORBIDDEN, "You cannot update this location");
   }
 
-  if (payload.latitude && payload.longitude) {
-    location.coordinates = {
-      type: "Point",
-      coordinates: [Number(payload.longitude), Number(payload.latitude)],
-    };
-  }
+if (payload.latitude !== undefined && payload.longitude !== undefined) {
+  location.coordinates = {
+    type: "Point",
+    coordinates: [Number(payload.longitude), Number(payload.latitude)],
+  };
+}
 
   if (payload.name) location.name = payload.name;
   if (payload.description) location.description = payload.description;
