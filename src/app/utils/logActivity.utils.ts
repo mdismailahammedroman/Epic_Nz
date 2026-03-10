@@ -17,6 +17,7 @@ export const logActivity = async (p: {
   after?: any;
 }) => {
   try {
+    if (!p.actorId) return;
     let actorObjectId: Types.ObjectId | undefined;
 
     if (p.actorId && Types.ObjectId.isValid(p.actorId)) {
