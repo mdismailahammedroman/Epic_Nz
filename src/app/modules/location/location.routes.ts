@@ -109,7 +109,7 @@ locationController.deleteLocation
 // update location
 router.patch(
 "/update/:locationId",
-checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
+checkAuth( Role.ADMIN, Role.SUPER_ADMIN),
 validateRequest(LocationValidation.updateLocationValidationSchema),
 locationController.updateLocation
 );
