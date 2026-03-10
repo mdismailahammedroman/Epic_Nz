@@ -100,7 +100,10 @@ const locationSchema = new Schema(
   },
 );
 
-locationSchema.index({ coordinates: "2dsphere" });
+locationSchema.index({ coordinates: "2dsphere" })
+locationSchema.index({ category: 1 })
+locationSchema.index({ status: 1 })
+locationSchema.index({ createdAt: -1 })
 
 const Location = model<ILocation>("Location", locationSchema);
 

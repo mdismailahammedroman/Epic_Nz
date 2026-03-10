@@ -53,7 +53,7 @@ export interface ILocation {
   watererType: IWaterTheaterType;
   animalClearance: IAnimalClearance;
   networkQuality: INetworkQuality;
-  imageUrl: string;
+imageUrl: string[];
   ratings?: {
     userId: Types.ObjectId;
     rating: number;

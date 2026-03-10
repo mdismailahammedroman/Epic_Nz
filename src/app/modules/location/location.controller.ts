@@ -364,6 +364,37 @@ const deleteLocation = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateLocation = CatchAsync(async (req: Request, res: Response) => {
+
+  const { locationId } = req.params;
+  const user = req.user as JwtPayload;
+
+  const updatedLocation = await locationServices.updateLocation(
+    locationId as string,
+    user.userId,
+    user.role,
+    req.body
+  );
+
+    logActivity({
+    actorId: user.userId,
+    actorRole: user.role,
+    action: "LOCATION_UPDATED",
+    entityType: "Location",
+    entityId: locationId as string,
+    message: "Location Updated",
+    ip: req.ip,
+    userAgent: req.headers["user-agent"] as string,
+  }).catch(console.error);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Location updated successfully",
+    data: updatedLocation,
+  });
+});
+
 export const locationController = {
   submitLocation,
   getAllActivities,
@@ -382,4 +413,5 @@ export const locationController = {
   rejectLocation,
   getLocationsByStatusWise,
   deleteLocation,
+  updateLocation,
 };

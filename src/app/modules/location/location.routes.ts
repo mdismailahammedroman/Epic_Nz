@@ -105,4 +105,11 @@ router.delete(
   locationController.deleteLocation,
 );
 
+router.patch(
+  "/update/:locationId",
+  validateRequest(LocationValidation.updateLocationValidationSchema),
+  checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
+  locationController.updateLocation,
+);
+
 export const locationRouter = router;

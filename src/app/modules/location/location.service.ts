@@ -17,6 +17,7 @@ import { StatusCodes } from "http-status-codes";
 import { sendPushNotification } from "../../utils/notificationUtils";
 
 import { Role } from "../user/user.interface";
+import { envVar } from "../../config/envVar";
 
 const submitLocation = async (
   userId: string,
@@ -24,7 +25,7 @@ const submitLocation = async (
   latitude: number,
   longitude: number,
   imageUrl: string[],
-  categoryName: string,
+ categoryName: CategoryEnum,
   description: string,
   watererType: IWaterTheaterType,
   animalClearance: IAnimalClearance,
@@ -53,7 +54,7 @@ const submitLocation = async (
         animalClearance,
         networkQuality,
         coordinates: { type: "Point", coordinates: [lon, lat] },
-        category: categoryName || CategoryEnum,
+            category: categoryName,
         status: LocationStatus.PENDING,
       });
 
@@ -171,7 +172,7 @@ const saveLocationForUser = async (userId: string, locationId: string) => {
     throw new AppError(404, "User not found");
   }
   user.savedLocations = user.savedLocations || [];
-  if (user.savedLocations.includes(locationId)) {
+  if (user.savedLocations.some(id => id.toString() === locationId)) {
     throw new AppError(400, "Location already saved for user");
   }
   user.savedLocations.push(locationId);
@@ -194,7 +195,7 @@ const unsaveLocationForUser = async (userId: string, locationId: string) => {
   user.savedLocations = user.savedLocations || [];
 
   // Check if location exists in savedLocations
-  if (!user.savedLocations.includes(locationId)) {
+  if (!user.savedLocations.some(id => id.toString() === locationId)) {
     throw new AppError(400, "Location is not saved for user");
   }
 
@@ -231,7 +232,7 @@ const shareLocation = async (locationId: string, userId: string) => {
 
   const shareLinkId = uuidv4();
 
-  const deepLink = `http://localhost:5000/api/v1/location/${locationId}`;
+const deepLink = `${envVar.FRONTEND_URL}/location/${locationId}`;
 
   await Location.updateOne(
     { _id: locationId },
@@ -372,7 +373,7 @@ const getLocationPinsService = async () => {
   // Map locations to pins format (coordinates and placeName)
   const locationPins = locations.map((location) => ({
     coordinates: location.coordinates,
-    placeName: Location.name,
+    placeName: location.name,
   }));
 
   return locationPins;
@@ -402,29 +403,87 @@ const getLocationsByStatus = async (
 const deleteLocation = async (
   locationId: string,
   userId: string,
-  role: string,
+  role: string
 ) => {
+
   if (!Types.ObjectId.isValid(locationId)) {
-    throw new AppError(400, "Invalid location ID format");
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid location ID");
   }
 
   const location = await Location.findById(locationId);
+
   if (!location) {
-    throw new AppError(404, "Location not found");
+    throw new AppError(StatusCodes.NOT_FOUND, "Location not found");
   }
 
-  const isAdmin = role === Role.ADMIN;
-  const isOwner = String(location.userId) === String(userId);
+  const isAdmin = role === Role.ADMIN || role === Role.SUPER_ADMIN;
+  const isOwner = location.userId.toString() === userId;
 
   if (!isAdmin && !isOwner) {
-    throw new AppError(403, "You can only delete your own location");
+    throw new AppError(StatusCodes.FORBIDDEN, "You cannot delete this location");
   }
 
-  await Location.findByIdAndDelete(locationId);
+  location.isDeleted = true;
+  location.deletedAt = new Date();
+  location.deletedBy = new Types.ObjectId(userId);
 
-  return null;
+  await location.save();
+
+  return location;
 };
 
+
+const updateLocation = async (
+  locationId: string,
+  userId: string,
+  role: string,
+  payload: Partial<{
+    name: string;
+    description: string;
+    category: CategoryEnum;
+    latitude: number;
+    longitude: number;
+    watererType: IWaterTheaterType;
+    animalClearance: IAnimalClearance;
+    networkQuality: INetworkQuality;
+  }>
+) => {
+
+  if (!Types.ObjectId.isValid(locationId)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid location ID");
+  }
+
+  const location = await Location.findById(locationId);
+
+  if (!location) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Location not found");
+  }
+
+  const isAdmin = role === Role.ADMIN || role === Role.SUPER_ADMIN;
+  const isOwner = location.userId.toString() === userId;
+
+  if (!isAdmin && !isOwner) {
+    throw new AppError(StatusCodes.FORBIDDEN, "You cannot update this location");
+  }
+
+  if (payload.latitude && payload.longitude) {
+    location.coordinates = {
+      type: "Point",
+      coordinates: [Number(payload.longitude), Number(payload.latitude)],
+    };
+  }
+
+  if (payload.name) location.name = payload.name;
+  if (payload.description) location.description = payload.description;
+  if (payload.category) location.category = payload.category;
+  if (payload.watererType) location.watererType = payload.watererType;
+  if (payload.animalClearance) location.animalClearance = payload.animalClearance;
+  if (payload.networkQuality) location.networkQuality = payload.networkQuality;
+
+  await location.save();
+
+  return location;
+};
 export const locationServices = {
   submitLocation,
   getAllActivities,
@@ -443,4 +502,5 @@ export const locationServices = {
   getLocationPinsService,
   getLocationsByStatus,
   deleteLocation,
+  updateLocation,
 };
