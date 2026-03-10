@@ -19,6 +19,10 @@ import { redisClient } from "../../config/redisConfig";
 import { normalizeTokens } from "../../utils/normalizeTokens";
 import { userServices } from "../user/user.service";
 
+
+const SYSTEM_ACTOR_ID = "000000000000000000000000";
+
+
 function sanitizeRedirect(input: unknown) {
   if (typeof input !== "string") return "/";
 
@@ -305,6 +309,7 @@ const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
   await authService.forgetPassword(email);
 await logActivity({
+   actorId: SYSTEM_ACTOR_ID,
   actorRole: "GUEST",
   action: "PASSWORD_RESET_REQUESTED",
   entityType: "Auth",
@@ -327,6 +332,7 @@ const resetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   await authService.resetUserPassword(email, newPassword);
   logActivity({
+     actorId: SYSTEM_ACTOR_ID,
     actorRole: "GUEST",
     action: "PASSWORD_RESET_COMPLETED",
     entityType: "Auth",
@@ -364,7 +370,7 @@ const setPassword = CatchAsync(
     const payload = req.user as JwtPayload | undefined;
 
     await logActivity({
-      actorId: payload?.userId ?? "SYSTEM", // fallback to SYSTEM if not logged in
+  actorId: payload?.userId ?? SYSTEM_ACTOR_ID, // fallback to SYSTEM if not logged in
       actorRole: payload?.role ?? "GUEST",
       action: "PASSWORD_SET",
       entityType: "Auth",

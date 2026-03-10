@@ -14,7 +14,7 @@ const sendVerificationOtpHandler = CatchAsync(
       statusCode: StatusCodes.OK,
       message: "Verification OTP sent successfully!",
     });
-  }
+  },
 );
 
 const verifyOtpHandler = CatchAsync(async (req: Request, res: Response) => {
@@ -49,13 +49,13 @@ const verifyForgotOtpHandler = CatchAsync(
       statusCode: StatusCodes.OK,
       message: "Forgot password OTP verified successfully!",
     });
-  }
+  },
 );
 
 const resendOtpHandler = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
 
-  await OTPService.sendOTP(email);
+  await OTPService.sendForgotPasswordOTP(email);
 
   sendResponse(res, {
     success: true,
