@@ -304,16 +304,15 @@ const changePassword = CatchAsync(async (req: Request, res: Response) => {
 const forgetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
   await authService.forgetPassword(email);
-  logActivity({
-    actorId: "SYSTEM", // system/guest placeholder (better: allow actorId optional)
-    actorRole: "GUEST",
-    action: "PASSWORD_RESET_REQUESTED",
-    entityType: "Auth",
-    message: "Forget password requested",
-    ip: req.ip,
-    userAgent: req.headers["user-agent"] as string,
-    meta: { email },
-  }).catch(console.error);
+await logActivity({
+  actorRole: "GUEST",
+  action: "PASSWORD_RESET_REQUESTED",
+  entityType: "Auth",
+  message: "Forget password requested",
+  ip: req.ip,
+  userAgent: req.headers["user-agent"] as string,
+  meta: { email },
+});
 
   sendResponse(res, {
     success: true,
@@ -328,7 +327,6 @@ const resetPassword = CatchAsync(async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   await authService.resetUserPassword(email, newPassword);
   logActivity({
-    actorId: "SYSTEM",
     actorRole: "GUEST",
     action: "PASSWORD_RESET_COMPLETED",
     entityType: "Auth",

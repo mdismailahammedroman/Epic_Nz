@@ -8,108 +8,124 @@ import { LocationValidation } from "./location.validation";
 
 const router = Router();
 
+// submit location
 router.post(
-  "/submit",
-  checkAuth(...Object.values(Role)),
-  multerUpload.array("image", 5),
-  validateRequest(LocationValidation.createLocationValidationSchema),
-  locationController.submitLocation,
+"/submit",
+checkAuth(...Object.values(Role)),
+multerUpload.array("image", 5),
+validateRequest(LocationValidation.createLocationValidationSchema),
+locationController.submitLocation
 );
+
+// get all activities
 router.get(
-  "/all",
-  checkAuth(...Object.values(Role)),
-  locationController.getAllActivities,
+"/all",
+checkAuth(...Object.values(Role)),
+locationController.getAllActivities
+);
+
+// my submissions
+router.get(
+"/my-submissions",
+checkAuth(Role.USER),
+locationController.getUserSubmissions
+);
+
+// category routes
+router.get(
+"/hikes",
+checkAuth(...Object.values(Role)),
+locationController.getHikes
 );
 
 router.get(
-  "/my-submissions",
-  checkAuth(Role.USER), // Ensure the user is authenticated
-  locationController.getUserSubmissions, // Call the controller method
+"/campgrounds",
+checkAuth(...Object.values(Role)),
+locationController.getCampgrounds
 );
 
 router.get(
-  "/hikes",
-  checkAuth(...Object.values(Role)),
-  locationController.getHikes,
+"/freedom-camping-locations",
+checkAuth(...Object.values(Role)),
+locationController.getFreedomCampingLocations
 );
+
 router.get(
-  "/campgrounds",
-  checkAuth(...Object.values(Role)),
-  locationController.getCampgrounds,
-);
-router.get(
-  "/freedom-camping-locations",
-  checkAuth(...Object.values(Role)),
-  locationController.getFreedomCampingLocations,
-);
-router.get(
-  "/epic-photo-spots",
-  checkAuth(...Object.values(Role)),
-  locationController.getEpicPhotoSpots,
-);
-router.get(
-  "/:locationId",
-  checkAuth(...Object.values(Role)),
-  locationController.locationDetailsById,
+"/epic-photo-spots",
+checkAuth(...Object.values(Role)),
+locationController.getEpicPhotoSpots
 );
 
-// save-location
-router.post(
-  "/:locationId/save",
-  checkAuth(Role.USER),
-  locationController.saveLocationForUser,
-);
-router.post(
-  "/:locationId/unsave",
-  checkAuth(Role.USER),
-  locationController.unsaveLocationForUser,
-);
-
-// POST /locations/{id}/share – Share a location with others via deep link.
-router.post(
-  "/:locationId/share",
-  checkAuth(Role.USER),
-  locationController.shareLocation,
-);
-
-// POST /locations/{id}/rating – location adventure rating .
-router.post(
-  "/:locationId/rating",
-  checkAuth(Role.USER),
-  locationController.locationRating,
-);
-
-// Approve location (ADMIN only)
-router.patch(
-  "/approve/:locationId",
-  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
-  locationController.approveLocation,
-);
-
-router.patch(
-  "/reject/:locationId",
-  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
-  locationController.rejectLocation,
-);
-
+// location pins (map)
 router.get("/pins", locationController.getLocationPins);
-router.get(
-  "/",
-  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
-  locationController.getLocationsByStatusWise,
+
+// save / unsave
+router.post(
+"/:locationId/save",
+checkAuth(Role.USER),
+locationController.saveLocationForUser
 );
 
-router.delete(
-  "/delete/:locationId",
-  checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
-  locationController.deleteLocation,
+router.post(
+"/:locationId/unsave",
+checkAuth(Role.USER),
+locationController.unsaveLocationForUser
+);
+
+// share location
+router.post(
+"/:locationId/share",
+checkAuth(Role.USER),
+locationController.shareLocation
+);
+
+// rating
+router.post(
+"/:locationId/rating",
+checkAuth(Role.USER),
+locationController.locationRating
+);
+
+// approve / reject (admin)
+router.patch(
+"/approve/:locationId",
+checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+locationController.approveLocation
 );
 
 router.patch(
-  "/update/:locationId",
-  checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
-  validateRequest(LocationValidation.updateLocationValidationSchema),
-  locationController.updateLocation,
+"/reject/:locationId",
+checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+locationController.rejectLocation
+);
+
+// delete location
+router.delete(
+"/delete/:locationId",
+checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
+locationController.deleteLocation
+);
+
+// update location
+router.patch(
+"/update/:locationId",
+checkAuth(Role.USER, Role.ADMIN, Role.SUPER_ADMIN),
+validateRequest(LocationValidation.updateLocationValidationSchema),
+locationController.updateLocation
+);
+
+// admin status wise list
+router.get(
+"/",
+checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+locationController.getLocationsByStatusWise
+);
+
+// ⚠️ dynamic route always LAST
+router.get(
+"/:locationId",
+checkAuth(...Object.values(Role)),
+locationController.locationDetailsById
 );
 
 export const locationRouter = router;

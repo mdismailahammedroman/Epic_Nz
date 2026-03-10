@@ -3,10 +3,10 @@ import { Types } from "mongoose";
 import { ActivityLog } from "../modules/activityLog/activityLog.model";
 
 export const logActivity = async (p: {
-  actorId: string;
-  actorRole: string;
-  action: string;
-  entityType: string;
+  actorId?: string;
+  actorRole?: string;
+  action?: string;
+  entityType?: string;
   entityId?: string;
   message?: string;
   status?: "SUCCESS" | "FAILED";
@@ -17,9 +17,10 @@ export const logActivity = async (p: {
   after?: any;
 }) => {
   return ActivityLog.create({
-    actorId: Types.ObjectId.isValid(p.actorId)
-      ? new Types.ObjectId(p.actorId)
-      : undefined,
+    actorId:
+      p.actorId && Types.ObjectId.isValid(p.actorId)
+        ? new Types.ObjectId(p.actorId)
+        : undefined,
 
     actorRole: p.actorRole,
     action: p.action,
