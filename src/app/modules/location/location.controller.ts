@@ -111,6 +111,7 @@ const getHikes = CatchAsync(async (req: Request, res: Response) => {
     data: hikesData.data,
   });
 });
+
 const getFreedomCampingLocations = CatchAsync(
   async (req: Request, res: Response) => {
     const query = req.query as Record<string, string>;
@@ -126,6 +127,7 @@ const getFreedomCampingLocations = CatchAsync(
     });
   },
 );
+
 const getCampgrounds = CatchAsync(async (req: Request, res: Response) => {
   const query = req.query as Record<string, string>;
   const Campgrounds = await locationServices.getCampgrounds(query);
@@ -138,6 +140,7 @@ const getCampgrounds = CatchAsync(async (req: Request, res: Response) => {
     meta: Campgrounds.meta,
   });
 });
+
 const getEpicPhotoSpots = CatchAsync(async (req: Request, res: Response) => {
   const query = req.query as Record<string, string>;
   const EpicPhotoSpotsData = await locationServices.getEpicPhotoSpots(query);
@@ -150,6 +153,7 @@ const getEpicPhotoSpots = CatchAsync(async (req: Request, res: Response) => {
     meta: EpicPhotoSpotsData.meta,
   });
 });
+
 const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
   const { locationId } = req.params;
   const locationDetails = await locationServices.locationDetailsById(
@@ -162,6 +166,7 @@ const locationDetailsById = CatchAsync(async (req: Request, res: Response) => {
     data: locationDetails,
   });
 });
+
 const saveLocationForUser = CatchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user as JwtPayload;
   const { locationId } = req.params;

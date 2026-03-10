@@ -484,6 +484,8 @@ const updateLocation = async (
 
   return location;
 };
+
+
 export const locationServices = {
   submitLocation,
   getAllActivities,
