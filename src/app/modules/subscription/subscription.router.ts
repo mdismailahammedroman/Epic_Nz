@@ -30,7 +30,7 @@ router.get(
 router.post(
   "/intent",
   checkAuth(Role.USER),
-  subscriptionController.createPaymentIntent,
+  subscriptionController.createSubscription,
 );
 
 
@@ -39,7 +39,7 @@ router.post(
 router.post(
   "/create-trial",
   checkAuth(Role.USER),
-  subscriptionController.createTrialSubscriptionController,
+  subscriptionController.createTrial,
 );
 
 export const SubscriptionRoute = router;

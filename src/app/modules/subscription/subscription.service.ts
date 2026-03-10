@@ -1,26 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { stripe } from "../../helper/stripe";
-import { envVar } from "../../config/envVar";
 
-import AppError from "../../errorHelper/AppError";
-import Stripe from "stripe";
+import { stripe } from "../../helper/stripe";
+import User from "../user/user.model";
 import Subscription from "./Subscription.model";
 import { Plan, SubscriptionStatus } from "./subscription.interface";
+import AppError from "../../errorHelper/AppError";
 import { StatusCodes } from "http-status-codes";
-import User from "../user/user.model";
+import { envVar } from "../../config/envVar";
+import Stripe from "stripe";
 
-/* ------------------------------------------------------- */
-/* CREATE PAYMENT INTENT (TRIAL → MONTHLY / YEARLY) */
-/* ------------------------------------------------------- */
 
-const createPaymentIntent = async (userId: string, plan: Plan) => {
+
+const createSubscriptionPayment = async (userId: string, plan: Plan) => {
 
   const user = await User.findById(userId);
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
   let customerId = user.stripeCustomerId;
 
-  // Create Stripe Customer if not exists
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email,
@@ -40,75 +37,57 @@ const createPaymentIntent = async (userId: string, plan: Plan) => {
       ? envVar.PRICE_MONTHLY
       : envVar.PRICE_YEARLY;
 
-  // Create Stripe Subscription
   const stripeSubscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
     payment_behavior: "default_incomplete",
-    expand: ["latest_invoice.payment_intent"],
-    metadata: {
-      userId,
-      plan_type: plan,
+    payment_settings: {
+      save_default_payment_method: "on_subscription",
     },
+    expand: ["latest_invoice.payment_intent"],
   });
 
-  let invoice = stripeSubscription.latest_invoice as Stripe.Invoice;
+  // FIX TYPE
+  const subscription = stripeSubscription as Stripe.Subscription;
 
-  let paymentIntent = (invoice as any)
-    .payment_intent as Stripe.PaymentIntent | null;
+  const invoice = subscription.latest_invoice as unknown as Stripe.Invoice;
 
-  // fallback retrieve invoice
-  if (!paymentIntent) {
-
-    const retrievedInvoice = await stripe.invoices.retrieve(invoice.id, {
-      expand: ["payment_intent"],
-    });
-
-    invoice = retrievedInvoice;
-
-    paymentIntent = (invoice as any)
-      .payment_intent as Stripe.PaymentIntent | null;
-  }
+  const paymentIntent =
+    (invoice as any).payment_intent as Stripe.PaymentIntent;
 
   if (!paymentIntent) {
-    throw new AppError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      "Payment initialization failed"
-    );
+    throw new AppError(500, "Payment initialization failed");
   }
 
-  const startDate = new Date();
+  // SAFE DATE
+  const startDate = new Date(
+    (subscription as any).current_period_start * 1000
+  );
 
-  const endDate =
-    plan === Plan.MONTHLY
-      ? new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000)
-      : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const endDate = new Date(
+    (subscription as any).current_period_end * 1000
+  );
 
-  // update or create subscription
   await Subscription.findOneAndUpdate(
     { userId },
     {
-      stripeSubscriptionId: stripeSubscription.id,
+      userId,
+      stripeSubscriptionId: subscription.id,
       stripeCustomerId: customerId,
       plan_type: plan,
-      status: SubscriptionStatus.PENDING,
-      ai_features_access: false,
       start_date: startDate,
       end_date: endDate,
+      status: SubscriptionStatus.PENDING,
+      auto_renew: true,
     },
     { upsert: true, new: true }
   );
 
   return {
-    subscriptionId: stripeSubscription.id,
     clientSecret: paymentIntent.client_secret,
-    customerId,
+    subscriptionId: subscription.id,
   };
 };
-
-/* ------------------------------------------------------- */
-/* CREATE TRIAL SUBSCRIPTION */
-/* ------------------------------------------------------- */
 
 const createTrialSubscription = async (userId: string) => {
 
@@ -120,95 +99,89 @@ const createTrialSubscription = async (userId: string) => {
   if (existing) return existing;
 
   const startDate = new Date();
-
   const endDate = new Date(
     startDate.getTime() + 30 * 24 * 60 * 60 * 1000
   );
 
-  const trial = await Subscription.findOneAndUpdate(
-    { userId },
-    {
-      userId,
-      plan_type: Plan.TRIAL,
-      stripeSubscriptionId: `TRIAL_${userId}`,
-      stripeCustomerId: `TRIAL_${userId}`,
-      start_date: startDate,
-      end_date: endDate,
-      status: SubscriptionStatus.ACTIVE,
-      ai_features_access: true,
-      ads_free: false,
-      auto_renew: false,
-      total_spent: 0,
-    },
-    { upsert: true, new: true }
-  );
+  const trial = await Subscription.create({
+    userId,
+    plan_type: Plan.TRIAL,
+    stripeSubscriptionId: `TRIAL_${userId}`,
+    stripeCustomerId: `TRIAL_${userId}`,
+    start_date: startDate,
+    end_date: endDate,
+    status: SubscriptionStatus.ACTIVE,
+    ai_features_access: true,
+    ads_free: false,
+    auto_renew: false,
+  });
 
   return trial;
 };
 
-/* ------------------------------------------------------- */
-/* STRIPE WEBHOOK */
-/* ------------------------------------------------------- */
-
 const stripeWebhookHandler = async (event: Stripe.Event) => {
 
-  if (event.type === "invoice.payment_succeeded") {
+  switch (event.type) {
 
-    const invoice = event.data.object as Stripe.Invoice;
+    case "invoice.payment_succeeded": {
 
-    const subscriptionId = (invoice as any).subscription as string;
+      const invoice = event.data.object as any;
 
-    if (!subscriptionId) return;
+      const subscriptionId = invoice.subscription;
 
-    const subscription = await Subscription.findOne({
-      stripeSubscriptionId: subscriptionId,
-    });
+      if (!subscriptionId) return;
 
-    if (!subscription) return;
+      const subscription = await Subscription.findOne({
+        stripeSubscriptionId: subscriptionId,
+      });
 
-    subscription.status = SubscriptionStatus.ACTIVE;
+      if (!subscription) return;
 
-    subscription.ai_features_access = true;
+      subscription.status = SubscriptionStatus.ACTIVE;
+      subscription.ai_features_access = true;
+      subscription.ads_free = true;
 
-    subscription.ads_free = true;
+      subscription.total_spent += invoice.amount_paid / 100;
 
-    subscription.total_spent += invoice.amount_paid / 100;
+      await subscription.save();
 
-    await subscription.save();
-  }
+      break;
+    }
 
-  if (event.type === "invoice.payment_failed") {
+    case "invoice.payment_failed": {
 
-    const invoice = event.data.object as Stripe.Invoice;
+      const invoice = event.data.object as any;
 
-    const subscriptionId = (invoice as any).subscription as string;
+      const subscriptionId = invoice.subscription;
 
-    if (!subscriptionId) return;
+      if (!subscriptionId) return;
 
-    const subscription = await Subscription.findOne({
-      stripeSubscriptionId: subscriptionId,
-    });
+      const subscription = await Subscription.findOne({
+        stripeSubscriptionId: subscriptionId,
+      });
 
-    if (!subscription) return;
+      if (!subscription) return;
 
-    subscription.status = SubscriptionStatus.PENDING;
+      subscription.status = SubscriptionStatus.SUSPENDED;
 
-    await subscription.save();
+      await subscription.save();
+
+      break;
+    }
+
+    case "customer.subscription.deleted": {
+
+      const sub = event.data.object as Stripe.Subscription;
+
+      await Subscription.findOneAndUpdate(
+        { stripeSubscriptionId: sub.id },
+        { status: SubscriptionStatus.CANCELLED }
+      );
+
+      break;
+    }
   }
 };
-
-/* ------------------------------------------------------- */
-/* GET MY SUBSCRIPTIONS */
-/* ------------------------------------------------------- */
-
-const getMySubscriptions = async (userId: string) => {
-
-  return Subscription.find({ userId }).sort({ createdAt: -1 });
-};
-
-/* ------------------------------------------------------- */
-/* TURN OFF AUTO RENEW */
-/* ------------------------------------------------------- */
 
 const turnOffAutoRenew = async (userId: string) => {
 
@@ -218,38 +191,24 @@ const turnOffAutoRenew = async (userId: string) => {
   });
 
   if (!subscription)
-    throw new AppError(
-      StatusCodes.NOT_FOUND,
-      "Active subscription not found"
-    );
+    throw new AppError(404, "Active subscription not found");
 
-  // TRIAL subscription
-  if (
-    subscription.plan_type === Plan.TRIAL ||
-    subscription.stripeSubscriptionId.startsWith("TRIAL")
-  ) {
-
+  if (subscription.plan_type === Plan.TRIAL) {
     subscription.auto_renew = false;
-
     await subscription.save();
 
     return {
-      message: "Trial subscription auto-renew disabled",
+      message: "Trial auto renew disabled",
       end_date: subscription.end_date,
     };
   }
 
-  // Paid subscription
-
   await stripe.subscriptions.update(
     subscription.stripeSubscriptionId,
-    {
-      cancel_at_period_end: true,
-    }
+    { cancel_at_period_end: true }
   );
 
   subscription.auto_renew = false;
-
   await subscription.save();
 
   return {
@@ -257,10 +216,6 @@ const turnOffAutoRenew = async (userId: string) => {
     end_date: subscription.end_date,
   };
 };
-
-/* ------------------------------------------------------- */
-/* RESTORE SUBSCRIPTION */
-/* ------------------------------------------------------- */
 
 const restoreSubscription = async (userId: string) => {
 
@@ -270,57 +225,35 @@ const restoreSubscription = async (userId: string) => {
   });
 
   if (!subscription)
-    throw new AppError(
-      StatusCodes.NOT_FOUND,
-      "No cancelled subscription found"
-    );
-
-  if (new Date(subscription.end_date) < new Date()) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "Subscription expired"
-    );
-  }
+    throw new AppError(404, "Cancelled subscription not found");
 
   await stripe.subscriptions.update(
     subscription.stripeSubscriptionId,
-    {
-      cancel_at_period_end: false,
-    }
+    { cancel_at_period_end: false }
   );
 
   subscription.status = SubscriptionStatus.ACTIVE;
+  subscription.auto_renew = true;
 
   await subscription.save();
 
-  return {
-    message: "Subscription restored successfully",
-    subscription,
-  };
+  return subscription;
 };
 
-/* ------------------------------------------------------- */
-/* ADMIN: GET ALL SUBSCRIPTIONS */
-/* ------------------------------------------------------- */
+const getMySubscriptions = async (userId: string) => {
+  return Subscription.find({ userId }).sort({ createdAt: -1 });
+};
 
 const getAllSubscriptions = async () => {
-
   return Subscription.find().sort({ createdAt: -1 });
 };
 
 export const subscriptionService = {
-
+  createSubscriptionPayment,
   createTrialSubscription,
-
-  createPaymentIntent,
-
   stripeWebhookHandler,
-
-  getMySubscriptions,
-
   turnOffAutoRenew,
-
-  getAllSubscriptions,
-
   restoreSubscription,
+  getMySubscriptions,
+  getAllSubscriptions,
 };

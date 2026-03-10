@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
 import { CatchAsync } from "../../utils/catchAsync";
 import { subscriptionService } from "./subscription.service";
@@ -6,72 +5,56 @@ import { sendResponse } from "../../utils/SendResponse";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelper/AppError";
 import { JwtPayload } from "jsonwebtoken";
-import Stripe from "stripe";
 import { envVar } from "../../config/envVar";
 import { stripe } from "../../helper/stripe";
 import { logActivity } from "../../utils/logActivity.utils";
 
-const createPaymentIntent = CatchAsync(async (req: Request, res: Response) => {
-  const { plan } = req.body;
+const createSubscription = CatchAsync(async (req: Request, res: Response) => {
+
   const userId = (req.user as JwtPayload).userId;
+  const { plan } = req.body;
 
-  if (!plan) throw new AppError(StatusCodes.BAD_REQUEST, "Plan is required");
-
-  const session = await subscriptionService.createPaymentIntent(userId, plan);
-
-  logActivity({
-    actorId: userId,
-    actorRole: (req.user as JwtPayload).role,
-    action: "CHECKOUT_SESSION_CREATED",
-    entityType: "Subscription",
-    message: "Checkout session created",
-    ip: req.ip,
-    userAgent: req.headers["user-agent"] as string,
-    meta: { plan },
-  }).catch(console.error);
+  const result = await subscriptionService.createSubscriptionPayment(
+    userId,
+    plan
+  );
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "Checkout session created",
-    data: session,
+    message: "Subscription initialized",
+    data: result,
   });
 });
 
-const createTrialSubscriptionController = CatchAsync(
-  async (req: Request, res: Response) => {
-    const userId = (req.user as JwtPayload).userId;
+const createTrial = CatchAsync(async (req: Request, res: Response) => {
 
-    const trialSub = await subscriptionService.createTrialSubscription(userId);
+  const userId = (req.user as JwtPayload).userId;
 
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Trial subscription created successfully",
-      data: trialSub,
-    });
-  },
-);
+  const trial = await subscriptionService.createTrialSubscription(userId);
 
-const stripeWebhook = async (req: Request, res: Response) => {
-  const signature = req.headers["stripe-signature"] as string;
-  if (!signature) return res.status(400).send("Missing signature");
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Trial activated",
+    data: trial,
+  });
+});
 
-  let event: Stripe.Event;
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      signature,
-      envVar.STRIPE_WEBHOOK_SECRET,
-    );
-  } catch (err: any) {
-    return res.status(400).send(err.message);
-  }
+const stripeWebhook =CatchAsync(async (req: Request, res: Response) => {
+    const signature = req.headers["stripe-signature"] as string;
+
+  const event = stripe.webhooks.constructEvent(
+    req.body,
+    signature,
+    envVar.STRIPE_WEBHOOK_SECRET
+  );
 
   await subscriptionService.stripeWebhookHandler(event);
+
   res.json({ received: true });
-};
+});
 
 
 const getMySubscriptions = CatchAsync(async (req: Request, res: Response) => {
@@ -170,8 +153,8 @@ const restoreSubscription = CatchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: result.message,
-    data: result.subscription,
+    message: result.status === "ACTIVE" ? "Subscription restored" : "Subscription updated",
+    data: result,
   });
 });
 
@@ -187,7 +170,7 @@ const getAllSubscriptions = CatchAsync(async (req: Request, res: Response) => {
 });
 
 export const subscriptionController = {
-  createTrialSubscriptionController,
+  createSubscription,
   stripeWebhook,
   getMySubscriptions,
   turnOffAutoRenew,
@@ -195,6 +178,6 @@ export const subscriptionController = {
   cancelSubscription,
   restoreSubscription,
   getAllSubscriptions,
-  createPaymentIntent,
+  createTrial,
 
 };
