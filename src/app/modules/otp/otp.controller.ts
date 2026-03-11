@@ -5,23 +5,22 @@ import { OTPService } from "./otp.service";
 import { sendResponse } from "../../utils/SendResponse";
 
 // Send OTP route
-const sendVerificationOtpHandler = CatchAsync(
-  async (req: Request, res: Response) => {
-    const { email } = req.body;
+const sendVerificationOtpHandler = CatchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body;
 
-    // response instantly
-    sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: "OTP request received. Check your email soon.",
-    });
+  // Response instantly
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "OTP request received. Check your email soon.",
+  });
 
-    // OTP send in background, catch errors
-    OTPService.sendOTP(email).catch((err) => {
-      console.error("Failed to send OTP/email:", err);
-    });
-  },
-);
+  // OTP send in background
+  OTPService.sendOTP(email).catch(err => {
+    console.error("[OTPService] Failed to send OTP/email:", err);
+  });
+});
+
 
 const verifyOtpHandler = CatchAsync(async (req: Request, res: Response) => {
   const { email, otp } = req.body;

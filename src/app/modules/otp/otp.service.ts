@@ -8,7 +8,7 @@ import { UserStatus } from "../user/user.interface";
 const OTP_EXPIRATION = 2 * 60; // 2 minutes
 
 // Send verification OTP
-export const sendOTP = async (email: string) => {
+const sendOTP = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(404, "User not found");
   if (user.is_verified) throw new AppError(400, "User already verified");
@@ -17,16 +17,21 @@ export const sendOTP = async (email: string) => {
   const redisKey = `otp:${email}`;
 
   await redisClient.set(redisKey, otp, { EX: OTP_EXPIRATION });
+  console.log(`[OTP DEBUG] OTP for ${email}: ${otp}`);
 
-  await sendEmail({
+  // Fire-and-forget: don't block Node
+  sendEmail({
     to: email,
     subject: "Verify Your Email",
     templateName: "otp",
     templateData: { name: user.full_name || "User", otp },
+  }).catch(err => {
+    console.error("[sendOTP] Email failed:", err);
   });
 
   return true;
 };
+
 
 // Verify verification OTP
 const verifyOTP = async (email: string, otp: string) => {
