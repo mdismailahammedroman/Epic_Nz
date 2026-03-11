@@ -17,21 +17,16 @@ const sendOTP = async (email: string) => {
   const redisKey = `otp:${email}`;
 
   await redisClient.set(redisKey, otp, { EX: OTP_EXPIRATION });
-  console.log(`[OTP DEBUG] OTP for ${email}: ${otp}`);
 
-  // Fire-and-forget: don't block Node
-  sendEmail({
+  await sendEmail({
     to: email,
     subject: "Verify Your Email",
     templateName: "otp",
     templateData: { name: user.full_name || "User", otp },
-  }).catch(err => {
-    console.error("[sendOTP] Email failed:", err);
   });
 
   return true;
 };
-
 
 // Verify verification OTP
 const verifyOTP = async (email: string, otp: string) => {
@@ -46,7 +41,6 @@ const verifyOTP = async (email: string, otp: string) => {
     { email },
     { $set: { is_verified: true, status: UserStatus.ACTIVE } },
   );
-
   await redisClient.del(redisKey);
   return true;
 };

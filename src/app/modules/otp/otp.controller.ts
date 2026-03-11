@@ -4,23 +4,18 @@ import { StatusCodes } from "http-status-codes";
 import { OTPService } from "./otp.service";
 import { sendResponse } from "../../utils/SendResponse";
 
-// Send OTP route
-const sendVerificationOtpHandler = CatchAsync(async (req: Request, res: Response) => {
-  const { email } = req.body;
+const sendVerificationOtpHandler = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
+    await OTPService.sendOTP(email);
 
-  // Response instantly
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: "OTP request received. Check your email soon.",
-  });
-
-  // OTP send in background
-  OTPService.sendOTP(email).catch(err => {
-    console.error("[OTPService] Failed to send OTP/email:", err);
-  });
-});
-
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Verification OTP sent successfully!",
+    });
+  },
+);
 
 const verifyOtpHandler = CatchAsync(async (req: Request, res: Response) => {
   const { email, otp } = req.body;
@@ -56,25 +51,16 @@ const verifyForgotOtpHandler = CatchAsync(
     });
   },
 );
-// Resend forgot password OTP
+
 const resendOtpHandler = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
-  if (!email) {
-    return sendResponse(res, {
-      success: false,
-      statusCode: StatusCodes.BAD_REQUEST,
-      message: "Email is required",
-    });
-  }
+
+  await OTPService.sendForgotPasswordOTP(email);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "OTP resend request received.",
-  });
-
-  OTPService.sendForgotPasswordOTP(email).catch((err) => {
-    console.error("[OTPService] Failed to resend OTP:", err);
+    message: "OTP resent successfully!",
   });
 });
 
@@ -82,6 +68,6 @@ export const otpController = {
   sendVerificationOtpHandler,
   verifyOtpHandler,
   sendForgotOtpHandler,
-  verifyForgotOtpHandler,
   resendOtpHandler,
+  verifyForgotOtpHandler,
 };
