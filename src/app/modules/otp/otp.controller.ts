@@ -14,7 +14,7 @@ const sendVerificationOtpHandler = CatchAsync(
       statusCode: StatusCodes.OK,
       message: "Verification OTP sent successfully!",
     });
-  },
+  }
 );
 
 const verifyOtpHandler = CatchAsync(async (req: Request, res: Response) => {
@@ -49,18 +49,27 @@ const verifyForgotOtpHandler = CatchAsync(
       statusCode: StatusCodes.OK,
       message: "Forgot password OTP verified successfully!",
     });
-  },
+  }
 );
-
+// Resend forgot password OTP
 const resendOtpHandler = CatchAsync(async (req: Request, res: Response) => {
   const { email } = req.body;
-
-  await OTPService.sendForgotPasswordOTP(email);
+  if (!email) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: StatusCodes.BAD_REQUEST,
+      message: "Email is required",
+    });
+  }
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "OTP resent successfully!",
+    message: "OTP resend request received.",
+  });
+
+  OTPService.sendForgotPasswordOTP(email).catch(err => {
+    console.error("[OTPService] Failed to resend OTP:", err);
   });
 });
 
@@ -68,6 +77,6 @@ export const otpController = {
   sendVerificationOtpHandler,
   verifyOtpHandler,
   sendForgotOtpHandler,
-  resendOtpHandler,
   verifyForgotOtpHandler,
+  resendOtpHandler,
 };

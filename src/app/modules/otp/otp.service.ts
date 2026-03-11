@@ -8,7 +8,7 @@ import { UserStatus } from "../user/user.interface";
 const OTP_EXPIRATION = 2 * 60; // 2 minutes
 
 // Send verification OTP
-const sendOTP = async (email: string) => {
+export const sendOTP = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(404, "User not found");
   if (user.is_verified) throw new AppError(400, "User already verified");
@@ -41,6 +41,7 @@ const verifyOTP = async (email: string, otp: string) => {
     { email },
     { $set: { is_verified: true, status: UserStatus.ACTIVE } },
   );
+
   await redisClient.del(redisKey);
   return true;
 };
