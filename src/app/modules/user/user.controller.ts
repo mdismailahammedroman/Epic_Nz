@@ -207,6 +207,22 @@ const updateFcmToken = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const userPermanentDelete = CatchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const decodedToken = req.user as JwtPayload;
+
+  // Call service for permanent deletion
+  await userServices.userPermanentDeleteService(userId as string, decodedToken);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User permanently deleted successfully!",
+    data: null,
+  });
+});
+ 
 export const userController = {
   userRegister,
   getMe,
@@ -218,4 +234,5 @@ export const userController = {
   updateUserPreferences,
   getMyFcmToken,
   updateFcmToken,
+  userPermanentDelete,
 };

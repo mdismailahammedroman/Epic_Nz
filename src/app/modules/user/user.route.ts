@@ -57,5 +57,10 @@ router.patch(
 router.get("/fcm-token", checkAuth(), userController.getMyFcmToken);
 
 router.patch("/fcm-token", checkAuth(), userController.updateFcmToken);
+router.delete(
+  "/permanent/:userId",
+  checkAuth(),
+  userController.userPermanentDelete,
+);
 
 export const userRouter = router;

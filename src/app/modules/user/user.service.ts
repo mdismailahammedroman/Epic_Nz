@@ -390,6 +390,34 @@ const fcmTokenUpdate = async (
   return { fcmTokens: tokens };
 };
 
+
+const userPermanentDeleteService = async (
+  userId: string,
+  decodedToken: JwtPayload,
+) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
+  }
+
+  const allowedRoles = [Role.ADMIN];
+
+  // Only admin or the user itself can permanently delete
+  if (!allowedRoles.includes(decodedToken.role)) {
+    if (decodedToken.userId !== userId) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You are not allowed to delete this user permanently!",
+      );
+    }
+  }
+
+  // Permanently remove user
+  await User.findByIdAndDelete(userId);
+
+  return null;
+}; 
 export const userServices = {
   createUser,
   getMeService,
@@ -401,4 +429,5 @@ export const userServices = {
   updateUserPreferences,
   getMyFcmTokens,
   fcmTokenUpdate,
+  userPermanentDeleteService,
 };
