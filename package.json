@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node ./dist/server.js",
     "dev": "nodemon --watch src --ext ts --exec ts-node ./src/server.ts",
-    "build": "tsc && cp -r src/app/utils/templates dist/app/utils/",
+    "build": "tsc",
     "lint": "npx eslint ./src",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

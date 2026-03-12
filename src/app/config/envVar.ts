@@ -16,11 +16,10 @@ interface REDIS_TYPE {
   REDIS_PASSWORD: string;
 }
 
-interface SMTP_TYPE {
-  SMTP_HOST: string;
-  SMTP_PORT: string;
-  SMTP_USER: string;
-  SMTP_PASSWORD: string;
+interface EMAIL_TYPE  {
+  SENDGRID_API_KEY: string;
+  SENDGRID_FROM_EMAIL: string;
+  SENDGRID_FROM_NAME: string;
 }
 
 interface GOOGLE_TYPE {
@@ -58,7 +57,7 @@ interface EnvVar {
   PRICE_YEARLY: string;
   PRICE_MONTHLY: string;
   REDIS: REDIS_TYPE;
-  SMTP: SMTP_TYPE;
+  EMAIL: EMAIL_TYPE ;
   GOOGLE_AUTH: GOOGLE_TYPE;
   APPLE_AUTH: APPLE_AUTH_TYPE;
   SESSION_SECRET: string;
@@ -92,10 +91,6 @@ const loadEnvVariables = (): EnvVar => {
     "REDIS_PORT",
     "REDIS_USERNAME",
     "REDIS_PASSWORD",
-    "SMTP_HOST",
-    "SMTP_PORT",
-    "SMTP_USER",
-    "SMTP_PASSWORD",
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_CALLBACK_URL",
@@ -116,6 +111,9 @@ const loadEnvVariables = (): EnvVar => {
     "APPLE_CALLBACK_URL",
     "SUPER_ADMIN_EMAIL",
     "SUPER_ADMIN_PASSWORD",
+    "SENDGRID_API_KEY",
+    "SENDGRID_FROM_EMAIL",
+    "SENDGRID_FROM_NAME",
   ];
 
   requiredEnvVariables.forEach((varName) => {
@@ -156,11 +154,10 @@ const loadEnvVariables = (): EnvVar => {
       REDIS_USERNAME: process.env.REDIS_USERNAME as string,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
     },
-    SMTP: {
-      SMTP_HOST: process.env.SMTP_HOST as string,
-      SMTP_PORT: process.env.SMTP_PORT as string,
-      SMTP_USER: process.env.SMTP_USER as string,
-      SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
+    EMAIL: {
+      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY as string,
+      SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL as string,
+      SENDGRID_FROM_NAME: process.env.SENDGRID_FROM_NAME as string,
     },
     GOOGLE_AUTH: {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,

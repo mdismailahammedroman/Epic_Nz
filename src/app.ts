@@ -22,7 +22,7 @@ const app: Application = express();
 app.post(
   "/api/v1/subscription/webhook",
   express.raw({ type: "application/json" }),
-  subscriptionController.stripeWebhook
+  subscriptionController.stripeWebhook,
 );
 
 // 2️⃣ Normal middlewares
@@ -31,10 +31,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const allowedOrigins = [
-  "http://209.38.86.70/api/",
-  "http://209.38.86.70/",
+  "http://209.38.86.70",
+  "http://209.38.86.70/dashboard",
+  "http://localhost:3000",
 ];
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -73,6 +73,8 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
+
 
 /* 🧭 ROUTES */
 app.get("/", (_req, res) => res.send("API Working..."));
