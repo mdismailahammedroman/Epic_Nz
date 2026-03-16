@@ -30,36 +30,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const allowedOrigins = [
-  "http://209.38.86.70",
-  "http://209.38.86.70/dashboard",
-  "http://localhost:3000",
-];
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow non-browser (mobile, curl)
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS not allowed"));
-      }
-    },
+    origin: [
+      "https://epicnz.app",
+      "https://www.epicnz.app",
+      "http://localhost:3000"
+    ],
     credentials: true,
-  }),
+  })
 );
 
 app.set("trust proxy", 1);
 
 app.use(safeSanitizeMiddleware);
 
-app.use(
-  session({
-    secret: envVar.EXPRESS_SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
+session({
+  secret: envVar.EXPRESS_SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true,
+    sameSite: "none"
+  }
+})
 
 // 6️⃣ Passport
 app.use(passport.initialize());
